@@ -132,8 +132,31 @@
          (.setCommitter name email)
          (.call))))
 
-(defn git-add-and-commit [])
-(defn git-commit-amend)
+(defn git-commit-amend
+  ([repo message]
+     (-> repo
+         (.commit)
+         (.setMessage message)
+         (.setAmend true)
+         (.call)))
+  ([repo message {:keys [name email]}]
+     (-> repo
+         (.commit)
+         (.setMessage message)
+         (.setAuthor name email)
+         (.setAmend true)
+         (.call)))
+  ([repo message {:keys [name email]} {:keys [name email]}]
+     (-> repo
+         (.commit)
+         (.setMessage message)
+         (.setAuthor name email)
+         (.setCommitter name email)
+         (.setAmend true)
+         (.call))))
+
+(defn git-add-and-commit
+  )
 
 (defn git-fetch [])
 
