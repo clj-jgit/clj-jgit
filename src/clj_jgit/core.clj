@@ -1,7 +1,8 @@
 (ns clj-jgit.core
   (:require [clojure.java.io :as io]
             [clj-file-utils.core :as file]
-            [clojure.contrib.repl-utils :as ru])
+            [clojure.contrib.repl-utils :as ru]
+            [clj-jgit.util.core :as util])
   (:import [org.eclipse.jgit.lib RepositoryBuilder]
            [org.eclipse.jgit.api
             Git
@@ -96,7 +97,21 @@
            (.call)))))
 
 (defn git-cherry-pick [])
-(defn git-clone [])
+
+(defn git-clone
+  ([uri] (git-clone uri (util/name-from-uri uri) "master" "master" false))
+  ([uri local-dir] (git-clone uri local-dir "master" "master" false))
+  ([uri local-dir remote-branch] (git-clone uri local-dir remote-branch "master" false))
+  ([uri local-dir remote-branch local-branch] (git-clone uri local-dir remote-branch local-branch false))
+  ([uri local-dir remote-branch local-branch bare?]
+     (-> (Git/cloneRepository)
+         (.setURI uri)
+         (.setDirectory (io/as-file local-dir))
+         (.setRemote remote-branch)
+         (.setBranch local-branch)
+         (.setBare bare?)
+         (.call))))
+
 (defn git-fetch [])
 
 (defn git-init
