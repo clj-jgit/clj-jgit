@@ -203,7 +203,12 @@
 (defn git-push [])
 (defn git-rebase [])
 (defn git-revert [])
-(defn git-rm [])
+(defn git-rm
+  [repo file-pattern]
+  (-> repo
+      (.rm)
+      (.addFilepattern file-pattern)
+      (.call)))
 
 (defn git-status
   "Return the status of the Git repository. Opts will return individual aspects of the status, and can be specified as `:added`, `:changed`, `:missing`, `:modified`, `:removed`, or `:untracked`."
