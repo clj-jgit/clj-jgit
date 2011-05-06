@@ -155,8 +155,30 @@
          (.setAmend true)
          (.call))))
 
+
 (defn git-add-and-commit
-  )
+  "This is the `git commit -a...` command"
+  ([repo message]
+     (-> repo
+         (.commit)
+         (.setMessage message)
+         (.setAll true)
+         (.call)))
+  ([repo message {:keys [name email]}]
+     (-> repo
+         (.commit)
+         (.setMessage message)
+         (.setAuthor name email)
+         (.setAll true)
+         (.call)))
+  ([repo message {:keys [name email]} {:keys [name email]}]
+     (-> repo
+         (.commit)
+         (.setMessage message)
+         (.setAuthor name email)
+         (.setCommitter name email)
+         (.setAll true)
+         (.call))))
 
 (defn git-fetch [])
 
