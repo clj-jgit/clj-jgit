@@ -191,7 +191,13 @@
            (.setDirectory (io/as-file target-dir))
            (.call)))))
 
-(defn git-log [])
+(defn git-log
+  "Return a seq of all commit objects"
+  [repo]
+  (seq (-> repo
+           (.log)
+           (.call))))
+
 (defn git-merge [])
 (defn git-pull [])
 (defn git-push [])
