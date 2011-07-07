@@ -1,4 +1,4 @@
-(ns clj-jgit.core
+(ns clj-jgit.porcelain
   (:require [clojure.java.io :as io]
             [clj-file-utils.core :as file]
             [clojure.contrib.repl-utils :as ru]
