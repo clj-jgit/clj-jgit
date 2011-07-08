@@ -3,7 +3,8 @@
             [clj-file-utils.core :as file]
             [clojure.contrib.repl-utils :as ru]
             [clj-jgit.util.core :as util])
-  (:import [org.eclipse.jgit.lib RepositoryBuilder]
+  (:import [java.io.FileNotFoundException]
+           [org.eclipse.jgit.lib RepositoryBuilder]
            [org.eclipse.jgit.api
             Git
             InitCommand StatusCommand AddCommand
@@ -15,13 +16,15 @@
   (let [dir (if (not (re-find #"\.git$" path))
               (io/as-file (str path "/.git"))
               (io/as-file path))]
-    (when (.exists dir)
+    (if (.exists dir)
       (let [repo (-> (RepositoryBuilder.)
                      (.setGitDir dir)
                      (.readEnvironment)
                      (.findGitDir)
                      (.build))]
-        (Git. repo)))))
+        (Git. repo))
+      (throw (java.io.FileNotFoundException.
+              (str "The Git repository at '" path "' could not be located."))))))
 
 (defn git-add
   "The `file-pattern` is either a single file name (exact, not a pattern) or the name of a directory. If a directory is supplied, all files within that directory will be added. If `only-update?` is set to `true`, only files which are already part of the index will have their changes staged (i.e. no previously untracked files will be added to the index)."
@@ -146,13 +149,14 @@
          (.commit)
          (.setMessage message)
          (.setAuthor name email)
+         (.setCommitter name email)
          (.call)))
-  ([repo message {:keys [name email]} {:keys [name email]}]
+  ([repo message {:keys [author-name author-email]} {:keys [committer-name committer-email]}]
      (-> repo
          (.commit)
          (.setMessage message)
-         (.setAuthor name email)
-         (.setCommitter name email)
+         (.setAuthor author-name author-email)
+         (.setCommitter committer-name committer-email)
          (.call))))
 
 (defn git-commit-amend
