@@ -7,7 +7,7 @@
            [org.eclipse.jgit.api
             Git
             InitCommand StatusCommand AddCommand
-            ListBranchCommand]))
+            ListBranchCommand PullCommand]))
 
 (defn load-repo
   "Given a path (either to the parent folder or to the `.git` folder itself), load the Git repository"
@@ -112,6 +112,29 @@
          (.setBare bare?)
          (.call))))
 
+(declare git-fetch)
+(declare git-merge)
+(defn git-clone-full
+  "Clone, fetch the master branch and merge its latest commit"
+  ([uri] (git-clone-full uri (util/name-from-uri uri) "master" "master" false))
+  ([uri local-dir] (git-clone-full uri local-dir "master" "master" false))
+  ([uri local-dir remote-branch] (git-clone-full uri local-dir remote-branch "master" false))
+  ([uri local-dir remote-branch local-branch] (git-clone-full uri local-dir remote-branch local-branch false))
+  ([uri local-dir remote-branch local-branch bare?]
+     (let [new-repo (-> (Git/cloneRepository)
+                        (.setURI uri)
+                        (.setDirectory (io/as-file local-dir))
+                        (.setRemote remote-branch)
+                        (.setBranch local-branch)
+                        (.setBare bare?)
+                        (.call))
+           fetch-result (git-fetch new-repo)
+           merge-result (git-merge new-repo
+                                   (first (.getAdvertisedRefs fetch-result)))]
+       {:repo new-repo,
+        :fetch-result fetch-result,
+        :merge-result  merge-result})))
+
 (defn git-commit
   ([repo message]
      (-> repo
@@ -180,7 +203,17 @@
          (.setAll true)
          (.call))))
 
-(defn git-fetch [])
+(defn git-fetch
+  ([repo]
+     (-> repo
+         (.fetch)
+         (.setRemote "master")
+         (.call)))
+  ([repo remote]
+     (-> repo
+         (.fetch)
+         (.setRemote remote)
+         (.call))))
 
 (defn git-init
   "Initialize and load a new Git repository"
@@ -198,8 +231,20 @@
            (.log)
            (.call))))
 
-(defn git-merge [])
-(defn git-pull [])
+(defn git-merge
+  [repo commit-ref]
+  (-> repo
+      (.merge)
+      (.include commit-ref)
+      (.call)))
+
+(defn git-pull
+  "NOT WORKING: Requires work with configuration"
+  [repo]
+  (-> repo
+      (.pull)
+      (.call)))
+
 (defn git-push [])
 (defn git-rebase [])
 (defn git-revert [])
