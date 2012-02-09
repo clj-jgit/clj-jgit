@@ -1,6 +1,5 @@
 (ns clj-jgit.porcelain
   (:require [clojure.java.io :as io]
-            [clj-file-utils.core :as file]
             [clj-jgit.util.core :as util])
   (:import [java.io.FileNotFoundException]
            [org.eclipse.jgit.lib RepositoryBuilder]
