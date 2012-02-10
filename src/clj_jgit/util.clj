@@ -1,4 +1,10 @@
-(ns clj-jgit.util.print)
+(ns clj-jgit.util)
+
+(defn name-from-uri
+  "Given a URI to a Git resource, derive the name (for use in cloning to a directory)"
+  [uri]
+  (second (re-find #"/([^/]*)\.git$" uri)))
+
 
 (defmacro when-present
   "Special `when` macro for checking if an attribute isn't available or is an empty string"
