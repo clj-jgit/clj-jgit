@@ -6,3 +6,4 @@ pom.xml
 .lein-deps-sum
 sandbox
 sandbox*
+/.lein-failures

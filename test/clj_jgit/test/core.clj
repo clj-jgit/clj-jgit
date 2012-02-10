@@ -9,5 +9,3 @@
               "https://git.example.com/project.git"]]
     (is (every? #(= %1 "project") (map #(name-from-uri %) uris))
         "Repository name must be 'project'")))
-
-(deftest )
