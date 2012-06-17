@@ -5,7 +5,6 @@
   [uri]
   (second (re-find #"/([^/]*)\.git$" uri)))
 
-
 (defmacro when-present
   "Special `when` macro for checking if an attribute isn't available or is an empty string"
   [obj & body]
@@ -18,3 +17,10 @@
    (str "#<" (.replaceFirst (str (.getClass o)) "class " "") ", "
         "Name: " (.getName o) ", "
         "ObjectId: " (.getName (.getObjectId o)) ">") w))
+
+(defn normalize-path [path]
+  (if (= path "/")
+    "/"
+    (if (= (first path) \/)
+      (apply str (rest path))
+      path)))
