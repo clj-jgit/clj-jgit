@@ -107,8 +107,9 @@ Git class instance as a repo handler, internal JGit API uses instances of Reposi
 (with-repo "/path/to/a/repo"
   (println repo)
   ;=> {:raw #<FileRepository Repository[/Users/railsmonk/clj-jgit/.git]>, 
-      :git #<Git org.eclipse.jgit.api.Git@96f1ee5>, 
-      :walk #<RevWalk org.eclipse.jgit.revwalk.RevWalk@5e555139>})
+  ;    :git #<Git org.eclipse.jgit.api.Git@96f1ee5>, 
+  ;    :walk #<RevWalk org.eclipse.jgit.revwalk.RevWalk@5e555139>}
+)
 
 ;; Returns a universal handler for a repo (can be used only for low-level API)
 (def repo (universal-repo "/path/to/a/repo"))
@@ -136,23 +137,25 @@ Git class instance as a repo handler, internal JGit API uses instances of Reposi
 ```clj
 ;; Gather information about specific commit
 (commit-info repo (find-rev-commit repo "38dd57264cf"))
-;=> {:repo {:git #<Git org.eclipse.jgit.api.Git@21d306ef>, 
-            :raw #<FileRepository Repository[/Users/railsmonk/clj-jgit/.git]>, 
-            :walk #<RevWalk org.eclipse.jgit.revwalk.RevWalk@256c4642>}, 
-    :changed_files [[".gitignore" :add] 
-                    ["README.md" :add] 
-                    ["project.clj" :add] 
-                    ["src/clj_jgit/core.clj" :add] 
-                    ["src/clj_jgit/util/print.clj" :add] 
-                    ["test/clj_jgit/test/core.clj" :add]], 
-    :raw #<RevCommit commit 38dd57264cf5c05fb77211c8347d1f16e4474623 1304645414 ----sp>, 
-    :author "Daniel Gregoire", 
-    :email "daniel.l.gregoire@gmail.com", 
-    :message "Initial commit", 
-    :branches ("refs/heads/master"), 
-    :merge false, 
-    :time #<Date Fri May 06 09:30:14 KRAT 2011>, 
-    :id "38dd57264cf5c05fb77211c8347d1f16e4474623"}
+
+; Returns
+{:repo {:git #<Git org.eclipse.jgit.api.Git@21d306ef>, 
+        :raw #<FileRepository Repository[/Users/railsmonk/clj-jgit/.git]>, 
+        :walk #<RevWalk org.eclipse.jgit.revwalk.RevWalk@256c4642>}, 
+:changed_files [[".gitignore" :add] 
+                ["README.md" :add] 
+                ["project.clj" :add] 
+                ["src/clj_jgit/core.clj" :add] 
+                ["src/clj_jgit/util/print.clj" :add] 
+                ["test/clj_jgit/test/core.clj" :add]], 
+:raw #<RevCommit commit 38dd57264cf5c05fb77211c8347d1f16e4474623 1304645414 ----sp>, 
+:author "Daniel Gregoire", 
+:email "daniel.l.gregoire@gmail.com", 
+:message "Initial commit", 
+:branches ("refs/heads/master"), 
+:merge false, 
+:time #<Date Fri May 06 09:30:14 KRAT 2011>, 
+:id "38dd57264cf5c05fb77211c8347d1f16e4474623"}
 
 ;; You can also combine this with Porcelain API, to get a list of all commits in a repo with detailed information
 (with-repo "/path/to/repo.git"
