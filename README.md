@@ -87,6 +87,71 @@ In order to use most of the functions in JGit's API, you need to have a reposito
 
 This function throws a `FileNotFoundException` if the directory in question does not exist.
 
+### Querying repository
+
+This uses a lower level JGit API, so it's not entirely compatible with the API shown above. Porcelain API used above is using
+Git class instance as a repo handler, internal JGit API uses instances of Repository class.
+
+```
+;; Log
+(git-log my-repo)
+;=> (#<RevCommit commit 36748f70c687e8d2bc92d262692cd03ffc6c2473 1304696936 ----sp> ...)
+
+;; Log for range
+(git-log my-repo "36748f70" "master^3")
+;=> (#<RevCommit commit 36748f70c687e8d2bc92d262692cd03ffc6c2473 1304696936 ----sp> ...)
+
+;; This macro allows you to create a universal handler with name "repo"
+(with-repo "/path/to/a/repo"
+  (println repo)
+  ;=> {:raw #<FileRepository Repository[/Users/railsmonk/clj-jgit/.git]>, 
+      :git #<Git org.eclipse.jgit.api.Git@96f1ee5>, 
+      :walk #<RevWalk org.eclipse.jgit.revwalk.RevWalk@5e555139>})
+
+;; Returns a universal handler for a repo (can be used only for low-level API)
+(def repo (universal-repo "/path/to/a/repo"))
+
+;; List of pairs of branch refs and RevCommits associated with them
+(branch-list-with-heads repo)
+;=> ([#<org.eclipse.jgit.storage.file.RefDirectory$LooseUnpeeled, Name: refs/heads/master, ObjectId: 3b9c98bc151bb4920f9799cfa6c32c536ed64348> 
+      #<RevCommit commit 3b9c98bc151bb4920f9799cfa6c32c536ed64348 1339922123 -----p>])
+
+;; Find a ObjectId instance for a repo and given commit-ish
+(def commit-obj-id (find-object-id repo "38dd57264cf5c05fb77211c8347d1f16e4474623"))
+;=> #<ObjectId AnyObjectId[38dd57264cf5c05fb77211c8347d1f16e4474623]>
+
+;; Show all the branches where commit is present
+(branches-for repo commit-obj-id)
+;=> ("refs/heads/master")
+
+;; List of all revision objects in the repository, for all branches
+(rev-list repo)
+;=> #<RevCommitList [commit 3b9c98bc151bb4920f9799cfa6c32c536ed64348 1339922123 ----sp, ... ]>
+
+;; Gather information about specific commit
+(commit-info repo (find-rev-commit repo "38dd57264cf"))
+;=> {:repo {:git #<Git org.eclipse.jgit.api.Git@21d306ef>, 
+            :raw #<FileRepository Repository[/Users/railsmonk/clj-jgit/.git]>, 
+            :walk #<RevWalk org.eclipse.jgit.revwalk.RevWalk@256c4642>}, 
+    :changed_files [[".gitignore" :add] 
+                    ["README.md" :add] 
+                    ["project.clj" :add] 
+                    ["src/clj_jgit/core.clj" :add] 
+                    ["src/clj_jgit/util/print.clj" :add] 
+                    ["test/clj_jgit/test/core.clj" :add]], 
+    :raw #<RevCommit commit 38dd57264cf5c05fb77211c8347d1f16e4474623 1304645414 ----sp>, 
+    :author "Daniel Gregoire", 
+    :email "daniel.l.gregoire@gmail.com", 
+    :message "Initial commit", 
+    :branches ("refs/heads/master"), 
+    :merge false, 
+    :time #<Date Fri May 06 09:30:14 KRAT 2011>, 
+    :id "38dd57264cf5c05fb77211c8347d1f16e4474623"}
+
+;; You can also combine this with Porcelain API, to get a list of all commits in a repo with detailed information
+(with-repo "/path/to/repo.git"
+  (map #(commit-info repo) (git-log (:git repo))))
+```
 ### Making Changes ###
 
 TODO
