@@ -13,18 +13,21 @@
     [org.eclipse.jgit.lib FileMode Repository ObjectIdRef]
     [org.eclipse.jgit.api Git LogCommand]))
 
-(declare raw-repo raw-repo find-rev-commit
+(declare raw-repo raw-repo find-object-id
          change-kind create-tree-walk diff-formatter-for-changes
          changed-files-in-first-commit prepare-file-entry
          mark-all-heads-as-start-for!)
 
+(defn universal-repo [path]
+  (let [git-repo ^Git (porcelain/load-repo path)
+        raw-repo ^Repository (.getRepository git-repo)
+        rev-walk ^RevWalk (RevWalk. raw-repo)]
+    {:git git-repo
+     :raw raw-repo
+     :walk rev-walk}))
+
 (defmacro with-repo [repo-path & body]
-  `(let [git-repo# ^Git (porcelain/load-repo ~repo-path)
-         raw-repo# ^Repository (.getRepository git-repo#)
-         rev-walk# ^RevWalk (RevWalk. raw-repo#)
-         ~'repo {:git git-repo#
-                 :raw raw-repo#
-                 :walk rev-walk#}]
+  `(let [~'repo (universal-repo ~repo-path)]
      ~@body))
 
 (defn bound-commit 
@@ -34,16 +37,16 @@
 
 (def cached-bound-commit (memo-lru bound-commit 10000))
 
-(defn find-rev-commit 
+(defn find-object-id 
   "Find RevCommit instance not in any RevWalk by commit-ish"
   [repo commit-ish]
   (.resolve (:raw repo) commit-ish))
 
-(defn find-in-rev-walk
+(defn find-rev-commit
   "Find RevCommit instance in RevWalk by commit-ish"
   [repo commit-ish]
   (->> commit-ish
-    (find-rev-commit repo)
+    (find-object-id repo)
     (cached-bound-commit repo)))
 
 (defn branch-list-with-heads
@@ -76,7 +79,7 @@
   "Find changes for commit-ish"
   [repo commit-ish]
   (->> commit-ish
-    (find-in-rev-walk repo)
+    (find-rev-commit repo)
     (changed-files repo)))
 
 (defn rev-list [repo]

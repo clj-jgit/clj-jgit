@@ -26,15 +26,15 @@
   (read-only-repo
     (is
       #(instance? RevCommit %)
-      (find-rev-commit repo "38dd57264cf5c05fb77211c8347d1f16e4474623"))
+      (find-object-id repo "38dd57264cf5c05fb77211c8347d1f16e4474623"))
     (is
       #(instance? RevCommit %)
-      (find-rev-commit repo "master"))))
+      (find-object-id repo "master"))))
 
 (testing "commit-in-rev-walk"
   (read-only-repo
     (let [first-commit (find-rev-commit repo "38dd57264cf5c05fb77211c8347d1f16e4474623")
-          master (find-rev-commit repo "master")]
+          master (find-object-id repo "master")]
       (is
         (instance? RevCommit (bound-commit repo first-commit)))
       (is
@@ -50,7 +50,7 @@
 
 (testing "branches-for"
   (read-only-repo
-    (let [first-commit (find-rev-commit repo "38dd57264cf5c05fb77211c8347d1f16e4474623")]
+    (let [first-commit (find-object-id repo "38dd57264cf5c05fb77211c8347d1f16e4474623")]
       (is (= ["refs/heads/master"] (branches-for repo first-commit))))))
 
 (testing "changed-files" 
@@ -84,7 +84,7 @@
   (read-only-repo
     (are 
       [commit-ish info] (= info (-> commit-ish 
-                                  ((partial find-in-rev-walk repo)) 
+                                  ((partial find-rev-commit repo)) 
                                   ((partial commit-info repo))
                                   (dissoc :repo :raw :time)))
       "38dd57264cf5c05fb77211c8347d1f16e4474623" {:changed_files 
