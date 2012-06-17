@@ -92,7 +92,7 @@ This function throws a `FileNotFoundException` if the directory in question does
 This uses a lower level JGit API, so it's not entirely compatible with the API shown above. Porcelain API used above is using
 Git class instance as a repo handler, internal JGit API uses instances of Repository class.
 
-```
+```clj
 ;; Log
 (git-log my-repo)
 ;=> (#<RevCommit commit 36748f70c687e8d2bc92d262692cd03ffc6c2473 1304696936 ----sp> ...)
@@ -100,7 +100,9 @@ Git class instance as a repo handler, internal JGit API uses instances of Reposi
 ;; Log for range
 (git-log my-repo "36748f70" "master^3")
 ;=> (#<RevCommit commit 36748f70c687e8d2bc92d262692cd03ffc6c2473 1304696936 ----sp> ...)
+```
 
+```clj
 ;; This macro allows you to create a universal handler with name "repo"
 (with-repo "/path/to/a/repo"
   (println repo)
@@ -110,7 +112,9 @@ Git class instance as a repo handler, internal JGit API uses instances of Reposi
 
 ;; Returns a universal handler for a repo (can be used only for low-level API)
 (def repo (universal-repo "/path/to/a/repo"))
+```
 
+```clj
 ;; List of pairs of branch refs and RevCommits associated with them
 (branch-list-with-heads repo)
 ;=> ([#<org.eclipse.jgit.storage.file.RefDirectory$LooseUnpeeled, Name: refs/heads/master, ObjectId: 3b9c98bc151bb4920f9799cfa6c32c536ed64348> 
@@ -127,7 +131,9 @@ Git class instance as a repo handler, internal JGit API uses instances of Reposi
 ;; List of all revision objects in the repository, for all branches
 (rev-list repo)
 ;=> #<RevCommitList [commit 3b9c98bc151bb4920f9799cfa6c32c536ed64348 1339922123 ----sp, ... ]>
+```
 
+```clj
 ;; Gather information about specific commit
 (commit-info repo (find-rev-commit repo "38dd57264cf"))
 ;=> {:repo {:git #<Git org.eclipse.jgit.api.Git@21d306ef>, 
