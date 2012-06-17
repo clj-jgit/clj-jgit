@@ -8,6 +8,8 @@
             InitCommand StatusCommand AddCommand
             ListBranchCommand PullCommand]))
 
+(declare log-builder)
+
 (defn load-repo
   "Given a path (either to the parent folder or to the `.git` folder itself), load the Git repository"
   [path]
@@ -228,10 +230,22 @@
 
 (defn git-log
   "Return a seq of all commit objects"
-  [repo]
-  (seq (-> repo
+  ([repo]
+    (seq (-> repo
            (.log)
            (.call))))
+  ([repo hash-a hash-b]
+    (seq (-> repo
+           (log-builder hash-a hash-b)
+           (.call)))))
+
+(defn- log-builder [repo hash-a hash-b]
+  "Builds a log command object for a range of commit-ish names"
+  (let [log (.log repo)
+        raw-repo (.getRepository repo)] 
+    (if (= hash-a "0000000000000000000000000000000000000000")
+      (.add log (.resolve raw-repo hash-b))
+      (.addRange log (.resolve raw-repo hash-a) (.resolve raw-repo hash-b)))))
 
 (defn git-merge
   [repo commit-ref]
