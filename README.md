@@ -1,4 +1,4 @@
-# clj-jgit #
+# clj-jgit [![Build Status](https://secure.travis-ci.org/dsabanin/clj-jgit.png)](http://travis-ci.org/dsabanin/clj-jgit) #
 
 Clojure wrapper for using the JGit library to manipulate Git repositories in a "pure Java" fashion.
 
