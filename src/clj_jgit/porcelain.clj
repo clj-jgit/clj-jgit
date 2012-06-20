@@ -235,6 +235,11 @@
     (seq (-> repo
            (.log)
            (.call))))
+  ([repo hash]
+    (seq (-> repo
+           (.log)
+           (.add (low/resolve-object repo hash))
+           (.call))))
   ([repo hash-a hash-b]
     (seq (-> repo
            (log-builder hash-a hash-b)
