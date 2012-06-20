@@ -89,8 +89,7 @@ This function throws a `FileNotFoundException` if the directory in question does
 
 ### Querying repository
 
-This uses a lower level JGit API, so it's not entirely compatible with the API shown above. Porcelain API used above is using
-Git class instance as a repo handler, internal JGit API uses instances of Repository class.
+This uses internal JGit API, so it may require some additional knowledge of JGit.
 
 ```clj
 ;; Log
@@ -105,24 +104,22 @@ Git class instance as a repo handler, internal JGit API uses instances of Reposi
 ```clj
 ;; This macro allows you to create a universal handler with name "repo"
 (with-repo "/path/to/a/repo"
-  (println repo)
-  ;=> {:raw #<FileRepository Repository[/Users/railsmonk/clj-jgit/.git]>, 
-  ;    :git #<Git org.eclipse.jgit.api.Git@96f1ee5>, 
-  ;    :walk #<RevWalk org.eclipse.jgit.revwalk.RevWalk@5e555139>}
-)
-
-;; Returns a universal handler for a repo (can be used only for low-level API)
-(def repo (universal-repo "/path/to/a/repo"))
+  ...)
 ```
 
 ```clj
+;; Creates a RevWalk instance needed to traverse the commits for the repo.
+;; Commits found through a RevWalk can be compared and used only with other
+;; commits found with a same RevWalk instance.
+(def rev-walk (new-rev-walk repo))
+
 ;; List of pairs of branch refs and RevCommits associated with them
-(branch-list-with-heads repo)
+(branch-list-with-heads repo rev-walk)
 ;=> ([#<org.eclipse.jgit.storage.file.RefDirectory$LooseUnpeeled, Name: refs/heads/master, ObjectId: 3b9c98bc151bb4920f9799cfa6c32c536ed64348> 
       #<RevCommit commit 3b9c98bc151bb4920f9799cfa6c32c536ed64348 1339922123 -----p>])
 
-;; Find a ObjectId instance for a repo and given commit-ish
-(def commit-obj-id (find-object-id repo "38dd57264cf5c05fb77211c8347d1f16e4474623"))
+;; Find an ObjectId instance for a repo and given commit-ish, tree-ish or blob
+(def commit-obj-id (resolve-object repo "38dd57264cf5c05fb77211c8347d1f16e4474623"))
 ;=> #<ObjectId AnyObjectId[38dd57264cf5c05fb77211c8347d1f16e4474623]>
 
 ;; Show all the branches where commit is present
@@ -136,12 +133,10 @@ Git class instance as a repo handler, internal JGit API uses instances of Reposi
 
 ```clj
 ;; Gather information about specific commit
-(commit-info repo (find-rev-commit repo "38dd57264cf"))
+(commit-info repo (find-rev-commit repo rev-walk "38dd57264cf"))
 
 ; Returns
-{:repo {:git #<Git org.eclipse.jgit.api.Git@21d306ef>, 
-        :raw #<FileRepository Repository[/Users/railsmonk/clj-jgit/.git]>, 
-        :walk #<RevWalk org.eclipse.jgit.revwalk.RevWalk@256c4642>}, 
+{:repo #<Git org.eclipse.jgit.api.Git@21d306ef>, 
 :changed_files [[".gitignore" :add] 
                 ["README.md" :add] 
                 ["project.clj" :add] 
@@ -159,7 +154,7 @@ Git class instance as a repo handler, internal JGit API uses instances of Reposi
 
 ;; You can also combine this with Porcelain API, to get a list of all commits in a repo with detailed information
 (with-repo "/path/to/repo.git"
-  (map #(commit-info repo) (git-log (:git repo))))
+  (map #(commit-info repo) (git-log repo)))
 ```
 ### Making Changes ###
 
