@@ -1,5 +1,6 @@
 (ns clj-jgit.porcelain
   (:require [clojure.java.io :as io]
+            [clj-jgit.low-level :as low]
             [clj-jgit.util :as util])
   (:import [java.io.FileNotFoundException]
            [org.eclipse.jgit.lib RepositoryBuilder]
@@ -241,11 +242,10 @@
 
 (defn- log-builder [repo hash-a hash-b]
   "Builds a log command object for a range of commit-ish names"
-  (let [log (.log repo)
-        raw-repo (.getRepository repo)] 
+  (let [log (.log repo)] 
     (if (= hash-a "0000000000000000000000000000000000000000")
-      (.add log (.resolve raw-repo hash-b))
-      (.addRange log (.resolve raw-repo hash-a) (.resolve raw-repo hash-b)))))
+      (.add log (low/resolve-object repo hash-b))
+      (.addRange log (low/resolve-object repo hash-a) (low/resolve-object repo hash-b)))))
 
 (defn git-merge
   [repo commit-ref]
