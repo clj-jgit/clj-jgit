@@ -1,6 +1,9 @@
-(ns clj-jgit.test.low-level
+(ns clj-jgit.test.querying
   (:use 
-    [clj-jgit.low-level]
+    [clj-jgit.test.helpers]
+    [clj-jgit.internal]
+    [clj-jgit.porcelain]
+    [clj-jgit.querying]
     [clojure.test])
   (:import 
     [java.io File]
@@ -8,37 +11,6 @@
     [org.eclipse.jgit.lib Repository AnyObjectId ObjectId]
     [org.eclipse.jgit.revwalk RevWalk RevCommit]
     [org.eclipse.jgit.storage.file RefDirectory$LooseUnpeeled]))
-
-; Using clj-jgit repo for read-only tests
-(def read-only-repo-path (System/getProperty "user.dir"))
-
-(defmacro read-only-repo [& body]
-  `(with-repo ~read-only-repo-path
-     ~@body))
-
-(testing "with-repo macro"
-  (read-only-repo
-    (is (instance? Git repo))
-    (is (instance? RevWalk rev-walk))))
-
-(testing "find-rev-commit"
-  (read-only-repo
-    (is
-      #(instance? RevCommit %)
-      (resolve-object repo "38dd57264cf5c05fb77211c8347d1f16e4474623"))
-    (is
-      #(instance? RevCommit %)
-      (resolve-object repo "master"))))
-
-(testing "bound-commit"
-  (read-only-repo
-    (let [first-commit (resolve-object repo "38dd57264cf5c05fb77211c8347d1f16e4474623")
-          master (resolve-object repo "master")
-          rev-walk (new-rev-walk repo)]
-      (is
-        (instance? RevCommit (bound-commit repo rev-walk first-commit)))
-      (is
-        (instance? RevCommit (bound-commit repo rev-walk master))))))
 
 (testing "branch-list-with-heads"
   (read-only-repo
@@ -79,6 +51,13 @@
 (testing "rev-list"
   (read-only-repo
     (is (>= (count (rev-list repo (new-rev-walk repo))) 24))))
+
+(testing "find-rev-commit"
+  (read-only-repo
+    (are [commit-ish] (instance? RevCommit (find-rev-commit repo (new-rev-walk repo) commit-ish))
+         "master"
+         "38dd57264cf5c05fb77211c8347d1f16e4474623"
+         "master^")))
 
 (testing "commit-info"
   (read-only-repo
@@ -127,12 +106,3 @@
                                                   :merge true, 
                                                   :id "0d3d1c2e7b6c47f901fcae9ef661a22948c64573"})))
 
-(testing "resolve-object"
-  (read-only-repo
-    (are
-      [object-name] (instance? ObjectId (resolve-object repo object-name))
-      "master" ; commit-ish
-      "38dd57264cf5c05fb77211c8347d1f16e4474623" ; initial commit
-      "cefa1a770d57f7f89a59d1a376ef5ffc480649ae" ; tree
-      "1656b6ddae437f8cbdaabaa27e399cb431eec94e" ; blob
-      )))

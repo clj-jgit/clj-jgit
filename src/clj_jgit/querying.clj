@@ -1,44 +1,24 @@
-(ns clj-jgit.low-level
+(ns clj-jgit.querying
   (:require [clojure.java.io :as io]
             [clj-jgit.util :as util]
             [clj-jgit.porcelain :as porcelain]
             [clojure.string :as string])
-  (:use clojure.core.memoize)
+  (:use
+    clj-jgit.internal
+    clojure.core.memoize)
   (:import
     [org.eclipse.jgit.diff DiffFormatter DiffEntry]
     [org.eclipse.jgit.util.io DisabledOutputStream]
     [org.eclipse.jgit.diff RawTextComparator]
     [org.eclipse.jgit.revwalk RevWalk RevCommit RevCommitList]
-    [org.eclipse.jgit.treewalk TreeWalk]
     [org.eclipse.jgit.lib FileMode Repository ObjectIdRef ObjectId]
     [org.eclipse.jgit.api Git LogCommand]))
 
-(declare resolve-object change-kind create-tree-walk diff-formatter-for-changes
-         changed-files-in-first-commit prepare-file-entry
-         mark-all-heads-as-start-for! rev-walk)
-
-(defmacro with-repo [path & body]
-  `(let [~'repo (porcelain/load-repo ~path)
-         ~'rev-walk (new-rev-walk ~'repo)]
-     ~@body))
-
-(defn ^RevWalk new-rev-walk [^Git repo]
-  (RevWalk. (.getRepository repo)))
-
-(defn bound-commit 
-  "Find a RevCommit object in a RevWalk and bound to it."
-  [^Git repo 
-   ^RevWalk rev-walk 
-   ^ObjectId rev-commit]
-  (.parseCommit rev-walk rev-commit))
+(declare change-kind create-tree-walk diff-formatter-for-changes
+         changed-files-in-first-commit parse-diff-entry
+         mark-all-heads-as-start-for!)
 
 (def cached-bound-commit (memo-lru bound-commit 10000))
-
-(defn resolve-object
-  "Find ObjectId instance for any Git name: commit-ish, tree-ish or blob."
-  [^Git repo 
-   ^String commit-ish]
-  (.resolve (.getRepository repo) commit-ish))
 
 (defn find-rev-commit
   "Find RevCommit instance in RevWalk by commit-ish"
@@ -51,7 +31,7 @@
 
 (defn branch-list-with-heads
   "List of branches for a repo in pairs of [branch-ref branch-tip-commit]"
-  ([^Git repo] (branch-list-with-heads repo (new-rev-walk rev-walk)))
+  ([^Git repo] (branch-list-with-heads repo (new-rev-walk repo)))
   ([^Git repo
     ^RevWalk rev-walk]
     (letfn [(zip-commits [^ObjectIdRef branch-ref]
@@ -82,7 +62,7 @@
     (let [rev-parent ^RevCommit parent
           df ^DiffFormatter (diff-formatter-for-changes repo)
           entries (.scan df rev-parent rev-commit)]
-      (map prepare-file-entry entries))
+      (map parse-diff-entry entries))
     (changed-files-in-first-commit repo rev-commit)))
 
 (defn changes-for
@@ -132,13 +112,6 @@
       (= change "DELETE") :delete
       (= change "COPY") :copy)))
 
-(defn- create-tree-walk [^Git repo 
-                         ^RevCommit rev-commit]
-  (doto
-    (TreeWalk. (.getRepository repo))
-    (.addTree (.getTree rev-commit))
-    (.setRecursive true)))
-
 (defn- diff-formatter-for-changes [^Git repo]
   (doto 
     (DiffFormatter. DisabledOutputStream/INSTANCE)
@@ -148,13 +121,13 @@
 
 (defn- changed-files-in-first-commit [^Git repo 
                                       ^RevCommit rev-commit]
-  (let [tree-walk (create-tree-walk repo rev-commit)
+  (let [tree-walk (new-tree-walk repo rev-commit)
         changes (transient [])]
     (while (.next tree-walk)
       (conj! changes [(util/normalize-path (.getPathString tree-walk)) :add]))
     (persistent! changes)))
 
-(defn- prepare-file-entry [^DiffEntry entry]
+(defn- parse-diff-entry [^DiffEntry entry]
   (let [old-path (util/normalize-path (.getOldPath entry))
         new-path (util/normalize-path (.getNewPath entry))
         change-kind (change-kind entry)]
