@@ -92,6 +92,8 @@ This function throws a `FileNotFoundException` if the directory in question does
 This uses internal JGit API, so it may require some additional knowledge of JGit.
 
 ```clj
+(ns clj-jgit.porcelain)
+
 ;; Log
 (git-log my-repo)
 ;=> (#<RevCommit commit 36748f70c687e8d2bc92d262692cd03ffc6c2473 1304696936 ----sp> ...)
@@ -108,6 +110,8 @@ This uses internal JGit API, so it may require some additional knowledge of JGit
 ```
 
 ```clj
+(ns clj-jgit.querying)
+
 ;; Creates a RevWalk instance needed to traverse the commits for the repo.
 ;; Commits found through a RevWalk can be compared and used only with other
 ;; commits found with a same RevWalk instance.
@@ -156,9 +160,11 @@ This uses internal JGit API, so it may require some additional knowledge of JGit
 (with-repo "/path/to/repo.git"
   (map #(commit-info repo) (git-log repo)))
 ```
-### Making Changes ###
+### Contribute ###
 
-TODO
+If you want to contribute just fork the repository, work on the code, cover it with tests and submit a pull request through Github.
+
+Any questions related about clj-jgit can be discussed in the [Google Group](https://groups.google.com/forum/#!forum/clj-jgit).
 
 ## Caveat Windows Users
 
