@@ -26,6 +26,13 @@
       (throw (java.io.FileNotFoundException.
               (str "The Git repository at '" path "' could not be located."))))))
 
+(defmacro with-repo
+  "Binds `repo` to a repository handle"
+  [path & body]
+  `(let [~'repo (load-repo ~path)
+         ~'rev-walk (new-rev-walk ~'repo)]
+     ~@body))
+
 (defn git-add
   "The `file-pattern` is either a single file name (exact, not a pattern) or the name of a directory. If a directory is supplied, all files within that directory will be added. If `only-update?` is set to `true`, only files which are already part of the index will have their changes staged (i.e. no previously untracked files will be added to the index)."
   ([repo file-pattern] (git-add repo file-pattern false))
