@@ -164,7 +164,7 @@ This uses internal JGit API, so it may require some additional knowledge of JGit
 
 If you want to contribute just fork the repository, work on the code, cover it with tests and submit a pull request through Github.
 
-Any questions related about clj-jgit can be discussed in the [Google Group](https://groups.google.com/forum/#!forum/clj-jgit).
+Any questions related to clj-jgit can be discussed in the [Google Group](https://groups.google.com/forum/#!forum/clj-jgit).
 
 ## Caveat Windows Users
 
