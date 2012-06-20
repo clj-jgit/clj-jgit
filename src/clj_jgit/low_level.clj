@@ -51,12 +51,13 @@
 
 (defn branch-list-with-heads
   "List of branches for a repo in pairs of [branch-ref branch-tip-commit]"
-  [^Git repo
-   ^RevWalk rev-walk]
-  (letfn [(zip-commits [^ObjectIdRef branch-ref]
-                        [branch-ref (bound-commit repo rev-walk (.getObjectId branch-ref))])] 
-          (let [branches (porcelain/git-branch-list repo)]
-            (map zip-commits branches))))
+  ([^Git repo] (branch-list-with-heads repo (new-rev-walk rev-walk)))
+  ([^Git repo
+    ^RevWalk rev-walk]
+    (letfn [(zip-commits [^ObjectIdRef branch-ref]
+                         [branch-ref (bound-commit repo rev-walk (.getObjectId branch-ref))])] 
+           (let [branches (porcelain/git-branch-list repo)]
+             (map zip-commits branches)))))
 
 (def cached-branch-list-with-heads (memo-lru branch-list-with-heads 100))
 
@@ -92,13 +93,15 @@
     (find-rev-commit repo (new-rev-walk repo))
     (changed-files repo)))
 
-(defn rev-list [^Git repo 
-                ^RevWalk rev-walk]
-  (.reset rev-walk)
-  (mark-all-heads-as-start-for! repo rev-walk)
-  (doto (RevCommitList.)
-    (.source rev-walk)
-    (.fillTo Integer/MAX_VALUE)))
+(defn rev-list 
+  ([^Git repo] (rev-list repo (new-rev-walk repo)))
+  ([^Git repo 
+    ^RevWalk rev-walk] 
+    (.reset rev-walk)
+    (mark-all-heads-as-start-for! repo rev-walk)
+    (doto (RevCommitList.)
+      (.source rev-walk)
+      (.fillTo Integer/MAX_VALUE))))
 
 (defn commit-info [^Git repo 
                    ^RevCommit rev-commit]
