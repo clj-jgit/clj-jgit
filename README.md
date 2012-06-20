@@ -104,7 +104,7 @@ This uses internal JGit API, so it may require some additional knowledge of JGit
 ```clj
 ;; This macro allows you to create a universal handler with name "repo"
 (with-repo "/path/to/a/repo"
-  ...)
+  (git-log repo))
 ```
 
 ```clj
