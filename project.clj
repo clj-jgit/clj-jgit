@@ -3,4 +3,6 @@
   :dependencies [[org.clojure/clojure "1.3.0"]
                  [org.eclipse.jgit "1.3.0.201202151440-r"]
                  [org.clojure/core.memoize "0.5.1"]]
-  :repositories {"jgit-repository" "http://download.eclipse.org/jgit/maven"})
+  :dev-dependencies [[com.stuartsierra/lazytest "1.2.3"]]
+  :repositories {"stuartsierra-releases" "http://stuartsierra.com/maven2"
+                 "jgit-repository" "http://download.eclipse.org/jgit/maven"})
