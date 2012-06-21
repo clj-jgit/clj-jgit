@@ -8,7 +8,7 @@
 (defn ^RevWalk new-rev-walk [^Git repo]
   (RevWalk. (.getRepository repo)))
 
-(defn new-tree-walk
+(defn ^TreeWalk new-tree-walk
   "Create new recursive TreeWalk instance"
   [^Git repo 
    ^RevCommit rev-commit]
@@ -17,14 +17,14 @@
     (.addTree (.getTree rev-commit))
     (.setRecursive true)))
 
-(defn bound-commit 
+(defn ^RevCommit bound-commit 
   "Find a RevCommit object in a RevWalk and bound to it."
   [^Git repo 
    ^RevWalk rev-walk 
    ^ObjectId rev-commit]
   (.parseCommit rev-walk rev-commit))
 
-(defn resolve-object
+(defn ^ObjectId resolve-object
   "Find ObjectId instance for any Git name: commit-ish, tree-ish or blob."
   [^Git repo 
    ^String commit-ish]
