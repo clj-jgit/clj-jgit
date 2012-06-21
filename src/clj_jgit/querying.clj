@@ -49,10 +49,13 @@
    ^ObjectId commit]
   (.isMergedInto rev-walk (cached-bound-commit repo rev-walk commit) branch-tip-commit))
 
-(defn branches-for [^Git repo 
-                    ^ObjectId rev-commit]
+(defn branches-for
   "List of branches in which specific commit is present"
-  (let [rev-walk (new-rev-walk repo)] 
+  ([^Git repo 
+    ^ObjectId rev-commit] (branches-for repo (new-rev-walk repo) rev-commit))
+  ([^Git repo
+    ^RevWalk rev-walk
+    ^ObjectId rev-commit]
     (->> 
       (for [[^ObjectIdRef branch-ref ^RevCommit branch-tip-commit] (cached-branch-list-with-heads repo rev-walk)]
         (if (commit-in-branch? repo rev-walk branch-tip-commit rev-commit)
@@ -86,21 +89,26 @@
       (.source rev-walk)
       (.fillTo Integer/MAX_VALUE))))
 
-(defn commit-info [^Git repo 
-                   ^RevCommit rev-commit]
-  (let [ident (.getAuthorIdent rev-commit)
-        time (-> (.getCommitTime rev-commit) (* 1000) java.util.Date.)
-        message (-> (.getFullMessage rev-commit) str string/trim)]
-    {:id (.getName rev-commit)
-     :repo repo
-     :author (.getName ident)
-     :email (.getEmailAddress ident)
-     :time time
-     :message message
-     :changed_files (changed-files repo rev-commit)
-     :merge (> (.getParentCount rev-commit) 1)
-     :branches (branches-for repo rev-commit)
-     :raw rev-commit}))
+(defn commit-info 
+  ([^Git repo
+    ^RevCommit rev-commit] (commit-info repo (new-rev-walk repo) rev-commit))
+  ([^Git repo
+    ^RevWalk rev-walk
+    ^RevCommit rev-commit]
+    (let [ident (.getAuthorIdent rev-commit)
+          time (-> (.getCommitTime rev-commit) (* 1000) java.util.Date.)
+          message (-> (.getFullMessage rev-commit) str string/trim)]
+      {:id (.getName rev-commit)
+       :repo repo
+       :author (.getName ident)
+       :email (.getEmailAddress ident)
+       :time time
+       :message message
+       :changed_files (changed-files repo rev-commit)
+       :merge (> (.getParentCount rev-commit) 1)
+       :branches (branches-for repo rev-walk rev-commit)
+       :raw rev-commit ; can't retain commit because then RevCommit can't be garbage collected
+       })))
 
 (defn- mark-all-heads-as-start-for! [^Git repo
                                      ^RevWalk rev-walk]
