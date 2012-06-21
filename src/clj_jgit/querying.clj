@@ -43,7 +43,10 @@
 
 (defn commit-in-branch? 
   "Checks if commit is merged into branch"
-  [repo rev-walk branch-tip-commit commit]
+  [^Git repo
+   ^RevWalk rev-walk 
+   ^RevCommit branch-tip-commit 
+   ^ObjectId commit]
   (.isMergedInto rev-walk (cached-bound-commit repo rev-walk commit) branch-tip-commit))
 
 (defn branches-for [^Git repo 
