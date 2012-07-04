@@ -1,48 +1,20 @@
-(ns clj-jgit.test.low-level
+(ns clj-jgit.test.querying
   (:use 
-    [clj-jgit.low-level]
+    [clj-jgit.test.helpers]
+    [clj-jgit.internal]
+    [clj-jgit.porcelain]
+    [clj-jgit.querying]
     [clojure.test])
   (:import 
     [java.io File]
     [org.eclipse.jgit.api Git]
-    [org.eclipse.jgit.lib Repository AnyObjectId]
+    [org.eclipse.jgit.lib Repository AnyObjectId ObjectId]
     [org.eclipse.jgit.revwalk RevWalk RevCommit]
     [org.eclipse.jgit.storage.file RefDirectory$LooseUnpeeled]))
 
-; Using clj-jgit repo for read-only tests
-(def read-only-repo-path (System/getProperty "user.dir"))
-
-(defmacro read-only-repo [& body]
-  `(with-repo ~read-only-repo-path
-     ~@body))
-
-(testing "with-repo macro"
-  (read-only-repo
-    (is (instance? Git (:git repo)))
-    (is (instance? Repository (:raw repo)))
-    (is (instance? RevWalk (:walk repo)))))
-
-(testing "find-rev-commit"
-  (read-only-repo
-    (is
-      #(instance? RevCommit %)
-      (find-object-id repo "38dd57264cf5c05fb77211c8347d1f16e4474623"))
-    (is
-      #(instance? RevCommit %)
-      (find-object-id repo "master"))))
-
-(testing "commit-in-rev-walk"
-  (read-only-repo
-    (let [first-commit (find-rev-commit repo "38dd57264cf5c05fb77211c8347d1f16e4474623")
-          master (find-object-id repo "master")]
-      (is
-        (instance? RevCommit (bound-commit repo first-commit)))
-      (is
-        (instance? RevCommit (bound-commit repo master))))))
-
 (testing "branch-list-with-heads"
   (read-only-repo
-    (let [branches (branch-list-with-heads repo)
+    (let [branches (branch-list-with-heads repo (new-rev-walk repo))
           [branch-ref head-rev] (first branches)]
       (is (seq? branches))
       (is (instance? RefDirectory$LooseUnpeeled branch-ref))
@@ -50,7 +22,7 @@
 
 (testing "branches-for"
   (read-only-repo
-    (let [first-commit (find-object-id repo "38dd57264cf5c05fb77211c8347d1f16e4474623")]
+    (let [first-commit (resolve-object repo "38dd57264cf5c05fb77211c8347d1f16e4474623")]
       (is (= ["refs/heads/master"] (branches-for repo first-commit))))))
 
 (testing "changed-files" 
@@ -78,13 +50,20 @@
 
 (testing "rev-list"
   (read-only-repo
-    (is (>= (count (rev-list repo)) 24))))
+    (is (>= (count (rev-list repo (new-rev-walk repo))) 24))))
+
+(testing "find-rev-commit"
+  (read-only-repo
+    (are [commit-ish] (instance? RevCommit (find-rev-commit repo (new-rev-walk repo) commit-ish))
+         "master"
+         "38dd57264cf5c05fb77211c8347d1f16e4474623"
+         "master^")))
 
 (testing "commit-info"
   (read-only-repo
     (are 
-      [commit-ish info] (= info (-> commit-ish 
-                                  ((partial find-rev-commit repo)) 
+      [commit-ish info] (= info (-> commit-ish
+                                  ((partial find-rev-commit repo (new-rev-walk repo))) 
                                   ((partial commit-info repo))
                                   (dissoc :repo :raw :time)))
       "38dd57264cf5c05fb77211c8347d1f16e4474623" {:changed_files 
@@ -126,3 +105,4 @@
                                                   :branches ["refs/heads/master"], 
                                                   :merge true, 
                                                   :id "0d3d1c2e7b6c47f901fcae9ef661a22948c64573"})))
+
