@@ -1,6 +1,8 @@
 (ns clj-jgit.porcelain
   (:require [clojure.java.io :as io]
             [clj-jgit.util :as util])
+  (:use
+    clj-jgit.internal)
   (:import [java.io.FileNotFoundException]
            [org.eclipse.jgit.lib RepositoryBuilder]
            [org.eclipse.jgit.api
@@ -25,6 +27,13 @@
         (Git. repo))
       (throw (java.io.FileNotFoundException.
               (str "The Git repository at '" path "' could not be located."))))))
+
+(defmacro with-repo
+  "Binds `repo` to a repository handle"
+  [path & body]
+  `(let [~'repo (load-repo ~path)
+         ~'rev-walk (new-rev-walk ~'repo)]
+     ~@body))
 
 (defn git-add
   "The `file-pattern` is either a single file name (exact, not a pattern) or the name of a directory. If a directory is supplied, all files within that directory will be added. If `only-update?` is set to `true`, only files which are already part of the index will have their changes staged (i.e. no previously untracked files will be added to the index)."
@@ -234,6 +243,11 @@
     (seq (-> repo
            (.log)
            (.call))))
+  ([repo hash]
+    (seq (-> repo
+           (.log)
+           (.add (resolve-object repo hash))
+           (.call))))
   ([repo hash-a hash-b]
     (seq (-> repo
            (log-builder hash-a hash-b)
@@ -241,11 +255,10 @@
 
 (defn- log-builder [repo hash-a hash-b]
   "Builds a log command object for a range of commit-ish names"
-  (let [log (.log repo)
-        raw-repo (.getRepository repo)] 
+  (let [log (.log repo)] 
     (if (= hash-a "0000000000000000000000000000000000000000")
-      (.add log (.resolve raw-repo hash-b))
-      (.addRange log (.resolve raw-repo hash-a) (.resolve raw-repo hash-b)))))
+      (.add log (resolve-object repo hash-b))
+      (.addRange log (resolve-object repo hash-a) (resolve-object repo hash-b)))))
 
 (defn git-merge
   [repo commit-ref]

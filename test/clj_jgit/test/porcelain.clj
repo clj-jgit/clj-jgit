@@ -1,7 +1,11 @@
 (ns clj-jgit.test.porcelain
-  (:use [clj-jgit.porcelain]
+  (:use [clj-jgit.test.helpers]
+        [clj-jgit.porcelain]
         [clojure.test])
-  (:import [java.io File]))
+  (:import 
+    [java.io File]
+    [org.eclipse.jgit.api Git]
+    [org.eclipse.jgit.revwalk RevWalk]))
 
 (defn- get-temp-dir
   "Returns a temporary directory"
@@ -17,3 +21,8 @@
 (deftest test-git-init
   (let [repo-dir (get-temp-dir)]
      (is #(nil? %) (git-init repo-dir))))
+
+(testing "with-repo macro"
+  (read-only-repo
+    (is (instance? Git repo))
+    (is (instance? RevWalk rev-walk))))
