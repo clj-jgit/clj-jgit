@@ -4,6 +4,7 @@
                  [org.eclipse.jgit "1.3.0.201202151440-r"]
                  [org.clojure/core.memoize "0.5.1"]]
   :dev-dependencies [[com.stuartsierra/lazytest "1.2.3"]
+                     [fs "1.3.2"]
                      [midje "1.4.0"]
                      [lein-marginalia "0.7.1"]
                      [lein-clojars "0.9.0"]
