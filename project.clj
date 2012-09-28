@@ -1,4 +1,4 @@
-(defproject clj-jgit "0.1"
+(defproject clj-jgit "0.2"
   :description "Clojure wrapper for JGit"
   :dependencies [[org.clojure/clojure "1.3.0"]
                  [org.eclipse.jgit "1.3.0.201202151440-r"]
