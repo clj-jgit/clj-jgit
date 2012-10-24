@@ -1,5 +1,6 @@
 (ns clj-jgit.porcelain
   (:require [clojure.java.io :as io]
+            [clojure.string :as str]
             [clj-jgit.util :as util])
   (:use
     clj-jgit.internal)
@@ -60,6 +61,18 @@
                           (.setListMode (opt opt-val))
                           (.call)))]
        (seq branches))))
+
+(defn git-branch-current* [repo] (.getFullBranch (.getRepository repo)))
+
+(defn git-branch-current
+  "The current branch of the git repo"
+  [repo]
+  (str/replace (git-branch-current* repo) #"^refs/heads/" ""))
+
+(defn git-branch-attached?
+  "Is the current repo on a branch (true) or in a detached HEAD state?"
+  [repo]
+  (not (nil? (re-find #"^refs/heads/" (git-branch-current* repo)))))
 
 (defn git-branch-create
   "Create a new branch in the Git repository."
