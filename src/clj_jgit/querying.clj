@@ -46,8 +46,8 @@
   [^Git repo
    ^RevWalk rev-walk 
    ^RevCommit branch-tip-commit 
-   ^ObjectId commit]
-  (.isMergedInto rev-walk (cached-bound-commit repo rev-walk commit) branch-tip-commit))
+   ^ObjectId bound-commit]
+  (.isMergedInto rev-walk bound-commit branch-tip-commit))
 
 (defn branches-for
   "List of branches in which specific commit is present"
@@ -56,11 +56,13 @@
   ([^Git repo
     ^RevWalk rev-walk
     ^ObjectId rev-commit]
-    (->> 
-      (for [[^ObjectIdRef branch-ref ^RevCommit branch-tip-commit] (cached-branch-list-with-heads repo rev-walk)]
-        (if (commit-in-branch? repo rev-walk branch-tip-commit rev-commit)
-          (.getName branch-ref)))
-      (remove nil?))))
+    (let [bound-commit (bound-commit repo rev-walk rev-commit) ; (cached-bound-commit repo rev-walk commit)
+          branch-list (cached-branch-list-with-heads repo rev-walk)] 
+      (->> 
+        (for [[^ObjectIdRef branch-ref ^RevCommit branch-tip-commit] branch-list]
+          (if (commit-in-branch? repo rev-walk branch-tip-commit bound-commit)
+            (.getName branch-ref)))
+        (remove nil?)))))
 
 (defn changed-files [^Git repo 
                      ^RevCommit rev-commit]
