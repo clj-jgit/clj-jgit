@@ -2,6 +2,10 @@
 
 Clojure wrapper for using the JGit library to manipulate Git repositories in a "pure Java" fashion.
 
+## Installation ##
+
+Last stable version is available on [Clojars](https://clojars.org/clj-jgit).
+
 ## Quickstart Tutorial ##
 
 This brief tutorial will show you how to: 
