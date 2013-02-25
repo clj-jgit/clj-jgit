@@ -56,8 +56,8 @@
   ([^Git repo
     ^RevWalk rev-walk
     ^ObjectId rev-commit]
-    (let [bound-commit (bound-commit repo rev-walk rev-commit) ; (cached-bound-commit repo rev-walk commit)
-          branch-list (cached-branch-list-with-heads repo rev-walk)] 
+    (let [bound-commit (bound-commit repo rev-walk rev-commit)
+          branch-list (branch-list-with-heads repo rev-walk)]
       (->> 
         (for [[^ObjectIdRef branch-ref ^RevCommit branch-tip-commit] branch-list]
           (if (commit-in-branch? repo rev-walk branch-tip-commit bound-commit)
