@@ -162,7 +162,7 @@ This uses internal JGit API, so it may require some additional knowledge of JGit
 
 ;; You can also combine this with Porcelain API, to get a list of all commits in a repo with detailed information
 (with-repo "/path/to/repo.git"
-  (map #(commit-info repo) (git-log repo)))
+  (map #(commit-info repo %) (git-log repo)))
 ```
 ### Contribute ###
 
