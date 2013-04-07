@@ -11,7 +11,7 @@
     [org.eclipse.jgit.util.io DisabledOutputStream]
     [org.eclipse.jgit.diff RawTextComparator]
     [org.eclipse.jgit.revwalk RevWalk RevCommit RevCommitList]
-    [org.eclipse.jgit.lib FileMode Repository ObjectIdRef ObjectId]
+    [org.eclipse.jgit.lib FileMode Repository ObjectIdRef ObjectId AnyObjectId]
     [org.eclipse.jgit.api Git LogCommand]
     [org.eclipse.jgit.storage.file RefDirectory$LooseNonTag]))
 
@@ -163,7 +163,7 @@
     ^RevWalk rev-walk
     ^RefDirectory$LooseNonTag object] 
     (.reset rev-walk)
-    (.markStart rev-walk (.lookupCommit ^RevWalk rev-walk ^org.eclipse.jgit.lib.AnyObjectId (.getObjectId object)))
+    (.markStart rev-walk (.lookupCommit ^RevWalk rev-walk ^AnyObjectId (.getObjectId object)))
     (.toArray 
       (doto (RevCommitList.)
         (.source rev-walk)
