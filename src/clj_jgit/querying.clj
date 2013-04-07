@@ -18,8 +18,6 @@
          changed-files-in-first-commit parse-diff-entry
          mark-all-heads-as-start-for!)
 
-(def cached-bound-commit (memo-lru bound-commit 10000))
-
 (defn find-rev-commit
   "Find RevCommit instance in RevWalk by commit-ish"
   [^Git repo
@@ -27,7 +25,7 @@
    commit-ish]
   (->> commit-ish
     (resolve-object repo) 
-    (cached-bound-commit repo rev-walk)))
+    (bound-commit repo rev-walk)))
 
 (defn branch-list-with-heads
   "List of branches for a repo in pairs of [branch-ref branch-tip-commit]"
