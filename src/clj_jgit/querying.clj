@@ -35,9 +35,7 @@
     (letfn [(zip-commits [^ObjectIdRef branch-ref]
                          [branch-ref (bound-commit repo rev-walk (.getObjectId branch-ref))])] 
            (let [branches (porcelain/git-branch-list repo)]
-             (map zip-commits branches)))))
-
-(def cached-branch-list-with-heads (memo-lru branch-list-with-heads 100))
+             (doall (map zip-commits branches))))))
 
 (defn commit-in-branch? 
   "Checks if commit is merged into branch"
