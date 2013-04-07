@@ -47,18 +47,19 @@
 
 (defn branches-for
   "List of branches in which specific commit is present"
-  ([^Git repo 
-    ^ObjectId rev-commit] (branches-for repo (new-rev-walk repo) rev-commit))
   ([^Git repo
-    ^RevWalk rev-walk
     ^ObjectId rev-commit]
-    (let [bound-commit (bound-commit repo rev-walk rev-commit)
+    (let [rev-walk (new-rev-walk repo)
+          bound-commit (bound-commit repo rev-walk rev-commit)
           branch-list (branch-list-with-heads repo rev-walk)]
       (->> 
-        (for [[^ObjectIdRef branch-ref ^RevCommit branch-tip-commit] branch-list]
-          (if (commit-in-branch? repo rev-walk branch-tip-commit bound-commit)
-            (.getName branch-ref)))
-        (remove nil?)))))
+        (for [[^ObjectIdRef branch-ref ^RevCommit branch-tip-commit] branch-list
+              :when branch-tip-commit]
+          (do
+            (when (commit-in-branch? repo rev-walk branch-tip-commit bound-commit)
+              (.getName branch-ref))))
+        (remove nil?)
+        doall))))
 
 (defn changed-files [^Git repo 
                      ^RevCommit rev-commit]
