@@ -12,7 +12,8 @@
     [org.eclipse.jgit.diff RawTextComparator]
     [org.eclipse.jgit.revwalk RevWalk RevCommit RevCommitList]
     [org.eclipse.jgit.lib FileMode Repository ObjectIdRef ObjectId]
-    [org.eclipse.jgit.api Git LogCommand]))
+    [org.eclipse.jgit.api Git LogCommand]
+    [org.eclipse.jgit.storage.file RefDirectory$LooseNonTag]))
 
 (declare change-kind create-tree-walk diff-formatter-for-changes
          changed-files-in-first-commit parse-diff-entry
@@ -88,26 +89,36 @@
       (.source rev-walk)
       (.fillTo Integer/MAX_VALUE))))
 
+(defn commit-info-without-branch
+  [^Git repo
+   ^RevWalk rev-walk
+   ^RevCommit rev-commit]
+  (let [ident (.getAuthorIdent rev-commit)
+        time (-> (.getCommitTime rev-commit) (* 1000) java.util.Date.)
+        message (-> (.getFullMessage rev-commit) str string/trim)]
+    {:id (.getName rev-commit)
+     :repo repo
+     :author (.getName ident)
+     :email (.getEmailAddress ident)
+     :time time
+     :message message
+     :changed_files (changed-files repo rev-commit)
+     :merge (> (.getParentCount rev-commit) 1)
+     :raw rev-commit ; can't retain commit because then RevCommit can't be garbage collected
+     }))
+
 (defn commit-info 
-  ([^Git repo
-    ^RevCommit rev-commit] (commit-info repo (new-rev-walk repo) rev-commit))
+  ([^Git repo, ^RevCommit rev-commit] 
+    (commit-info repo (new-rev-walk repo) rev-commit))
+  ([^Git repo, ^RevWalk rev-walk, ^RevCommit rev-commit]
+    (merge (commit-info-without-branch repo rev-walk rev-commit)
+      {:branches (branches-for repo rev-commit)}))
   ([^Git repo
     ^RevWalk rev-walk
+    commit-map
     ^RevCommit rev-commit]
-    (let [ident (.getAuthorIdent rev-commit)
-          time (-> (.getCommitTime rev-commit) (* 1000) java.util.Date.)
-          message (-> (.getFullMessage rev-commit) str string/trim)]
-      {:id (.getName rev-commit)
-       :repo repo
-       :author (.getName ident)
-       :email (.getEmailAddress ident)
-       :time time
-       :message message
-       :changed_files (changed-files repo rev-commit)
-       :merge (> (.getParentCount rev-commit) 1)
-       :branches (branches-for repo rev-walk rev-commit)
-       :raw rev-commit ; can't retain commit because then RevCommit can't be garbage collected
-       })))
+    (merge (commit-info-without-branch repo rev-walk rev-commit)
+      {:branches (map #(.getName %) (or (.get commit-map rev-commit) []))})))
 
 (defn- mark-all-heads-as-start-for! [^Git repo
                                      ^RevWalk rev-walk]
@@ -146,3 +157,29 @@
       (= old-path "dev/null") [new-path change-kind]
       (= new-path "dev/null") [old-path change-kind]
       :else [old-path change-kind new-path])))
+
+(defn rev-list-for
+  ([^Git repo 
+    ^RevWalk rev-walk
+    ^RefDirectory$LooseNonTag object] 
+    (.reset rev-walk)
+    (.markStart rev-walk (.lookupCommit ^RevWalk rev-walk ^org.eclipse.jgit.lib.AnyObjectId (.getObjectId object)))
+    (.toArray 
+      (doto (RevCommitList.)
+        (.source rev-walk)
+        (.fillTo Integer/MAX_VALUE)))))
+
+(defn- add-branch-to-map
+  [repo rev-walk branch ^java.util.HashMap m]
+  (let [^"[Ljava.lang.Object;" revs (rev-list-for repo rev-walk branch)]
+    (dotimes [i (alength revs)]
+      (let [c (aget revs i)]
+        (.put m c (conj (or (.get m c) []) branch))))))
+
+(defn build-commit-map
+  ([repo] (build-commit-map repo (new-rev-walk repo)))
+  ([repo rev-walk]
+    (let [^java.util.HashMap m (java.util.HashMap.)]
+      (loop [[branch & branches] (vals (.getRefs (.getRefDatabase (.getRepository repo)) "refs/heads/"))]
+        (add-branch repo rev-walk branch m)
+        (if branches (recur branches) m)))))
