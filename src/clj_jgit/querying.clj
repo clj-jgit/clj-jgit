@@ -89,7 +89,7 @@
       (.source rev-walk)
       (.fillTo Integer/MAX_VALUE))))
 
-(defn commit-info-without-branch
+(defn commit-info-without-branches
   [^Git repo
    ^RevWalk rev-walk
    ^RevCommit rev-commit]
@@ -111,13 +111,13 @@
   ([^Git repo, ^RevCommit rev-commit] 
     (commit-info repo (new-rev-walk repo) rev-commit))
   ([^Git repo, ^RevWalk rev-walk, ^RevCommit rev-commit]
-    (merge (commit-info-without-branch repo rev-walk rev-commit)
+    (merge (commit-info-without-branches repo rev-walk rev-commit)
       {:branches (branches-for repo rev-commit)}))
   ([^Git repo
     ^RevWalk rev-walk
     commit-map
     ^RevCommit rev-commit]
-    (merge (commit-info-without-branch repo rev-walk rev-commit)
+    (merge (commit-info-without-branches repo rev-walk rev-commit)
       {:branches (map #(.getName %) (or (.get commit-map rev-commit) []))})))
 
 (defn- mark-all-heads-as-start-for! [^Git repo
