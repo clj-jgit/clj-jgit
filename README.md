@@ -163,6 +163,20 @@ This uses internal JGit API, so it may require some additional knowledge of JGit
 ;; You can also combine this with Porcelain API, to get a list of all commits in a repo with detailed information
 (with-repo "/path/to/repo.git"
   (map #(commit-info repo %) (git-log repo)))
+  
+;; Branches lookup is an expensive operation, especially for repos with many branches.
+;; commit-info spends most of it time trying to detect list of branches commit belongs to.
+
+; If you don't require branches list in commit info, you can use:
+(commit-info-without-branches repo rev-walk rev-commit)
+
+; If you want branches list, but want it to work faster, you can generate commit map that turns
+; commits and branches into a map for fast branch lookups. In real-life this can give 30x-100x speed
+; up when you are traversing lists of commits, depending on amount of branches you have.
+(let [rev-walk (new-rev-walk repo)
+      commit-map (build-commit-map repo rev-walk)
+      commits (git-log repo)]
+  (map (partial commit-info repo rev-walk commit-map) commits))
 ```
 ### Contribute ###
 
