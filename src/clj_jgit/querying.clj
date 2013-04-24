@@ -11,9 +11,10 @@
     [org.eclipse.jgit.util.io DisabledOutputStream]
     [org.eclipse.jgit.diff RawTextComparator]
     [org.eclipse.jgit.revwalk RevWalk RevCommit RevCommitList]
-    [org.eclipse.jgit.lib FileMode Repository ObjectIdRef ObjectId AnyObjectId]
+    [org.eclipse.jgit.lib FileMode Repository ObjectIdRef ObjectId AnyObjectId Ref]
     [org.eclipse.jgit.api Git LogCommand]
-    [org.eclipse.jgit.storage.file RefDirectory$LooseNonTag]))
+    [org.eclipse.jgit.storage.file RefDirectory$LooseNonTag]
+    [java.util HashMap]))
 
 (declare change-kind create-tree-walk diff-formatter-for-changes
          changed-files-in-first-commit parse-diff-entry
@@ -115,10 +116,10 @@
       {:branches (branches-for repo rev-commit)}))
   ([^Git repo
     ^RevWalk rev-walk
-    commit-map
+    ^java.util.HashMap commit-map
     ^RevCommit rev-commit]
     (merge (commit-info-without-branch repo rev-walk rev-commit)
-      {:branches (map #(.getName %) (or (.get commit-map rev-commit) []))})))
+      {:branches (map #(.getName ^Ref %) (or (.get commit-map rev-commit) []))})))
 
 (defn- mark-all-heads-as-start-for! [^Git repo
                                      ^RevWalk rev-walk]
