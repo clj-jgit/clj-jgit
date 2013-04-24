@@ -18,7 +18,8 @@
         "Name: " (.getName o) ", "
         "ObjectId: " (.getName (.getObjectId o)) ">") w))
 
-(defn normalize-path [path]
+(defn normalize-path 
+  [path]
   (if (= path "/")
     "/"
     (if (= (first path) \/)

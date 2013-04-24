@@ -5,27 +5,25 @@
     [org.eclipse.jgit.lib ObjectId]
     [org.eclipse.jgit.api Git]))
 
-(defn ^RevWalk new-rev-walk [^Git repo]
+(defn new-rev-walk 
+  "Creates a new RevWalk instance (mutable)"
+  ^org.eclipse.jgit.revwalk.RevWalk [^Git repo]
   (RevWalk. (.getRepository repo)))
 
-(defn ^TreeWalk new-tree-walk
-  "Create new recursive TreeWalk instance"
-  [^Git repo 
-   ^RevCommit rev-commit]
+(defn new-tree-walk
+  "Create new recursive TreeWalk instance (mutable)"
+  ^org.eclipse.jgit.treewalk.TreeWalk [^Git repo ^RevCommit rev-commit]
   (doto
     (TreeWalk. (.getRepository repo))
     (.addTree (.getTree rev-commit))
     (.setRecursive true)))
 
-(defn ^RevCommit bound-commit 
+(defn bound-commit 
   "Find a RevCommit object in a RevWalk and bound to it."
-  [^Git repo 
-   ^RevWalk rev-walk 
-   ^ObjectId rev-commit]
+  ^org.eclipse.jgit.revwalk.RevCommit [^Git repo ^RevWalk rev-walk ^ObjectId rev-commit]
   (.parseCommit rev-walk rev-commit))
 
-(defn ^ObjectId resolve-object
+(defn resolve-object
   "Find ObjectId instance for any Git name: commit-ish, tree-ish or blob."
-  [^Git repo 
-   ^String commit-ish]
+  ^org.eclipse.jgit.lib.ObjectId [^Git repo ^String commit-ish]
   (.resolve (.getRepository repo) commit-ish))
