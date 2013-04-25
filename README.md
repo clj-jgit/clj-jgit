@@ -6,7 +6,7 @@ You can view latest auto-generated API documentation here: [clj-jgit.github.io/c
 
 ## Installation ##
 
-Last stable version is available on [Clojars](https://clojars.org/clj-jgit).
+Last stable version is available on [Clojars](http://clojars.org/clj-jgit).
 
 ## Quickstart Tutorial ##
 
