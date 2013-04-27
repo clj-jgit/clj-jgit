@@ -3510,7 +3510,7 @@ net.brehaut.ClojureTools = (function (SH) {
   (print-simple
    (str &quot;#&lt;&quot; (.replaceFirst (str (.getClass o)) &quot;class &quot; &quot;&quot;) &quot;, &quot;
         &quot;Name: &quot; (.getName o) &quot;, &quot;
-        &quot;ObjectId: &quot; (.getName (.getObjectId o)) &quot;&gt;&quot;) w))</pre></td></tr><tr><td class="docs">
+        &quot;ObjectId: &quot; (.getName (.getObjectId o)) &quot;&gt;&quot;) w))</pre></td></tr><tr><td class="docs"><p>Removes a leading slash from a path</p>
 </td><td class="codes"><pre class="brush: clojure">(defn normalize-path 
   [path]
   (if (= path &quot;/&quot;)
