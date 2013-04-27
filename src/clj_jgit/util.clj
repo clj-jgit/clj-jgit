@@ -19,6 +19,7 @@
         "ObjectId: " (.getName (.getObjectId o)) ">") w))
 
 (defn normalize-path 
+  "Removes a leading slash from a path"
   [path]
   (if (= path "/")
     "/"
