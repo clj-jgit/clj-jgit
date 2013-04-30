@@ -15,21 +15,27 @@
 
 (declare log-builder)
 
+(defn- guess-repo-path
+  [^String path]
+  (let [with-git (io/as-file (str path "/.git"))
+        bare (io/as-file (str path "/refs"))] 
+    (cond 
+      (.endsWith path ".git") (io/as-file path)
+      (.exists with-git) with-git
+      (.exists bare) (io/as-file path))))
+
 (defn load-repo
   "Given a path (either to the parent folder or to the `.git` folder itself), load the Git repository"
-  ^org.eclipse.jgit.api.Git [path]
-  (let [dir (if (not (re-find #"\.git$" path))
-              (io/as-file (str path "/.git"))
-              (io/as-file path))]
-    (if (.exists dir)
-      (let [repo (-> (RepositoryBuilder.)
-                     (.setGitDir dir)
-                     (.readEnvironment)
-                     (.findGitDir)
-                     (.build))]
-        (Git. repo))
-      (throw (FileNotFoundException.
-              (str "The Git repository at '" path "' could not be located."))))))
+  (^org.eclipse.jgit.api.Git [path]
+    (if-let [guessed-path (guess-repo-path path)]
+      (-> (RepositoryBuilder.)
+        (.setGitDir guessed-path)
+        (.readEnvironment)
+        (.findGitDir)
+        (.build)
+        (Git.))
+      (throw 
+        (FileNotFoundException. (str "The Git repository at '" path "' could not be located."))))))
 
 (defmacro with-repo
   "Binds `repo` to a repository handle"
