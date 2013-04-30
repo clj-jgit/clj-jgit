@@ -341,3 +341,23 @@
                      {field (into #{} ((field status-fns) status))})))))
 
 (defn git-tag [])
+
+(defonce fake-repo 
+  (let [path (str (System/getProperty "java.io.tmpdir") "fake-empty-repo.clj-jgit")]
+    (if-not (.exists (java.io.File. path))
+      (git-init path)
+      (load-repo path))))
+
+(defn git-ls-remote
+  ([^Git repo]
+    (-> repo .lsRemote .call))
+  ([^Git repo remote]
+    (-> repo .lsRemote 
+      (.setRemote remote) 
+      .call))
+  ([^Git repo remote opts]
+    (-> repo .lsRemote
+      (.setRemote remote)
+      (.setHeads (:heads opts false))
+      (.setTags (:tags opts false))
+      (.call))))
