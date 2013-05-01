@@ -10,8 +10,10 @@
             Git
             InitCommand StatusCommand AddCommand
             ListBranchCommand PullCommand MergeCommand LogCommand
-            LsRemoteCommand Status]
-           [org.eclipse.jgit.transport FetchResult]))
+            LsRemoteCommand Status ResetCommand$ResetType]
+           [org.eclipse.jgit.transport FetchResult]
+           [org.eclipse.jgit.merge MergeStrategy]
+           [clojure.lang Keyword]))
 
 (declare log-builder)
 
@@ -306,13 +308,27 @@
       (.add log (resolve-object hash-b repo))
       (.addRange log (resolve-object hash-a repo) (resolve-object hash-b repo)))))
 
+(def merge-strategies 
+  {:ours MergeStrategy/OURS
+   :resolve MergeStrategy/RESOLVE
+   :simple-two-way MergeStrategy/SIMPLE_TWO_WAY_IN_CORE
+   :theirs MergeStrategy/THEIRS})
 
 (defn git-merge
-  [^Git repo commit-ref]
-  (-> repo
-      (.merge)
-      ^MergeCommand (.include commit-ref)
-      (.call)))
+  ([^Git repo commit-ref]
+    (let [commit-obj (resolve-object commit-ref repo)] 
+      (-> repo
+        (.merge)
+        ^MergeCommand (.include commit-obj)
+        (.call))))
+  ([^Git repo commit-ref ^Keyword strategy]
+    (let [commit-obj (resolve-object commit-ref repo)
+          strategy-obj ^MergeStrategy (merge-strategies strategy)]
+      (-> repo
+        (.merge)
+        ^MergeCommand (.include commit-obj)
+        ^MergeCommand (.setStrategy strategy-obj)
+        (.call)))))
 
 (defn git-pull
   "NOT WORKING: Requires work with configuration"
