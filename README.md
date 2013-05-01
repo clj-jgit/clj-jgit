@@ -2,7 +2,7 @@
 
 Clojure wrapper for using the JGit library to manipulate Git repositories in a "pure Java" fashion.
 
-You can view latest auto-generated API documentation here: [clj-jgit.github.io/clj-jgit](https://clj-jgit.github.io/clj-jgit).
+You can view latest auto-generated API documentation here: [clj-jgit.github.io/clj-jgit](http://clj-jgit.github.io/clj-jgit).
 
 ## Installation ##
 
