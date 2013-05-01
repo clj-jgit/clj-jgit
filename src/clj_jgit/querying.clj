@@ -22,8 +22,7 @@
 (defn find-rev-commit
   "Find RevCommit instance in RevWalk by commit-ish"
   [^Git repo ^RevWalk rev-walk commit-ish]
-  (->> commit-ish
-    (resolve-object repo) 
+  (->> (resolve-object commit-ish repo)
     (bound-commit repo rev-walk)))
 
 (defn branch-list-with-heads

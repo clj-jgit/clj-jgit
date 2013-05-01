@@ -291,7 +291,7 @@
   ([^Git repo hash]
     (seq (-> repo
            (.log)
-           (.add (resolve-object repo hash))
+           (.add (resolve-object hash repo))
            (.call))))
   ([^Git repo hash-a hash-b]
     (seq (-> repo
@@ -303,8 +303,9 @@
   ^org.eclipse.jgit.api.LogCommand [^Git repo hash-a hash-b]
   (let [log (.log repo)] 
     (if (= hash-a "0000000000000000000000000000000000000000")
-      (.add log (resolve-object repo hash-b))
-      (.addRange log (resolve-object repo hash-a) (resolve-object repo hash-b)))))
+      (.add log (resolve-object hash-b repo))
+      (.addRange log (resolve-object hash-a repo) (resolve-object hash-b repo)))))
+
 
 (defn git-merge
   [^Git repo commit-ref]

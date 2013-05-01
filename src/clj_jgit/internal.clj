@@ -28,7 +28,25 @@
   ^org.eclipse.jgit.revwalk.RevCommit [^Git repo ^RevWalk rev-walk ^ObjectId rev-commit]
   (.parseCommit rev-walk rev-commit))
 
-(defn resolve-object
-  "Find ObjectId instance for any Git name: commit-ish, tree-ish or blob."
-  ^org.eclipse.jgit.lib.ObjectId [^Git repo ^String commit-ish]
-  (.resolve (.getRepository repo) commit-ish))
+(defprotocol Resolvable
+  (resolve-object [commit-ish repo] 
+    "Find ObjectId instance for any Git name: commit-ish, tree-ish or blob. Accepts ObjectId instances and just passes them through."))
+
+(extend-type String
+  Resolvable
+  (resolve-object 
+    ^org.eclipse.jgit.lib.ObjectId [^String commit-ish ^Git repo]
+    (.resolve (.getRepository repo) commit-ish)))
+
+(extend-type ObjectId
+  Resolvable
+  (resolve-object 
+    ^org.eclipse.jgit.lib.ObjectId [commit-ish ^Git repo]
+    commit-ish))
+
+(extend-type Git
+  Resolvable
+  (resolve-object 
+    ^org.eclipse.jgit.lib.ObjectId [^Git repo commit-ish]
+    "For compatibility with previous implementation of resolve-object, which would take repo as a first argument."
+    (resolve-object commit-ish repo)))
