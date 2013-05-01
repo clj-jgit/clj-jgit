@@ -3,7 +3,12 @@
     [org.eclipse.jgit.revwalk RevWalk RevCommit RevCommitList]
     [org.eclipse.jgit.treewalk TreeWalk]
     [org.eclipse.jgit.lib ObjectId]
-    [org.eclipse.jgit.api Git]))
+    [org.eclipse.jgit.api Git]
+    [org.eclipse.jgit.transport RefSpec]))
+
+(defn ref-spec 
+  ^org.eclipse.jgit.transport.RefSpec [str]
+  (RefSpec. str))
 
 (defn new-rev-walk 
   "Creates a new RevWalk instance (mutable)"

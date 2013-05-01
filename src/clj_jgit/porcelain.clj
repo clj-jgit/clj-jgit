@@ -258,14 +258,20 @@
 (defn git-fetch
   (^org.eclipse.jgit.transport.FetchResult [^Git repo]
      (-> repo
-         (.fetch)
-         (.setRemote "master")
-         (.call)))
+       (.fetch)
+       (.setRemote "master")
+       (.call)))
   (^org.eclipse.jgit.transport.FetchResult [^Git repo remote]
      (-> repo
-         (.fetch)
-         (.setRemote remote)
-         (.call))))
+       (.fetch)
+       (.setRemote remote)
+       (.call)))
+  (^org.eclipse.jgit.transport.FetchResult [^Git repo remote & refs]
+     (-> repo
+       (.fetch)
+       (.setRefSpecs (map ref-spec refs))
+       (.setRemote remote)
+       (.call))))
 
 (defn git-init
   "Initialize and load a new Git repository"
