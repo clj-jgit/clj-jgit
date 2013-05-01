@@ -367,3 +367,21 @@
       (.setHeads (:heads opts false))
       (.setTags (:tags opts false))
       (.call))))
+
+(def reset-modes
+  {:hard ResetCommand$ResetType/HARD
+   :keep ResetCommand$ResetType/KEEP
+   :merge ResetCommand$ResetType/MERGE
+   :mixed ResetCommand$ResetType/MIXED
+   :soft ResetCommand$ResetType/SOFT})
+
+(defn git-reset
+  ([^Git repo ref]
+    (-> repo .reset
+      (.setRef ref)
+      (.call)))
+  ([^Git repo ref mode-sym]
+    (-> repo .reset
+      (.setRef ref)
+      (.setMode ^ResetCommand$ResetType (reset-modes mode-sym))
+      (.call))))
