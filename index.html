@@ -3028,14 +3028,18 @@ net.brehaut.ClojureTools = (function (SH) {
     build_tree: build_tree
   };
 })(SyntaxHighlighter);
-</script><title>clj-jgit -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">clj-jgit</h1><h2 class="project-version">0.3.3</h2><br /><p>Clojure wrapper for JGit</p>
+</script><title>clj-jgit -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">clj-jgit</h1><h2 class="project-version">0.3.5</h2><br /><p>Clojure wrapper for JGit</p>
 </div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.5.1</td></tr><tr><td class="dep-name">org.eclipse.jgit</td><td class="dotted"><hr /></td><td class="dep-version">2.3.1.201302201838-r</td></tr><tr><td class="dep-name">org.clojure/core.memoize</td><td class="dotted"><hr /></td><td class="dep-version">0.5.2</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#clj-jgit.internal">clj-jgit.internal</a></li><li><a href="#clj-jgit.porcelain">clj-jgit.porcelain</a></li><li><a href="#clj-jgit.querying">clj-jgit.querying</a></li><li><a href="#clj-jgit.util">clj-jgit.util</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clj-jgit.internal" name="clj-jgit.internal"><h1 class="project-name">clj-jgit.internal</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns clj-jgit.internal
   (:import
     [org.eclipse.jgit.revwalk RevWalk RevCommit RevCommitList]
     [org.eclipse.jgit.treewalk TreeWalk]
     [org.eclipse.jgit.lib ObjectId]
-    [org.eclipse.jgit.api Git]))</pre></td></tr><tr><td class="docs"><p>Creates a new RevWalk instance (mutable)</p>
+    [org.eclipse.jgit.api Git]
+    [org.eclipse.jgit.transport RefSpec]))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn ref-spec 
+  ^org.eclipse.jgit.transport.RefSpec [str]
+  (RefSpec. str))</pre></td></tr><tr><td class="docs"><p>Creates a new RevWalk instance (mutable)</p>
 </td><td class="codes"><pre class="brush: clojure">(defn new-rev-walk 
   ^org.eclipse.jgit.revwalk.RevWalk [^Git repo]
   (RevWalk. (.getRepository repo)))</pre></td></tr><tr><td class="docs"><p>Create new recursive TreeWalk instance (mutable)</p>
@@ -3047,55 +3051,80 @@ net.brehaut.ClojureTools = (function (SH) {
     (.setRecursive true)))</pre></td></tr><tr><td class="docs"><p>Find a RevCommit object in a RevWalk and bound to it.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn bound-commit 
   ^org.eclipse.jgit.revwalk.RevCommit [^Git repo ^RevWalk rev-walk ^ObjectId rev-commit]
-  (.parseCommit rev-walk rev-commit))</pre></td></tr><tr><td class="docs"><p>Find ObjectId instance for any Git name: commit-ish, tree-ish or blob.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn resolve-object
-  ^org.eclipse.jgit.lib.ObjectId [^Git repo ^String commit-ish]
-  (.resolve (.getRepository repo) commit-ish))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clj-jgit.porcelain" name="clj-jgit.porcelain"><h1 class="project-name">clj-jgit.porcelain</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+  (.parseCommit rev-walk rev-commit))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defprotocol Resolvable
+  (resolve-object [commit-ish repo] 
+    &quot;Find ObjectId instance for any Git name: commit-ish, tree-ish or blob. Accepts ObjectId instances and just passes them through.&quot;))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(extend-type String
+  Resolvable
+  (resolve-object 
+    ^org.eclipse.jgit.lib.ObjectId [^String commit-ish ^Git repo]
+    (.resolve (.getRepository repo) commit-ish)))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(extend-type ObjectId
+  Resolvable
+  (resolve-object 
+    ^org.eclipse.jgit.lib.ObjectId [commit-ish ^Git repo]
+    commit-ish))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(extend-type Git
+  Resolvable
+  (resolve-object 
+    ^org.eclipse.jgit.lib.ObjectId [^Git repo commit-ish]
+    &quot;For compatibility with previous implementation of resolve-object, which would take repo as a first argument.&quot;
+    (resolve-object commit-ish repo)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clj-jgit.porcelain" name="clj-jgit.porcelain"><h1 class="project-name">clj-jgit.porcelain</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns clj-jgit.porcelain
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
             [clj-jgit.util :as util])
   (:use
     clj-jgit.internal)
-  (:import [java.io.FileNotFoundException]
+  (:import [java.io FileNotFoundException File]
            [org.eclipse.jgit.lib RepositoryBuilder]
            [org.eclipse.jgit.api
             Git
             InitCommand StatusCommand AddCommand
-            ListBranchCommand PullCommand]))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(declare log-builder)</pre></td></tr><tr><td class="docs"><p>Given a path (either to the parent folder or to the <code>.git</code> folder itself), load the Git repository</p>
+            ListBranchCommand PullCommand MergeCommand LogCommand
+            LsRemoteCommand Status ResetCommand$ResetType]
+           [org.eclipse.jgit.transport FetchResult]
+           [org.eclipse.jgit.merge MergeStrategy]
+           [clojure.lang Keyword]))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(declare log-builder)</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn- guess-repo-path
+  [^String path]
+  (let [with-git (io/as-file (str path &quot;/.git&quot;))
+        bare (io/as-file (str path &quot;/refs&quot;))] 
+    (cond 
+      (.endsWith path &quot;.git&quot;) (io/as-file path)
+      (.exists with-git) with-git
+      (.exists bare) (io/as-file path))))</pre></td></tr><tr><td class="docs"><p>Given a path (either to the parent folder or to the <code>.git</code> folder itself), load the Git repository</p>
 </td><td class="codes"><pre class="brush: clojure">(defn load-repo
-  [path]
-  (let [dir (if (not (re-find #&quot;\.git$&quot; path))
-              (io/as-file (str path &quot;/.git&quot;))
-              (io/as-file path))]
-    (if (.exists dir)
-      (let [repo (-&gt; (RepositoryBuilder.)
-                     (.setGitDir dir)
-                     (.readEnvironment)
-                     (.findGitDir)
-                     (.build))]
-        (Git. repo))
-      (throw (java.io.FileNotFoundException.
-              (str &quot;The Git repository at '&quot; path &quot;' could not be located.&quot;))))))</pre></td></tr><tr><td class="docs"><p>Binds <code>repo</code> to a repository handle</p>
+  (^org.eclipse.jgit.api.Git [path]
+    (if-let [guessed-path (guess-repo-path path)]
+      (-&gt; (RepositoryBuilder.)
+        (.setGitDir guessed-path)
+        (.readEnvironment)
+        (.findGitDir)
+        (.build)
+        (Git.))
+      (throw 
+        (FileNotFoundException. (str &quot;The Git repository at '&quot; path &quot;' could not be located.&quot;))))))</pre></td></tr><tr><td class="docs"><p>Binds <code>repo</code> to a repository handle</p>
 </td><td class="codes"><pre class="brush: clojure">(defmacro with-repo
   [path &amp; body]
   `(let [~'repo (load-repo ~path)
          ~'rev-walk (new-rev-walk ~'repo)]
      ~@body))</pre></td></tr><tr><td class="docs"><p>The <code>file-pattern</code> is either a single file name (exact, not a pattern) or the name of a directory. If a directory is supplied, all files within that directory will be added. If <code>only-update?</code> is set to <code>true</code>, only files which are already part of the index will have their changes staged (i.e. no previously untracked files will be added to the index).</p>
 </td><td class="codes"><pre class="brush: clojure">(defn git-add
-  ([repo file-pattern] 
+  ([^Git repo file-pattern] 
     (git-add repo file-pattern false))
-  ([repo file-pattern only-update?]
+  ([^Git repo file-pattern only-update?]
      (-&gt; repo
          (.add)
          (.addFilepattern file-pattern)
          (.setUpdate only-update?)
          (.call))))</pre></td></tr><tr><td class="docs"><p>Get a list of branches in the Git repo. Return the default objects generated by the JGit API.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn git-branch-list
-  ([repo] 
+  ([^Git repo] 
     (git-branch-list repo :local))
-  ([repo opt]
+  ([^Git repo opt]
      (let [opt-val {:all org.eclipse.jgit.api.ListBranchCommand$ListMode/ALL
                     :remote org.eclipse.jgit.api.ListBranchCommand$ListMode/REMOTE}
            branches (if (= opt :local)
@@ -3108,20 +3137,20 @@ net.brehaut.ClojureTools = (function (SH) {
                           (.call)))]
        (seq branches))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn git-branch-current* 
-  [repo] 
+  [^Git repo] 
   (.getFullBranch (.getRepository repo)))</pre></td></tr><tr><td class="docs"><p>The current branch of the git repo</p>
 </td><td class="codes"><pre class="brush: clojure">(defn git-branch-current
-  [repo]
+  [^Git repo]
   (str/replace (git-branch-current* repo) #&quot;^refs/heads/&quot; &quot;&quot;))</pre></td></tr><tr><td class="docs"><p>Is the current repo on a branch (true) or in a detached HEAD state?</p>
 </td><td class="codes"><pre class="brush: clojure">(defn git-branch-attached?
-  [repo]
+  [^Git repo]
   (not (nil? (re-find #&quot;^refs/heads/&quot; (git-branch-current* repo)))))</pre></td></tr><tr><td class="docs"><p>Create a new branch in the Git repository.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn git-branch-create
-  ([repo branch-name]        
+  ([^Git repo branch-name]        
     (git-branch-create repo branch-name false nil))
-  ([repo branch-name force?] 
+  ([^Git repo branch-name force?] 
     (git-branch-create repo branch-name force? nil))
-  ([repo branch-name force? start-point]
+  ([^Git repo branch-name force? ^String start-point]
      (if (nil? start-point)
        (-&gt; repo
            (.branchCreate)
@@ -3135,22 +3164,22 @@ net.brehaut.ClojureTools = (function (SH) {
            (.setStartPoint start-point)
            (.call)))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn git-branch-delete
-  ([repo branch-names] 
+  ([^Git repo branch-names] 
     (git-branch-delete repo branch-names false))
-  ([repo branch-names force?]
+  ([^Git repo branch-names force?]
      (-&gt; repo
          (.branchDelete)
          (.setBranchNames (into-array String branch-names))
          (.setForce force?)
          (.call))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn git-checkout
-  ([repo branch-name] 
+  ([^Git repo branch-name] 
     (git-checkout repo branch-name false false nil))
-  ([repo branch-name create-branch?] 
+  ([^Git repo branch-name create-branch?] 
     (git-checkout repo branch-name create-branch? false nil))
-  ([repo branch-name create-branch? force?] 
+  ([^Git repo branch-name create-branch? force?] 
     (git-checkout repo branch-name create-branch? force? nil))
-  ([repo branch-name create-branch? force? start-point]
+  ([^Git repo branch-name create-branch? force? ^String start-point]
      (if (nil? start-point)
        (-&gt; repo
            (.checkout)
@@ -3202,26 +3231,26 @@ net.brehaut.ClojureTools = (function (SH) {
                         (.setBranch local-branch)
                         (.setBare bare?)
                         (.call))
-           fetch-result (git-fetch new-repo)
+           fetch-result ^FetchResult (git-fetch new-repo)
            merge-result (git-merge new-repo
                                    (first (.getAdvertisedRefs fetch-result)))]
        {:repo new-repo,
         :fetch-result fetch-result,
         :merge-result  merge-result})))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn git-commit
-  ([repo message]
+  ([^Git repo message]
      (-&gt; repo
          (.commit)
          (.setMessage message)
          (.call)))
-  ([repo message {:keys [name email]}]
+  ([^Git repo message {:keys [name email]}]
      (-&gt; repo
          (.commit)
          (.setMessage message)
          (.setAuthor name email)
          (.setCommitter name email)
          (.call)))
-  ([repo message {:keys [author-name author-email]} {:keys [committer-name committer-email]}]
+  ([^Git repo message {:keys [author-name author-email]} {:keys [committer-name committer-email]}]
      (-&gt; repo
          (.commit)
          (.setMessage message)
@@ -3229,20 +3258,20 @@ net.brehaut.ClojureTools = (function (SH) {
          (.setCommitter committer-name committer-email)
          (.call))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn git-commit-amend
-  ([repo message]
+  ([^Git repo message]
      (-&gt; repo
          (.commit)
          (.setMessage message)
          (.setAmend true)
          (.call)))
-  ([repo message {:keys [name email]}]
+  ([^Git repo message {:keys [name email]}]
      (-&gt; repo
          (.commit)
          (.setMessage message)
          (.setAuthor name email)
          (.setAmend true)
          (.call)))
-  ([repo message {:keys [name email]} {:keys [name email]}]
+  ([^Git repo message {:keys [name email]} {:keys [name email]}]
      (-&gt; repo
          (.commit)
          (.setMessage message)
@@ -3251,20 +3280,20 @@ net.brehaut.ClojureTools = (function (SH) {
          (.setAmend true)
          (.call))))</pre></td></tr><tr><td class="docs"><p>This is the <code>git commit -a...</code> command</p>
 </td><td class="codes"><pre class="brush: clojure">(defn git-add-and-commit
-  ([repo message]
+  ([^Git repo message]
      (-&gt; repo
          (.commit)
          (.setMessage message)
          (.setAll true)
          (.call)))
-  ([repo message {:keys [name email]}]
+  ([^Git repo message {:keys [name email]}]
      (-&gt; repo
          (.commit)
          (.setMessage message)
          (.setAuthor name email)
          (.setAll true)
          (.call)))
-  ([repo message {:keys [name email]} {:keys [name email]}]
+  ([^Git repo message {:keys [name email]} {:keys [name email]}]
      (-&gt; repo
          (.commit)
          (.setMessage message)
@@ -3273,16 +3302,22 @@ net.brehaut.ClojureTools = (function (SH) {
          (.setAll true)
          (.call))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn git-fetch
-  ([repo]
+  (^org.eclipse.jgit.transport.FetchResult [^Git repo]
      (-&gt; repo
-         (.fetch)
-         (.setRemote &quot;master&quot;)
-         (.call)))
-  ([repo remote]
+       (.fetch)
+       (.setRemote &quot;master&quot;)
+       (.call)))
+  (^org.eclipse.jgit.transport.FetchResult [^Git repo remote]
      (-&gt; repo
-         (.fetch)
-         (.setRemote remote)
-         (.call))))</pre></td></tr><tr><td class="docs"><p>Initialize and load a new Git repository</p>
+       (.fetch)
+       (.setRemote remote)
+       (.call)))
+  (^org.eclipse.jgit.transport.FetchResult [^Git repo remote &amp; refs]
+     (-&gt; repo
+       (.fetch)
+       (.setRefSpecs (map ref-spec refs))
+       (.setRemote remote)
+       (.call))))</pre></td></tr><tr><td class="docs"><p>Initialize and load a new Git repository</p>
 </td><td class="codes"><pre class="brush: clojure">(defn git-init
   ([] (git-init &quot;.&quot;))
   ([target-dir]
@@ -3291,33 +3326,47 @@ net.brehaut.ClojureTools = (function (SH) {
            (.setDirectory (io/as-file target-dir))
            (.call)))))</pre></td></tr><tr><td class="docs"><p>Return a seq of all commit objects</p>
 </td><td class="codes"><pre class="brush: clojure">(defn git-log
-  ([repo]
+  ([^Git repo]
     (seq (-&gt; repo
            (.log)
            (.call))))
-  ([repo hash]
+  ([^Git repo hash]
     (seq (-&gt; repo
            (.log)
-           (.add (resolve-object repo hash))
+           (.add (resolve-object hash repo))
            (.call))))
-  ([repo hash-a hash-b]
+  ([^Git repo hash-a hash-b]
     (seq (-&gt; repo
-           (log-builder hash-a hash-b)
+           ^LogCommand (log-builder hash-a hash-b)
            (.call)))))</pre></td></tr><tr><td class="docs"><p>Builds a log command object for a range of commit-ish names</p>
 </td><td class="codes"><pre class="brush: clojure">(defn- log-builder
-  [repo hash-a hash-b]
+  ^org.eclipse.jgit.api.LogCommand [^Git repo hash-a hash-b]
   (let [log (.log repo)] 
     (if (= hash-a &quot;0000000000000000000000000000000000000000&quot;)
-      (.add log (resolve-object repo hash-b))
-      (.addRange log (resolve-object repo hash-a) (resolve-object repo hash-b)))))</pre></td></tr><tr><td class="docs">
+      (.add log (resolve-object hash-b repo))
+      (.addRange log (resolve-object hash-a repo) (resolve-object hash-b repo)))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def merge-strategies 
+  {:ours MergeStrategy/OURS
+   :resolve MergeStrategy/RESOLVE
+   :simple-two-way MergeStrategy/SIMPLE_TWO_WAY_IN_CORE
+   :theirs MergeStrategy/THEIRS})</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn git-merge
-  [repo commit-ref]
-  (-&gt; repo
-      (.merge)
-      (.include commit-ref)
-      (.call)))</pre></td></tr><tr><td class="docs"><p>NOT WORKING: Requires work with configuration</p>
+  ([^Git repo commit-ref]
+    (let [commit-obj (resolve-object commit-ref repo)] 
+      (-&gt; repo
+        (.merge)
+        ^MergeCommand (.include commit-obj)
+        (.call))))
+  ([^Git repo commit-ref ^Keyword strategy]
+    (let [commit-obj (resolve-object commit-ref repo)
+          strategy-obj ^MergeStrategy (merge-strategies strategy)]
+      (-&gt; repo
+        (.merge)
+        ^MergeCommand (.include commit-obj)
+        ^MergeCommand (.setStrategy strategy-obj)
+        (.call)))))</pre></td></tr><tr><td class="docs"><p>NOT WORKING: Requires work with configuration</p>
 </td><td class="codes"><pre class="brush: clojure">(defn git-pull
-  [repo]
+  [^Git repo]
   (-&gt; repo
       (.pull)
       (.call)))</pre></td></tr><tr><td class="docs">
@@ -3325,26 +3374,60 @@ net.brehaut.ClojureTools = (function (SH) {
 (defn git-rebase [])
 (defn git-revert [])
 (defn git-rm
-  [repo file-pattern]
+  [^Git repo file-pattern]
   (-&gt; repo
       (.rm)
       (.addFilepattern file-pattern)
       (.call)))</pre></td></tr><tr><td class="docs"><p>Return the status of the Git repository. Opts will return individual aspects of the status, and can be specified as <code>:added</code>, <code>:changed</code>, <code>:missing</code>, <code>:modified</code>, <code>:removed</code>, or <code>:untracked</code>.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn git-status
-  [repo &amp; fields]
+  [^Git repo &amp; fields]
   (let [status (.. repo status call)
-        status-fns {:added     #(.getAdded %)
-                    :changed   #(.getChanged %)
-                    :missing   #(.getMissing %)
-                    :modified  #(.getModified %)
-                    :removed   #(.getRemoved %)
-                    :untracked #(.getUntracked %)}]
+        status-fns {:added     #(.getAdded ^Status %)
+                    :changed   #(.getChanged ^Status %)
+                    :missing   #(.getMissing ^Status %)
+                    :modified  #(.getModified ^Status %)
+                    :removed   #(.getRemoved ^Status %)
+                    :untracked #(.getUntracked ^Status %)}]
     (if-not (seq fields)
       (apply merge (for [[k f] status-fns]
                      {k (into #{} (f status))}))
       (apply merge (for [field fields]
                      {field (into #{} ((field status-fns) status))})))))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn git-tag [])</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clj-jgit.querying" name="clj-jgit.querying"><h1 class="project-name">clj-jgit.querying</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn git-tag [])</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defonce fake-repo 
+  (let [path (str (System/getProperty &quot;java.io.tmpdir&quot;) &quot;fake-empty-repo.clj-jgit&quot;)]
+    (if-not (.exists (java.io.File. path))
+      (git-init path)
+      (load-repo path))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn git-ls-remote
+  ([^Git repo]
+    (-&gt; repo .lsRemote .call))
+  ([^Git repo remote]
+    (-&gt; repo .lsRemote 
+      (.setRemote remote) 
+      .call))
+  ([^Git repo remote opts]
+    (-&gt; repo .lsRemote
+      (.setRemote remote)
+      (.setHeads (:heads opts false))
+      (.setTags (:tags opts false))
+      (.call))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def reset-modes
+  {:hard ResetCommand$ResetType/HARD
+   :keep ResetCommand$ResetType/KEEP
+   :merge ResetCommand$ResetType/MERGE
+   :mixed ResetCommand$ResetType/MIXED
+   :soft ResetCommand$ResetType/SOFT})</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn git-reset
+  ([^Git repo ref]
+    (-&gt; repo .reset
+      (.setRef ref)
+      (.call)))
+  ([^Git repo ref mode-sym]
+    (-&gt; repo .reset
+      (.setRef ref)
+      (.setMode ^ResetCommand$ResetType (reset-modes mode-sym))
+      (.call))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clj-jgit.querying" name="clj-jgit.querying"><h1 class="project-name">clj-jgit.querying</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns clj-jgit.querying
   (:require [clojure.java.io :as io]
             [clj-jgit.util :as util]
@@ -3366,8 +3449,7 @@ net.brehaut.ClojureTools = (function (SH) {
          mark-all-heads-as-start-for!)</pre></td></tr><tr><td class="docs"><p>Find RevCommit instance in RevWalk by commit-ish</p>
 </td><td class="codes"><pre class="brush: clojure">(defn find-rev-commit
   [^Git repo ^RevWalk rev-walk commit-ish]
-  (-&gt;&gt; commit-ish
-    (resolve-object repo) 
+  (-&gt;&gt; (resolve-object commit-ish repo)
     (bound-commit repo rev-walk)))</pre></td></tr><tr><td class="docs"><p>List of branches for a repo in pairs of [branch-ref branch-tip-commit]</p>
 </td><td class="codes"><pre class="brush: clojure">(defn branch-list-with-heads
   ([^Git repo] 
