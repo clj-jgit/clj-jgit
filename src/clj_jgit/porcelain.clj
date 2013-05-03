@@ -17,7 +17,8 @@
 
 (declare log-builder)
 
-(defn- guess-repo-path
+(defn- discover-repo
+  "Discover a Git repository in a path."
   [^String path]
   (let [with-git (io/as-file (str path "/.git"))
         bare (io/as-file (str path "/refs"))] 
@@ -29,9 +30,9 @@
 (defn load-repo
   "Given a path (either to the parent folder or to the `.git` folder itself), load the Git repository"
   (^org.eclipse.jgit.api.Git [path]
-    (if-let [guessed-path (guess-repo-path path)]
+    (if-let [git-dir (discover-repo path)]
       (-> (RepositoryBuilder.)
-        (.setGitDir guessed-path)
+        (.setGitDir git-dir)
         (.readEnvironment)
         (.findGitDir)
         (.build)
