@@ -3028,7 +3028,7 @@ net.brehaut.ClojureTools = (function (SH) {
     build_tree: build_tree
   };
 })(SyntaxHighlighter);
-</script><title>clj-jgit -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">clj-jgit</h1><h2 class="project-version">0.3.5</h2><br /><p>Clojure wrapper for JGit</p>
+</script><title>clj-jgit -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">clj-jgit</h1><h2 class="project-version">0.3.6</h2><br /><p>Clojure wrapper for JGit</p>
 </div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.5.1</td></tr><tr><td class="dep-name">org.eclipse.jgit</td><td class="dotted"><hr /></td><td class="dep-version">2.3.1.201302201838-r</td></tr><tr><td class="dep-name">org.clojure/core.memoize</td><td class="dotted"><hr /></td><td class="dep-version">0.5.2</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#clj-jgit.internal">clj-jgit.internal</a></li><li><a href="#clj-jgit.porcelain">clj-jgit.porcelain</a></li><li><a href="#clj-jgit.querying">clj-jgit.querying</a></li><li><a href="#clj-jgit.util">clj-jgit.util</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clj-jgit.internal" name="clj-jgit.internal"><h1 class="project-name">clj-jgit.internal</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns clj-jgit.internal
   (:import
@@ -3087,8 +3087,8 @@ net.brehaut.ClojureTools = (function (SH) {
            [org.eclipse.jgit.transport FetchResult]
            [org.eclipse.jgit.merge MergeStrategy]
            [clojure.lang Keyword]))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(declare log-builder)</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn- guess-repo-path
+</td><td class="codes"><pre class="brush: clojure">(declare log-builder)</pre></td></tr><tr><td class="docs"><p>Discover a Git repository in a path.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn- discover-repo
   [^String path]
   (let [with-git (io/as-file (str path &quot;/.git&quot;))
         bare (io/as-file (str path &quot;/refs&quot;))] 
@@ -3098,9 +3098,9 @@ net.brehaut.ClojureTools = (function (SH) {
       (.exists bare) (io/as-file path))))</pre></td></tr><tr><td class="docs"><p>Given a path (either to the parent folder or to the <code>.git</code> folder itself), load the Git repository</p>
 </td><td class="codes"><pre class="brush: clojure">(defn load-repo
   (^org.eclipse.jgit.api.Git [path]
-    (if-let [guessed-path (guess-repo-path path)]
+    (if-let [git-dir (discover-repo path)]
       (-&gt; (RepositoryBuilder.)
-        (.setGitDir guessed-path)
+        (.setGitDir git-dir)
         (.readEnvironment)
         (.findGitDir)
         (.build)
