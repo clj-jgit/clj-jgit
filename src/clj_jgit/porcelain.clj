@@ -7,13 +7,14 @@
   (:import [java.io FileNotFoundException File]
            [org.eclipse.jgit.lib RepositoryBuilder]
            [org.eclipse.jgit.api
-            Git
-            InitCommand StatusCommand AddCommand
+            Git InitCommand StatusCommand AddCommand
             ListBranchCommand PullCommand MergeCommand LogCommand
-            LsRemoteCommand Status ResetCommand$ResetType]
+            LsRemoteCommand Status ResetCommand$ResetType
+            FetchCommand]
            [org.eclipse.jgit.transport FetchResult]
            [org.eclipse.jgit.merge MergeStrategy]
-           [clojure.lang Keyword]))
+           [clojure.lang Keyword]
+           [java.util List]))
 
 (declare log-builder)
 
@@ -267,11 +268,10 @@
        (.setRemote remote)
        (.call)))
   (^org.eclipse.jgit.transport.FetchResult [^Git repo remote & refs]
-     (-> repo
-       (.fetch)
-       (.setRefSpecs (map ref-spec refs))
-       (.setRemote remote)
-       (.call))))
+     (let [^FetchCommand cmd (.fetch repo)]
+       (.setRefSpecs cmd ^List (map ref-spec refs))
+       (.setRemote cmd remote)
+       (.call cmd))))
 
 (defn git-init
   "Initialize and load a new Git repository"
