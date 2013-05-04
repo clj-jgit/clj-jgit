@@ -260,10 +260,7 @@
 
 (defn git-fetch
   (^org.eclipse.jgit.transport.FetchResult [^Git repo]
-     (-> repo
-       (.fetch)
-       (.setRemote "master")
-       (.call)))
+     (-> repo .fetch .call))
   (^org.eclipse.jgit.transport.FetchResult [^Git repo remote]
      (-> repo
        (.fetch)
