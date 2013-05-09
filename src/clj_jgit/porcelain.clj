@@ -11,7 +11,10 @@
             ListBranchCommand PullCommand MergeCommand LogCommand
             LsRemoteCommand Status ResetCommand$ResetType
             FetchCommand]
-           [org.eclipse.jgit.transport FetchResult]
+           [com.jcraft.jsch Session JSch]
+           [org.eclipse.jgit.transport FetchResult JschConfigSessionFactory
+            OpenSshConfig$Host SshSessionFactory]
+           [org.eclipse.jgit.util FS]
            [org.eclipse.jgit.merge MergeStrategy]
            [clojure.lang Keyword]
            [java.util List]))
@@ -400,3 +403,40 @@
       (.setRef ref)
       (.setMode ^ResetCommand$ResetType (reset-modes mode-sym))
       (.call))))
+
+(def ^:dynamic ^String *ssh-identity-name*)
+(def ^:dynamic ^String *ssh-prvkey*)
+(def ^:dynamic ^String *ssh-pubkey*)
+(def ^:dynamic ^String *ssh-passphrase* "")
+(def ^:dynamic *ssh-exclusive-identity* false)
+(def ^:dynamic *ssh-session-config* {})
+
+(def jsch-factory (proxy [JschConfigSessionFactory]
+  []
+  (configure [^OpenSshConfig$Host hc ^Session session]
+    (let [^JSch jsch (.getJSch ^JschConfigSessionFactory this hc FS/DETECTED)]
+      (doseq [[key val] *ssh-session-config*]
+        (.setConfig session key val))
+      (when *ssh-exclusive-identity* 
+        (.removeAllIdentity jsch))
+      (.addIdentity jsch *ssh-identity-name* 
+        (.getBytes *ssh-prvkey*) 
+        (.getBytes *ssh-pubkey*) 
+        (.getBytes *ssh-passphrase*))))))
+
+(SshSessionFactory/setInstance jsch-factory)
+
+(defmacro with-identity
+  "Creates an identity to use for SSH authentication."
+  [{:keys [name private public passphrase options exclusive]
+    :or {name "jgit-identity"
+         passphrase ""
+         options {"StrictHostKeyChecking" "no"}
+         exclusive false}} & body]
+  `(binding [*ssh-identity-name* ~name
+             *ssh-prvkey* ~private
+             *ssh-pubkey* ~public
+             *ssh-passphrase* ~passphrase
+             *ssh-session-config* ~options
+             *ssh-exclusive-identity* ~exclusive]
+     ~@body))
