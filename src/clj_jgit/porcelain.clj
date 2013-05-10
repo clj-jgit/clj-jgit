@@ -366,12 +366,6 @@
 
 (defn git-tag [])
 
-(defonce fake-repo 
-  (let [path (str (System/getProperty "java.io.tmpdir") "fake-empty-repo.clj-jgit")]
-    (if-not (.exists (java.io.File. path))
-      (git-init path)
-      (load-repo path))))
-
 (defn git-ls-remote
   ([^Git repo]
     (-> repo .lsRemote .call))
