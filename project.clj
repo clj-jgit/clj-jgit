@@ -1,9 +1,9 @@
-(defproject clj-jgit "0.3.6"
+(defproject clj-jgit "0.3.7"
   :description "Clojure wrapper for JGit"
-  :dependencies [[org.clojure/clojure "1.5.1"]
-                 [org.eclipse.jgit "2.3.1.201302201838-r"]
+  :dependencies [[org.eclipse.jgit "2.3.1.201302201838-r"]
                  [org.clojure/core.memoize "0.5.3"]]
-  :profiles {:dev {:dependencies [[midje "1.5.1"]
+  :profiles {:dev {:dependencies [[org.clojure/clojure "1.5.1"]
+                                  [midje "1.5.1"]
                                   [com.stuartsierra/lazytest "1.2.3"]
                                   [lein-clojars "0.9.0"]
                                   [fs "1.3.2"]]
