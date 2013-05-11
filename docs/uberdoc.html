@@ -3028,8 +3028,8 @@ net.brehaut.ClojureTools = (function (SH) {
     build_tree: build_tree
   };
 })(SyntaxHighlighter);
-</script><title>clj-jgit -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">clj-jgit</h1><h2 class="project-version">0.3.6</h2><br /><p>Clojure wrapper for JGit</p>
-</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.5.1</td></tr><tr><td class="dep-name">org.eclipse.jgit</td><td class="dotted"><hr /></td><td class="dep-version">2.3.1.201302201838-r</td></tr><tr><td class="dep-name">org.clojure/core.memoize</td><td class="dotted"><hr /></td><td class="dep-version">0.5.2</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#clj-jgit.internal">clj-jgit.internal</a></li><li><a href="#clj-jgit.porcelain">clj-jgit.porcelain</a></li><li><a href="#clj-jgit.querying">clj-jgit.querying</a></li><li><a href="#clj-jgit.util">clj-jgit.util</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clj-jgit.internal" name="clj-jgit.internal"><h1 class="project-name">clj-jgit.internal</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+</script><title>clj-jgit -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">clj-jgit</h1><h2 class="project-version">0.3.7</h2><br /><p>Clojure wrapper for JGit</p>
+</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.eclipse.jgit</td><td class="dotted"><hr /></td><td class="dep-version">2.3.1.201302201838-r</td></tr><tr><td class="dep-name">org.clojure/core.memoize</td><td class="dotted"><hr /></td><td class="dep-version">0.5.3</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#clj-jgit.internal">clj-jgit.internal</a></li><li><a href="#clj-jgit.porcelain">clj-jgit.porcelain</a></li><li><a href="#clj-jgit.querying">clj-jgit.querying</a></li><li><a href="#clj-jgit.util">clj-jgit.util</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clj-jgit.internal" name="clj-jgit.internal"><h1 class="project-name">clj-jgit.internal</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns clj-jgit.internal
   (:import
     [org.eclipse.jgit.revwalk RevWalk RevCommit RevCommitList]
@@ -3080,13 +3080,17 @@ net.brehaut.ClojureTools = (function (SH) {
   (:import [java.io FileNotFoundException File]
            [org.eclipse.jgit.lib RepositoryBuilder]
            [org.eclipse.jgit.api
-            Git
-            InitCommand StatusCommand AddCommand
+            Git InitCommand StatusCommand AddCommand
             ListBranchCommand PullCommand MergeCommand LogCommand
-            LsRemoteCommand Status ResetCommand$ResetType]
-           [org.eclipse.jgit.transport FetchResult]
+            LsRemoteCommand Status ResetCommand$ResetType
+            FetchCommand]
+           [com.jcraft.jsch Session JSch]
+           [org.eclipse.jgit.transport FetchResult JschConfigSessionFactory
+            OpenSshConfig$Host SshSessionFactory]
+           [org.eclipse.jgit.util FS]
            [org.eclipse.jgit.merge MergeStrategy]
-           [clojure.lang Keyword]))</pre></td></tr><tr><td class="docs">
+           [clojure.lang Keyword]
+           [java.util List]))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(declare log-builder)</pre></td></tr><tr><td class="docs"><p>Discover a Git repository in a path.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn- discover-repo
   [^String path]
@@ -3303,21 +3307,17 @@ net.brehaut.ClojureTools = (function (SH) {
          (.call))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn git-fetch
   (^org.eclipse.jgit.transport.FetchResult [^Git repo]
-     (-&gt; repo
-       (.fetch)
-       (.setRemote &quot;master&quot;)
-       (.call)))
+     (-&gt; repo .fetch .call))
   (^org.eclipse.jgit.transport.FetchResult [^Git repo remote]
      (-&gt; repo
        (.fetch)
        (.setRemote remote)
        (.call)))
   (^org.eclipse.jgit.transport.FetchResult [^Git repo remote &amp; refs]
-     (-&gt; repo
-       (.fetch)
-       (.setRefSpecs (map ref-spec refs))
-       (.setRemote remote)
-       (.call))))</pre></td></tr><tr><td class="docs"><p>Initialize and load a new Git repository</p>
+     (let [^FetchCommand cmd (.fetch repo)]
+       (.setRefSpecs cmd ^List (map ref-spec refs))
+       (.setRemote cmd remote)
+       (.call cmd))))</pre></td></tr><tr><td class="docs"><p>Initialize and load a new Git repository</p>
 </td><td class="codes"><pre class="brush: clojure">(defn git-init
   ([] (git-init &quot;.&quot;))
   ([target-dir]
@@ -3394,11 +3394,6 @@ net.brehaut.ClojureTools = (function (SH) {
       (apply merge (for [field fields]
                      {field (into #{} ((field status-fns) status))})))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn git-tag [])</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defonce fake-repo 
-  (let [path (str (System/getProperty &quot;java.io.tmpdir&quot;) &quot;fake-empty-repo.clj-jgit&quot;)]
-    (if-not (.exists (java.io.File. path))
-      (git-init path)
-      (load-repo path))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn git-ls-remote
   ([^Git repo]
     (-&gt; repo .lsRemote .call))
@@ -3427,7 +3422,39 @@ net.brehaut.ClojureTools = (function (SH) {
     (-&gt; repo .reset
       (.setRef ref)
       (.setMode ^ResetCommand$ResetType (reset-modes mode-sym))
-      (.call))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clj-jgit.querying" name="clj-jgit.querying"><h1 class="project-name">clj-jgit.querying</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+      (.call))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def ^:dynamic ^String *ssh-identity-name*)
+(def ^:dynamic ^String *ssh-prvkey*)
+(def ^:dynamic ^String *ssh-pubkey*)
+(def ^:dynamic ^String *ssh-passphrase* )
+(def ^:dynamic *ssh-exclusive-identity* false)
+(def ^:dynamic *ssh-session-config* {})</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def jsch-factory (proxy [JschConfigSessionFactory]
+  []
+  (configure [^OpenSshConfig$Host hc ^Session session]
+    (let [^JSch jsch (.getJSch ^JschConfigSessionFactory this hc FS/DETECTED)]
+      (doseq [[key val] *ssh-session-config*]
+        (.setConfig session key val))
+      (when *ssh-exclusive-identity* 
+        (.removeAllIdentity jsch))
+      (.addIdentity jsch *ssh-identity-name* 
+        (.getBytes *ssh-prvkey*) 
+        (.getBytes *ssh-pubkey*) 
+        (.getBytes *ssh-passphrase*))))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(SshSessionFactory/setInstance jsch-factory)</pre></td></tr><tr><td class="docs"><p>Creates an identity to use for SSH authentication.</p>
+</td><td class="codes"><pre class="brush: clojure">(defmacro with-identity
+  [{:keys [name private public passphrase options exclusive]
+    :or {name &quot;jgit-identity&quot;
+         passphrase &quot;&quot;
+         options {&quot;StrictHostKeyChecking&quot; &quot;no&quot;}
+         exclusive false}} &amp; body]
+  `(binding [*ssh-identity-name* ~name
+             *ssh-prvkey* ~private
+             *ssh-pubkey* ~public
+             *ssh-passphrase* ~passphrase
+             *ssh-session-config* ~options
+             *ssh-exclusive-identity* ~exclusive]
+     ~@body))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clj-jgit.querying" name="clj-jgit.querying"><h1 class="project-name">clj-jgit.querying</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns clj-jgit.querying
   (:require [clojure.java.io :as io]
             [clj-jgit.util :as util]
