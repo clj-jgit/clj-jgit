@@ -150,18 +150,18 @@
 
 (defn git-clone
   ([uri] 
-    (git-clone uri (util/name-from-uri uri) "master" "master" false))
+    (git-clone uri (util/name-from-uri uri) "origin" "master" false))
   ([uri local-dir] 
-    (git-clone uri local-dir "master" "master" false))
-  ([uri local-dir remote-branch] 
-    (git-clone uri local-dir remote-branch "master" false))
-  ([uri local-dir remote-branch local-branch] 
-    (git-clone uri local-dir remote-branch local-branch false))
-  ([uri local-dir remote-branch local-branch bare?]
+    (git-clone uri local-dir "origin" "master" false))
+  ([uri local-dir remote-name] 
+    (git-clone uri local-dir remote-name "master" false))
+  ([uri local-dir remote-name local-branch] 
+    (git-clone uri local-dir remote-name local-branch false))
+  ([uri local-dir remote-name local-branch bare?]
      (-> (Git/cloneRepository)
          (.setURI uri)
          (.setDirectory (io/as-file local-dir))
-         (.setRemote remote-branch)
+         (.setRemote remote-name)
          (.setBranch local-branch)
          (.setBare bare?)
          (.call))))
