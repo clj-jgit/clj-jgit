@@ -389,9 +389,7 @@
 
 (defn git-reset
   ([^Git repo ref]
-    (-> repo .reset
-      (.setRef ref)
-      (.call)))
+    (git-reset repo ref :mixed))
   ([^Git repo ref mode-sym]
     (-> repo .reset
       (.setRef ref)
