@@ -270,9 +270,9 @@
        (.fetch)
        (.setRemote remote)
        (.call)))
-  (^org.eclipse.jgit.transport.FetchResult [^Git repo remote & refs]
+  (^org.eclipse.jgit.transport.FetchResult [^Git repo remote & refspecs]
      (let [^FetchCommand cmd (.fetch repo)]
-       (.setRefSpecs cmd ^List (map ref-spec refs))
+       (.setRefSpecs cmd ^List (map ref-spec refspecs))
        (.setRemote cmd remote)
        (.call cmd))))
 
