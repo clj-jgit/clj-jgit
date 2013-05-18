@@ -432,3 +432,44 @@
              *ssh-session-config* ~options
              *ssh-exclusive-identity* ~exclusive]
      ~@body))
+
+(defn git-submodule-update
+  ([repo]
+    (-> repo 
+      (.submoduleUpdate) 
+      (.call)))
+  ([repo path]
+    (-> repo 
+      (.submoduleUpdate)
+      (.addPath path)
+      (.call))))
+
+(defn git-submodule-sync
+  ([repo]
+    (-> repo 
+      (.submoduleSync) 
+      (.call)))
+  ([repo path]
+    (-> repo 
+      (.submoduleSync)
+      (.addPath path)
+      (.call))))
+
+(defn git-submodule-init
+  ([repo]
+    (-> repo 
+      (.submoduleInit) 
+      (.call)))
+  ([repo path]
+    (-> repo 
+      (.submoduleInit)
+      (.addPath path)
+      (.call))))
+
+(defn git-submodule-add
+  [repo uri path]
+  (-> repo 
+    (.submoduleAdd)
+    (.setURI uri)
+    (.setPath path)
+    (.call)))
