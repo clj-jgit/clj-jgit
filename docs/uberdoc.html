@@ -3028,7 +3028,7 @@ net.brehaut.ClojureTools = (function (SH) {
     build_tree: build_tree
   };
 })(SyntaxHighlighter);
-</script><title>clj-jgit -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">clj-jgit</h1><h2 class="project-version">0.3.7</h2><br /><p>Clojure wrapper for JGit</p>
+</script><title>clj-jgit -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">clj-jgit</h1><h2 class="project-version">0.3.8</h2><br /><p>Clojure wrapper for JGit</p>
 </div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.eclipse.jgit</td><td class="dotted"><hr /></td><td class="dep-version">2.3.1.201302201838-r</td></tr><tr><td class="dep-name">org.clojure/core.memoize</td><td class="dotted"><hr /></td><td class="dep-version">0.5.3</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#clj-jgit.internal">clj-jgit.internal</a></li><li><a href="#clj-jgit.porcelain">clj-jgit.porcelain</a></li><li><a href="#clj-jgit.querying">clj-jgit.querying</a></li><li><a href="#clj-jgit.util">clj-jgit.util</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clj-jgit.internal" name="clj-jgit.internal"><h1 class="project-name">clj-jgit.internal</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns clj-jgit.internal
   (:import
@@ -3201,18 +3201,18 @@ net.brehaut.ClojureTools = (function (SH) {
 </td><td class="codes"><pre class="brush: clojure">(defn git-cherry-pick [])</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn git-clone
   ([uri] 
-    (git-clone uri (util/name-from-uri uri) &quot;master&quot; &quot;master&quot; false))
+    (git-clone uri (util/name-from-uri uri) &quot;origin&quot; &quot;master&quot; false))
   ([uri local-dir] 
-    (git-clone uri local-dir &quot;master&quot; &quot;master&quot; false))
-  ([uri local-dir remote-branch] 
-    (git-clone uri local-dir remote-branch &quot;master&quot; false))
-  ([uri local-dir remote-branch local-branch] 
-    (git-clone uri local-dir remote-branch local-branch false))
-  ([uri local-dir remote-branch local-branch bare?]
+    (git-clone uri local-dir &quot;origin&quot; &quot;master&quot; false))
+  ([uri local-dir remote-name] 
+    (git-clone uri local-dir remote-name &quot;master&quot; false))
+  ([uri local-dir remote-name local-branch] 
+    (git-clone uri local-dir remote-name local-branch false))
+  ([uri local-dir remote-name local-branch bare?]
      (-&gt; (Git/cloneRepository)
          (.setURI uri)
          (.setDirectory (io/as-file local-dir))
-         (.setRemote remote-branch)
+         (.setRemote remote-name)
          (.setBranch local-branch)
          (.setBare bare?)
          (.call))))</pre></td></tr><tr><td class="docs"><p>Clone, fetch the master branch and merge its latest commit</p>
@@ -3313,9 +3313,9 @@ net.brehaut.ClojureTools = (function (SH) {
        (.fetch)
        (.setRemote remote)
        (.call)))
-  (^org.eclipse.jgit.transport.FetchResult [^Git repo remote &amp; refs]
+  (^org.eclipse.jgit.transport.FetchResult [^Git repo remote &amp; refspecs]
      (let [^FetchCommand cmd (.fetch repo)]
-       (.setRefSpecs cmd ^List (map ref-spec refs))
+       (.setRefSpecs cmd ^List (map ref-spec refspecs))
        (.setRemote cmd remote)
        (.call cmd))))</pre></td></tr><tr><td class="docs"><p>Initialize and load a new Git repository</p>
 </td><td class="codes"><pre class="brush: clojure">(defn git-init
@@ -3415,9 +3415,7 @@ net.brehaut.ClojureTools = (function (SH) {
    :soft ResetCommand$ResetType/SOFT})</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn git-reset
   ([^Git repo ref]
-    (-&gt; repo .reset
-      (.setRef ref)
-      (.call)))
+    (git-reset repo ref :mixed))
   ([^Git repo ref mode-sym]
     (-&gt; repo .reset
       (.setRef ref)
@@ -3454,7 +3452,44 @@ net.brehaut.ClojureTools = (function (SH) {
              *ssh-passphrase* ~passphrase
              *ssh-session-config* ~options
              *ssh-exclusive-identity* ~exclusive]
-     ~@body))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clj-jgit.querying" name="clj-jgit.querying"><h1 class="project-name">clj-jgit.querying</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+     ~@body))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn git-submodule-update
+  ([repo]
+    (-&gt; repo 
+      (.submoduleUpdate) 
+      (.call)))
+  ([repo path]
+    (-&gt; repo 
+      (.submoduleUpdate)
+      (.addPath path)
+      (.call))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn git-submodule-sync
+  ([repo]
+    (-&gt; repo 
+      (.submoduleSync) 
+      (.call)))
+  ([repo path]
+    (-&gt; repo 
+      (.submoduleSync)
+      (.addPath path)
+      (.call))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn git-submodule-init
+  ([repo]
+    (-&gt; repo 
+      (.submoduleInit) 
+      (.call)))
+  ([repo path]
+    (-&gt; repo 
+      (.submoduleInit)
+      (.addPath path)
+      (.call))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn git-submodule-add
+  [repo uri path]
+  (-&gt; repo 
+    (.submoduleAdd)
+    (.setURI uri)
+    (.setPath path)
+    (.call)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clj-jgit.querying" name="clj-jgit.querying"><h1 class="project-name">clj-jgit.querying</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns clj-jgit.querying
   (:require [clojure.java.io :as io]
             [clj-jgit.util :as util]
