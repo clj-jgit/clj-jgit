@@ -8,3 +8,7 @@ sandbox
 sandbox*
 /.lein-failures
 .settings/ccw.repl.cmdhistory.prefs
+.classpath
+.project
+.lein-repl-history
+/target
