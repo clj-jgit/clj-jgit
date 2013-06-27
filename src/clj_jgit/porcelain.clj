@@ -192,18 +192,18 @@
 (defn git-clone-full
   "Clone, fetch the master branch and merge its latest commit"
   ([uri]
-     (git-clone-full uri (util/name-from-uri uri) "master" "master" false))
+     (git-clone-full uri (util/name-from-uri uri) "origin" "master" false))
   ([uri local-dir]
-     (git-clone-full uri local-dir "master" "master" false))
-  ([uri local-dir remote-branch]
-     (git-clone-full uri local-dir remote-branch "master" false))
-  ([uri local-dir remote-branch local-branch]
-     (git-clone-full uri local-dir remote-branch local-branch false))
-  ([uri local-dir remote-branch local-branch bare?]
+     (git-clone-full uri local-dir "origin" "master" false))
+  ([uri local-dir remote-name]
+     (git-clone-full uri local-dir remote-name "master" false))
+  ([uri local-dir remote-name local-branch]
+     (git-clone-full uri local-dir remote-name local-branch false))
+  ([uri local-dir remote-name local-branch bare?]
      (let [new-repo (-> (Git/cloneRepository)
                         (.setURI uri)
                         (.setDirectory (io/as-file local-dir))
-                        (.setRemote remote-branch)
+                        (.setRemote remote-name)
                         (.setBranch local-branch)
                         (.setBare bare?)
                         (.call))
