@@ -2,7 +2,7 @@
   (:import
     [org.eclipse.jgit.revwalk RevWalk RevCommit RevCommitList]
     [org.eclipse.jgit.treewalk TreeWalk]
-    [org.eclipse.jgit.lib ObjectId]
+    [org.eclipse.jgit.lib ObjectId ObjectIdRef]
     [org.eclipse.jgit.api Git]
     [org.eclipse.jgit.transport RefSpec]))
 
@@ -43,6 +43,12 @@
   (resolve-object
     ^org.eclipse.jgit.lib.ObjectId [commit-ish ^Git repo]
     commit-ish))
+
+(extend-type ObjectIdRef
+  Resolvable
+  (resolve-object
+    ^org.eclipse.jgit.lib.ObjectId [commit-ish ^Git repo]
+    (.getObjectId commit-ish)))
 
 (extend-type Git
   Resolvable
