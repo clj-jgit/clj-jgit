@@ -186,7 +186,6 @@
     (.setCloneAllBranches clone-all-branches)
     (.call)))
 
-(list (a b 1) 2)
 (declare git-fetch git-merge)
 
 (defn git-clone-full
