@@ -3,5 +3,5 @@ jdk:
   - oraclejdk7
   - openjdk6
 language: clojure
-script: "lein test"
+script: "lein with-profile dev test"
 
