@@ -27,15 +27,15 @@
 
 (defn branch-list-with-heads
   "List of branches for a repo in pairs of [branch-ref branch-tip-commit]"
-  ([^Git repo] 
+  ([^Git repo]
     (branch-list-with-heads repo (new-rev-walk repo)))
   ([^Git repo ^RevWalk rev-walk]
     (letfn [(zip-commits [^ObjectIdRef branch-ref]
-                         [branch-ref (bound-commit repo rev-walk (.getObjectId branch-ref))])] 
+                         [branch-ref (bound-commit repo rev-walk (.getObjectId branch-ref))])]
            (let [branches (porcelain/git-branch-list repo)]
              (doall (map zip-commits branches))))))
 
-(defn commit-in-branch? 
+(defn commit-in-branch?
   "Checks if commit is merged into branch"
   [^Git repo ^RevWalk rev-walk ^RevCommit branch-tip-commit ^ObjectId bound-commit]
   (.isMergedInto rev-walk bound-commit branch-tip-commit))
@@ -46,7 +46,7 @@
   (let [rev-walk (new-rev-walk repo)
         bound-commit (bound-commit repo rev-walk rev-commit)
         branch-list (branch-list-with-heads repo rev-walk)]
-    (->> 
+    (->>
       (for [[^ObjectIdRef branch-ref ^RevCommit branch-tip-commit] branch-list
             :when branch-tip-commit]
         (do
@@ -55,7 +55,7 @@
       (remove nil?)
       doall)))
 
-(defn changed-files 
+(defn changed-files
   "List of files changed in RevCommit object"
   [^Git repo ^RevCommit rev-commit]
   (if-let [parent (first (.getParents rev-commit))]
@@ -66,17 +66,17 @@
     (changed-files-in-first-commit repo rev-commit)))
 
 (defn changes-for
-  "Find changes for commit-ish" 
+  "Find changes for commit-ish"
   [^Git repo commit-ish]
   (->> commit-ish
     (find-rev-commit repo (new-rev-walk repo))
     (changed-files repo)))
 
-(defn rev-list 
+(defn rev-list
   "List of all revision in repo"
-  ([^Git repo] 
+  ([^Git repo]
     (rev-list repo (new-rev-walk repo)))
-  ([^Git repo ^RevWalk rev-walk] 
+  ([^Git repo ^RevWalk rev-walk]
     (.reset rev-walk)
     (mark-all-heads-as-start-for! repo rev-walk)
     (doto (RevCommitList.)
@@ -99,8 +99,8 @@
      :raw rev-commit ; can't retain commit because then RevCommit can't be garbage collected
      }))
 
-(defn commit-info 
-  ([^Git repo, ^RevCommit rev-commit] 
+(defn commit-info
+  ([^Git repo, ^RevCommit rev-commit]
     (commit-info repo (new-rev-walk repo) rev-commit))
   ([^Git repo, ^RevWalk rev-walk, ^RevCommit rev-commit]
     (merge (commit-info-without-branches repo rev-walk rev-commit)
@@ -109,12 +109,12 @@
     (merge (commit-info-without-branches repo rev-walk rev-commit)
       {:branches (map #(.getName ^Ref %) (or (.get commit-map rev-commit) []))})))
 
-(defn- mark-all-heads-as-start-for! 
+(defn- mark-all-heads-as-start-for!
   [^Git repo ^RevWalk rev-walk]
   (doseq [[objId ref] (.getAllRefsByPeeledObjectId (.getRepository repo))]
     (.markStart rev-walk (.lookupCommit rev-walk objId))))
 
-(defn- change-kind 
+(defn- change-kind
   [^DiffEntry entry]
   (let [change (.. entry getChangeType name)]
     (cond
@@ -123,15 +123,15 @@
       (= change "DELETE") :delete
       (= change "COPY") :copy)))
 
-(defn- diff-formatter-for-changes 
+(defn- diff-formatter-for-changes
   [^Git repo]
-  (doto 
+  (doto
     (DiffFormatter. DisabledOutputStream/INSTANCE)
     (.setRepository (.getRepository repo))
     (.setDiffComparator RawTextComparator/DEFAULT)
     (.setDetectRenames false)))
 
-(defn- changed-files-in-first-commit 
+(defn- changed-files-in-first-commit
   [^Git repo ^RevCommit rev-commit]
   (let [tree-walk (new-tree-walk repo rev-commit)
         changes (transient [])]
@@ -139,7 +139,7 @@
       (conj! changes [(util/normalize-path (.getPathString tree-walk)) :add]))
     (persistent! changes)))
 
-(defn- parse-diff-entry 
+(defn- parse-diff-entry
   [^DiffEntry entry]
   (let [old-path (util/normalize-path (.getOldPath entry))
         new-path (util/normalize-path (.getNewPath entry))
@@ -151,10 +151,10 @@
       :else [old-path change-kind new-path])))
 
 (defn rev-list-for
-  ([^Git repo ^RevWalk rev-walk ^RefDirectory$LooseNonTag object] 
+  ([^Git repo ^RevWalk rev-walk ^RefDirectory$LooseNonTag object]
     (.reset rev-walk)
     (.markStart rev-walk (.lookupCommit ^RevWalk rev-walk ^AnyObjectId (.getObjectId object)))
-    (.toArray 
+    (.toArray
       (doto (RevCommitList.)
         (.source rev-walk)
         (.fillTo Integer/MAX_VALUE)))))
@@ -167,7 +167,8 @@
         (.put m c (conj (or (.get m c) []) branch))))))
 
 (defn build-commit-map
-  ([repo] 
+  "Build commit map, which is a map of commit IDs to the list of branches they are in."
+  ([repo]
     (build-commit-map repo (new-rev-walk repo)))
   ([^Git repo ^RevWalk rev-walk]
     (let [^HashMap m (java.util.HashMap.)]
