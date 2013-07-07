@@ -214,6 +214,7 @@
         :merge-result  merge-result})))
 
 (defn git-commit
+  "Commit staged changes."
   ([^Git repo message]
      (-> repo
          (.commit)
@@ -235,6 +236,7 @@
          (.call))))
 
 (defn git-commit-amend
+  "Amend previous commit with staged changes."
   ([^Git repo message]
      (-> repo
          (.commit)
@@ -283,6 +285,7 @@
          (.call))))
 
 (defn git-fetch
+  "Fetch changes from upstream repository."
   (^org.eclipse.jgit.transport.FetchResult [^Git repo]
      (-> repo .fetch .call))
   (^org.eclipse.jgit.transport.FetchResult [^Git repo remote]
@@ -336,6 +339,7 @@
    :theirs MergeStrategy/THEIRS})
 
 (defn git-merge
+  "Merge ref in current branch."
   ([^Git repo commit-ref]
     (let [commit-obj (resolve-object commit-ref repo)]
       (-> repo
