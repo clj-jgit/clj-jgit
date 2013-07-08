@@ -3263,7 +3263,7 @@ net.brehaut.ClojureTools = (function (SH) {
                                    (first (.getAdvertisedRefs fetch-result)))]
        {:repo new-repo,
         :fetch-result fetch-result,
-        :merge-result  merge-result})))</pre></td></tr><tr><td class="docs">
+        :merge-result  merge-result})))</pre></td></tr><tr><td class="docs"><p>Commit staged changes.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn git-commit
   ([^Git repo message]
      (-&gt; repo
@@ -3283,7 +3283,7 @@ net.brehaut.ClojureTools = (function (SH) {
          (.setMessage message)
          (.setAuthor author-name author-email)
          (.setCommitter committer-name committer-email)
-         (.call))))</pre></td></tr><tr><td class="docs">
+         (.call))))</pre></td></tr><tr><td class="docs"><p>Amend previous commit with staged changes.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn git-commit-amend
   ([^Git repo message]
      (-&gt; repo
@@ -3327,7 +3327,7 @@ net.brehaut.ClojureTools = (function (SH) {
          (.setAuthor name email)
          (.setCommitter name email)
          (.setAll true)
-         (.call))))</pre></td></tr><tr><td class="docs">
+         (.call))))</pre></td></tr><tr><td class="docs"><p>Fetch changes from upstream repository.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn git-fetch
   (^org.eclipse.jgit.transport.FetchResult [^Git repo]
      (-&gt; repo .fetch .call))
@@ -3372,7 +3372,7 @@ net.brehaut.ClojureTools = (function (SH) {
   {:ours MergeStrategy/OURS
    :resolve MergeStrategy/RESOLVE
    :simple-two-way MergeStrategy/SIMPLE_TWO_WAY_IN_CORE
-   :theirs MergeStrategy/THEIRS})</pre></td></tr><tr><td class="docs">
+   :theirs MergeStrategy/THEIRS})</pre></td></tr><tr><td class="docs"><p>Merge ref in current branch.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn git-merge
   ([^Git repo commit-ref]
     (let [commit-obj (resolve-object commit-ref repo)]
