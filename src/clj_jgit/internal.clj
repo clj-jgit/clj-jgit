@@ -29,6 +29,7 @@
   (.parseCommit rev-walk rev-commit))
 
 (defprotocol Resolvable
+  "Protocol for things that resolve ObjectId's."
   (resolve-object [commit-ish repo]
     "Find ObjectId instance for any Git name: commit-ish, tree-ish or blob. Accepts ObjectId instances and just passes them through."))
 
