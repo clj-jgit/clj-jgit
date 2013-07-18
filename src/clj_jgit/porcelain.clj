@@ -21,8 +21,13 @@
 
 (declare log-builder)
 
-(defn- discover-repo
-  "Discover a Git repository in a path."
+(defmulti discover-repo "Discover a Git repository in a path." type)
+
+(defmethod discover-repo File
+  [^File file]
+  (discover-repo (.getPath file)))
+
+(defmethod discover-repo String
   [^String path]
   (let [with-git (io/as-file (str path "/.git"))
         bare (io/as-file (str path "/refs"))]
