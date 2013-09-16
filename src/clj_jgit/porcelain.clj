@@ -502,3 +502,50 @@
     (.setURI uri)
     (.setPath path)
     (.call)))
+
+;;
+;; Git Stash Commands
+;;
+
+(defn git-create-stash
+  [^Git repo]
+  (-> repo
+      .stashCreate
+      .call))
+
+(defn git-apply-stash
+  ([^Git repo] (git-apply-stash repo nil))
+  ([^Git repo ^String ref-id]
+   (-> repo
+       .stashApply
+       (.setStashRef ref-id)
+       .call)))
+
+(defn git-list-stash
+  [^Git repo]
+  (-> repo
+      .stashList
+      .call))
+
+(defn git-drop-stash
+  ([^Git repo]
+   (-> repo
+       .stashDrop
+       .call))
+  ([^Git repo ^String ref-id]
+   (let [stashes (git-list-stash repo)
+         target (first (filter #(= ref-id (second %))
+                               (map-indexed #(vector %1 (.getName %2)) stashes)))]
+     (when-not (nil? target)
+       (-> repo
+           .stashDrop
+           (.setStashRef (first target))
+           .call)))))
+
+(defn git-pop-stash
+  ([^Git repo]
+   (git-apply-stash repo)
+   (git-drop-stash repo))
+  ([^Git repo ^String ref-id]
+   (git-apply-stash repo ref-id)
+   (git-drop-stash repo ref-id)))
