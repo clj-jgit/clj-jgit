@@ -22,10 +22,11 @@
   (let [repo-dir (get-temp-dir)]
      (is #(nil? %) (git-init repo-dir))))
 
-(testing "with-repo macro"
-  (read-only-repo
-    (is (instance? Git repo))
-    (is (instance? RevWalk rev-walk))))
+(deftest porcelain-tests
+  (testing "with-repo macro"
+    (read-only-repo
+      (is (instance? Git repo))
+      (is (instance? RevWalk rev-walk)))))
 
 (deftest test-current-branch-functions
   (is (= [true
