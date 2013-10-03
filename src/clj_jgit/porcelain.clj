@@ -1,9 +1,8 @@
 (ns clj-jgit.porcelain
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
-            [clj-jgit.util :as util])
-  (:use
-    clj-jgit.internal)
+            [clj-jgit.util :as util]
+            [clj-jgit.internal :refer :all])
   (:import [java.io FileNotFoundException File]
            [org.eclipse.jgit.lib RepositoryBuilder]
            [org.eclipse.jgit.api
