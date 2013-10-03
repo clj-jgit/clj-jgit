@@ -425,31 +425,37 @@
       (.setMode ^ResetCommand$ResetType (reset-modes mode-sym))
       (.call))))
 
-(def ^:dynamic ^String *ssh-identity-name*)
-(def ^:dynamic ^String *ssh-prvkey*)
-(def ^:dynamic ^String *ssh-pubkey*)
-(def ^:dynamic ^String *ssh-passphrase* "")
+(def ^:dynamic *ssh-identity-name*)
+(def ^:dynamic *ssh-prvkey*)
+(def ^:dynamic *ssh-pubkey*)
+(def ^:dynamic *ssh-passphrase* "")
+(def ^:dynamic *ssh-identities* [])
 (def ^:dynamic *ssh-exclusive-identity* false)
 (def ^:dynamic *ssh-session-config* {})
 
-(def jsch-factory (proxy [JschConfigSessionFactory]
-  []
-  (configure [^OpenSshConfig$Host hc ^Session session]
-    (let [^JSch jsch (.getJSch ^JschConfigSessionFactory this hc FS/DETECTED)]
-      (doseq [[key val] *ssh-session-config*]
-        (.setConfig session key val))
-      (when *ssh-exclusive-identity*
-        (.removeAllIdentity jsch))
-      (.addIdentity jsch *ssh-identity-name*
-        (.getBytes *ssh-prvkey*)
-        (.getBytes *ssh-pubkey*)
-        (.getBytes *ssh-passphrase*))))))
+(def jsch-factory
+  (proxy [JschConfigSessionFactory] []
+    (configure [hc session]
+      (let [jsch (.getJSch this hc FS/DETECTED)]
+        (doseq [[key val] *ssh-session-config*]
+          (.setConfig session key val))
+        (when *ssh-exclusive-identity*
+          (.removeAllIdentity jsch))
+        (when (and *ssh-prvkey* *ssh-pubkey* *ssh-passphrase*)
+          (.addIdentity jsch *ssh-identity-name*
+                        (.getBytes *ssh-prvkey*)
+                        (.getBytes *ssh-pubkey*)
+                        (.getBytes *ssh-passphrase*)))
+        (doseq [{:keys [name private-key public-key passphrase]
+                 :or {passphrase ""
+                      name (str "key-" (.hashCode private-key))}} *ssh-identities*]
+          (.addIdentity jsch name (.getBytes private-key) (.getBytes public-key) (.getBytes passphrase)))))))
 
 (SshSessionFactory/setInstance jsch-factory)
 
 (defmacro with-identity
   "Creates an identity to use for SSH authentication."
-  [{:keys [name private public passphrase options exclusive]
+  [{:keys [name private public passphrase options exclusive identities]
     :or {name "jgit-identity"
          passphrase ""
          options {"StrictHostKeyChecking" "no"}
@@ -457,6 +463,7 @@
   `(binding [*ssh-identity-name* ~name
              *ssh-prvkey* ~private
              *ssh-pubkey* ~public
+             *ssh-identities* ~identities
              *ssh-passphrase* ~passphrase
              *ssh-session-config* ~options
              *ssh-exclusive-identity* ~exclusive]
