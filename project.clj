@@ -1,6 +1,6 @@
 (defproject clj-jgit "0.4.0"
   :description "Clojure wrapper for JGit"
-  :dependencies [[org.eclipse.jgit "2.3.1.201302201838-r"]
+  :dependencies [[org.eclipse.jgit "3.1.0.201310021548-r"] ;; "2.3.1.201302201838-r"
                  [org.clojure/core.memoize "0.5.3"]]
   :profiles {:dev {:dependencies [[org.clojure/clojure "1.5.1"]
                                   [midje "1.5.1"]
@@ -10,4 +10,4 @@
   :plugins [[lein-midje "3.0.1"]
             [lein-marginalia "0.7.1"]]
   :repositories {"stuartsierra-releases" "http://stuartsierra.com/maven2"
-                 "jgit-repository" "http://download.eclipse.org/jgit/maven"})
+                 "jgit-repository" "https://repo.eclipse.org/content/groups/releases/"})

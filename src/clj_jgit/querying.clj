@@ -151,7 +151,7 @@
       :else [old-path change-kind new-path])))
 
 (defn rev-list-for
-  ([^Git repo ^RevWalk rev-walk ^RefDirectory$LooseNonTag object]
+  ([^Git repo ^RevWalk rev-walk ^RefDirectory$LooseRef object]
     (.reset rev-walk)
     (.markStart rev-walk (.lookupCommit ^RevWalk rev-walk ^AnyObjectId (.getObjectId object)))
     (.toArray

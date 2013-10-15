@@ -11,14 +11,14 @@
   `(when (not (or (nil? ~obj) (empty? ~obj)))
      ~@body))
 
-(defmethod print-method org.eclipse.jgit.storage.file.RefDirectory$LooseUnpeeled
+(defmethod print-method org.eclipse.jgit.internal.storage.file.RefDirectory$LooseRef
   [o w]
   (print-simple
    (str "#<" (.replaceFirst (str (.getClass o)) "class " "") ", "
         "Name: " (.getName o) ", "
         "ObjectId: " (.getName (.getObjectId o)) ">") w))
 
-(defn normalize-path 
+(defn normalize-path
   "Removes a leading slash from a path"
   [path]
   (if (= path "/")
