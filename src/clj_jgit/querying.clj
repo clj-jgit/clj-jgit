@@ -169,7 +169,9 @@
   ([repo]
     (build-commit-map repo (new-rev-walk repo)))
   ([^Git repo ^RevWalk rev-walk]
-    (let [^HashMap m (java.util.HashMap.)]
-      (loop [[branch & branches] (vals (.getRefs (.getRefDatabase ^Repository (.getRepository repo)) "refs/heads/"))]
+    (let [^HashMap m (HashMap.)]
+      (loop [[branch & branches] (vals (get-refs repo "refs/heads/"))]
         (add-branch-to-map repo rev-walk branch m)
-        (if branches (recur branches) m)))))
+        (if branches
+          (recur branches)
+          m)))))

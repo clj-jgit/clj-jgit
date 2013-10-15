@@ -2,7 +2,7 @@
   (:import
     [org.eclipse.jgit.revwalk RevWalk RevCommit RevCommitList]
     [org.eclipse.jgit.treewalk TreeWalk]
-    [org.eclipse.jgit.lib ObjectId ObjectIdRef]
+    [org.eclipse.jgit.lib ObjectId ObjectIdRef Repository]
     [org.eclipse.jgit.api Git]
     [org.eclipse.jgit.transport RefSpec]))
 
@@ -57,3 +57,11 @@
     ^org.eclipse.jgit.lib.ObjectId [^Git repo commit-ish]
     "For compatibility with previous implementation of resolve-object, which would take repo as a first argument."
     (resolve-object commit-ish repo)))
+
+(defn ref-database
+  ^org.eclipse.jgit.lib.RefDatabase [^Git repo]
+  (.getRefDatabase ^Repository (.getRepository repo)))
+
+(defn get-refs
+  [^Git repo ^String prefix]
+  (.getRefs (ref-database repo) prefix))
