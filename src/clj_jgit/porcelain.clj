@@ -5,8 +5,7 @@
             [clj-jgit.internal :refer :all])
   (:import [java.io FileNotFoundException File]
            [org.eclipse.jgit.lib RepositoryBuilder]
-           [org.eclipse.jgit.api
-            Git InitCommand StatusCommand AddCommand
+           [org.eclipse.jgit.api Git InitCommand StatusCommand AddCommand
             ListBranchCommand PullCommand MergeCommand LogCommand
             LsRemoteCommand Status ResetCommand$ResetType
             FetchCommand]
@@ -448,7 +447,10 @@
         (doseq [{:keys [name private-key public-key passphrase]
                  :or {passphrase ""
                       name (str "key-" (.hashCode private-key))}} *ssh-identities*]
-          (.addIdentity jsch name (.getBytes private-key) (.getBytes public-key) (.getBytes passphrase)))))))
+          (.addIdentity jsch name
+                        (.getBytes private-key)
+                        (.getBytes public-key)
+                        (.getBytes passphrase)))))))
 
 (SshSessionFactory/setInstance jsch-factory)
 
