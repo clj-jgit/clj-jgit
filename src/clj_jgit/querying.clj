@@ -84,7 +84,7 @@
 (defn commit-info-without-branches
   [^Git repo ^RevWalk rev-walk ^RevCommit rev-commit]
   (let [ident (.getAuthorIdent rev-commit)
-        time (-> (.getCommitTime rev-commit) (* 1000) java.util.Date.)
+        time (-> (.getCommitTime rev-commit) (* 1000) Date.)
         message (-> (.getFullMessage rev-commit) str string/trim)]
     {:id (.getName rev-commit)
      :repo repo
@@ -158,7 +158,7 @@
         (.fillTo Integer/MAX_VALUE)))))
 
 (defn- add-branch-to-map
-  [^Git repo ^RevWalk rev-walk branch ^java.util.HashMap m]
+  [^Git repo ^RevWalk rev-walk branch ^HashMap m]
   (let [^"[Ljava.lang.Object;" revs (rev-list-for repo rev-walk branch)]
     (dotimes [i (alength revs)]
       (let [c (aget revs i)]
