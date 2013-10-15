@@ -1,19 +1,17 @@
 (ns clj-jgit.querying
   (:require [clojure.java.io :as io]
+            [clojure.string :as string]
             [clj-jgit.util :as util]
             [clj-jgit.porcelain :as porcelain]
-            [clojure.string :as string])
-  (:use
-    clj-jgit.internal)
-  (:import
-    [org.eclipse.jgit.diff DiffFormatter DiffEntry]
-    [org.eclipse.jgit.util.io DisabledOutputStream]
-    [org.eclipse.jgit.diff RawTextComparator]
-    [org.eclipse.jgit.revwalk RevWalk RevCommit RevCommitList]
-    [org.eclipse.jgit.lib FileMode Repository ObjectIdRef ObjectId AnyObjectId Ref]
-    [org.eclipse.jgit.api Git LogCommand]
-    [org.eclipse.jgit.storage.file RefDirectory$LooseNonTag]
-    [java.util HashMap]))
+            [clj-jgit.internal :refer :all])
+  (:import [org.eclipse.jgit.diff DiffFormatter DiffEntry]
+           [org.eclipse.jgit.util.io DisabledOutputStream]
+           [org.eclipse.jgit.diff RawTextComparator]
+           [org.eclipse.jgit.revwalk RevWalk RevCommit RevCommitList]
+           [org.eclipse.jgit.lib FileMode Repository ObjectIdRef ObjectId AnyObjectId Ref]
+           [org.eclipse.jgit.api Git LogCommand]
+           [org.eclipse.jgit.internal.storage.file RefDirectory$LooseRef]
+           [java.util HashMap Date]))
 
 (declare change-kind create-tree-walk diff-formatter-for-changes
          changed-files-in-first-commit parse-diff-entry
