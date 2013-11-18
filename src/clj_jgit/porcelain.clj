@@ -2,7 +2,8 @@
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
             [clj-jgit.util :as util]
-            [clj-jgit.internal :refer :all])
+            [clj-jgit.internal :refer :all]
+            [fs.core :as fs])
   (:import [java.io FileNotFoundException File]
            [org.eclipse.jgit.lib RepositoryBuilder]
            [org.eclipse.jgit.api Git InitCommand StatusCommand AddCommand
@@ -15,7 +16,8 @@
            [org.eclipse.jgit.util FS]
            [org.eclipse.jgit.merge MergeStrategy]
            [clojure.lang Keyword]
-           [java.util List]))
+           [java.util List]
+           [org.eclipse.jgit.api.errors JGitInternalException]))
 
 (declare log-builder)
 
@@ -558,3 +560,36 @@
   ([^Git repo ^String ref-id]
      (git-apply-stash repo ref-id)
      (git-drop-stash repo ref-id)))
+
+(defn git-clean
+  "Remove untracked files from the working tree.
+
+  clean-dirs? - true/false - remove untracked directories
+  force-dirs? - true/false - force removal of non-empty untracked directories
+  paths - set of paths to cleanup
+  ignore? - true/false - ignore paths from .gitignore"
+  [^Git repo & {:keys [clean-dirs? ignore? paths force-dirs?]
+                :or {clean-dirs? false
+                     force-dirs? false
+                     ignore? true
+                     paths #{}}}]
+  (letfn [(clean-loop [retries]
+            (try
+              (-> repo
+                  (.clean)
+                  (.setCleanDirectories clean-dirs?)
+                  (.setIgnore ignore?)
+                  (.setPaths paths)
+                  (.call))
+              (catch JGitInternalException e
+                (if-not force-dirs?
+                  (throw e)
+                  (when-let [dir-path (->> (.getMessage e)
+                                           (re-seq #"^Could not delete file (.*)$")
+                                           (first)
+                                           (last))]
+                    (if (retries dir-path)
+                      (throw e)
+                      (fs/delete-dir dir-path))
+                    #(clean-loop (conj retries dir-path)))))))]
+    (trampoline clean-loop #{})))
