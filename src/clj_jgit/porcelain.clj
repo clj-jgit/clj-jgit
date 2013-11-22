@@ -10,6 +10,7 @@
             ListBranchCommand PullCommand MergeCommand LogCommand
             LsRemoteCommand Status ResetCommand$ResetType
             FetchCommand]
+           [org.eclipse.jgit.submodule SubmoduleWalk]
            [com.jcraft.jsch Session JSch]
            [org.eclipse.jgit.transport FetchResult JschConfigSessionFactory
             OpenSshConfig$Host SshSessionFactory]
@@ -472,12 +473,21 @@
              *ssh-exclusive-identity* ~exclusive]
      ~@body))
 
+(defn git-submodule-fetch
+  [repo]
+  (let [gen (SubmoduleWalk/forIndex (.getRepository repo))]
+    (while (.next gen)
+      (git-fetch (Git/wrap (.getRepository gen))))))
+
 (defn git-submodule-update
   ([repo]
+     "Fetch each submodule repo and update them."
+     (git-submodule-fetch repo)
      (-> repo
          (.submoduleUpdate)
          (.call)))
   ([repo path]
+     (git-submodule-fetch repo)
      (-> repo
          (.submoduleUpdate)
          (.addPath path)
