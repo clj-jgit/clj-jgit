@@ -65,6 +65,9 @@ This brief tutorial will show you how to:
 ;; Status clean
 (git-status my-repo)
 ;=> {:untracked #{}, :removed #{}, :modified #{}, :missing #{}, :changed #{}, :added #{}}
+
+(git-clean my-repo :clean-dirs? true, :ignore? true)
+;=> ...
 ```
 
 ## Detailed Usage ##
