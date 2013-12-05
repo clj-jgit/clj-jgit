@@ -477,7 +477,8 @@
   [repo]
   (let [gen (SubmoduleWalk/forIndex (.getRepository repo))]
     (while (.next gen)
-      (git-fetch (Git/wrap (.getRepository gen))))))
+      (when-let [repo (.getRepository gen)]
+        (git-fetch (Git/wrap repo))))))
 
 (defn git-submodule-update
   ([repo]
