@@ -473,48 +473,68 @@
              *ssh-exclusive-identity* ~exclusive]
      ~@body))
 
+(defn submodule-walk
+  ([repo]
+     (->> (submodule-walk (.getRepository repo) 0)
+          (flatten)
+          (map #(Git/wrap %))))
+  ([repo level]
+     (when (< level 3)
+       (let [gen (SubmoduleWalk/forIndex repo)
+             repos (transient [])]
+         (while (.next gen)
+           (when-let [subm (.getRepository gen)]
+             (conj! repos subm)
+             (conj! repos (submodule-walk subm (inc level)))))
+         (->> (persistent! repos)
+              (flatten))))))
+
 (defn git-submodule-fetch
   [repo]
-  (let [gen (SubmoduleWalk/forIndex (.getRepository repo))]
-    (while (.next gen)
-      (when-let [repo (.getRepository gen)]
-        (git-fetch (Git/wrap repo))))))
+  (doseq [subm (submodule-walk repo)]
+    (git-fetch subm)))
 
 (defn git-submodule-update
   ([repo]
      "Fetch each submodule repo and update them."
      (git-submodule-fetch repo)
-     (-> repo
-         (.submoduleUpdate)
-         (.call)))
+     (doseq [subm (submodule-walk repo)]
+       (-> subm
+           (.submoduleUpdate)
+           (.call))))
   ([repo path]
      (git-submodule-fetch repo)
-     (-> repo
+     (doseq [subm (submodule-walk repo)]
+       (-> subm
          (.submoduleUpdate)
          (.addPath path)
-         (.call))))
+         (.call)))))
 
 (defn git-submodule-sync
   ([repo]
-     (-> repo
-         (.submoduleSync)
-         (.call)))
+     (doseq [subm (submodule-walk repo)]
+       (-> subm
+           (.submoduleSync)
+           (.call))))
   ([repo path]
-     (-> repo
-         (.submoduleSync)
-         (.addPath path)
-         (.call))))
+     (doseq [subm (submodule-walk repo)]
+       (-> subm
+           (.submoduleSync)
+           (.addPath path)
+           (.call)))))
 
 (defn git-submodule-init
   ([repo]
-     (-> repo
-         (.submoduleInit)
-         (.call)))
+     (doseq [subm (submodule-walk repo)]
+       (-> subm
+           (.submoduleInit)
+           (.call))))
   ([repo path]
-     (-> repo
-         (.submoduleInit)
-         (.addPath path)
-         (.call))))
+     (doseq [subm (submodule-walk repo)]
+       (-> subm
+           (.submoduleInit)
+           (.addPath path)
+           (.call)))))
 
 (defn git-submodule-add
   [repo uri path]
