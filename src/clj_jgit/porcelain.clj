@@ -426,9 +426,9 @@
          (.setMode ^ResetCommand$ResetType (reset-modes mode-sym))
          (.call))))
 
-(def ^:dynamic *ssh-identity-name*)
-(def ^:dynamic *ssh-prvkey*)
-(def ^:dynamic *ssh-pubkey*)
+(def ^:dynamic *ssh-identity-name* "")
+(def ^:dynamic *ssh-prvkey* "")
+(def ^:dynamic *ssh-pubkey* "")
 (def ^:dynamic *ssh-passphrase* "")
 (def ^:dynamic *ssh-identities* [])
 (def ^:dynamic *ssh-exclusive-identity* false)
@@ -444,7 +444,7 @@
           (.removeAllIdentity jsch))
         (when (and *ssh-prvkey* *ssh-pubkey* *ssh-passphrase*)
           (.addIdentity jsch *ssh-identity-name*
-                        (.getBytes *ssh-prvkey*)
+                        (.getBytes *ssh-prvkey* )
                         (.getBytes *ssh-pubkey*)
                         (.getBytes *ssh-passphrase*)))
         (doseq [{:keys [name private-key public-key passphrase]
