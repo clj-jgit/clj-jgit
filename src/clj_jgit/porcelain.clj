@@ -512,11 +512,11 @@
 
 (defn git-submodule-sync
   ([repo]
+     (.. repo submoduleSync call)
      (doseq [subm (submodule-walk repo)]
-       (-> subm
-           (.submoduleSync)
-           (.call))))
+       (.. subm submoduleSync call)))
   ([repo path]
+     (.. repo submoduleSync call)
      (doseq [subm (submodule-walk repo)]
        (-> subm
            (.submoduleSync)
@@ -525,11 +525,11 @@
 
 (defn git-submodule-init
   ([repo]
+     (.. repo submoduleInit call)
      (doseq [subm (submodule-walk repo)]
-       (-> subm
-           (.submoduleInit)
-           (.call))))
+       (.. subm submoduleInit call)))
   ([repo path]
+     (.. repo submoduleInit call)
      (doseq [subm (submodule-walk repo)]
        (-> subm
            (.submoduleInit)
