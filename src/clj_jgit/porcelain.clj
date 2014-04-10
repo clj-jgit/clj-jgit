@@ -18,7 +18,8 @@
            [org.eclipse.jgit.merge MergeStrategy]
            [clojure.lang Keyword]
            [java.util List]
-           [org.eclipse.jgit.api.errors JGitInternalException]))
+           [org.eclipse.jgit.api.errors JGitInternalException]
+           [org.eclipse.jgit.transport UsernamePasswordCredentialsProvider]))
 
 (declare log-builder)
 
@@ -36,6 +37,13 @@
      (.endsWith path ".git") (io/as-file path)
      (.exists with-git) with-git
      (.exists bare) (io/as-file path))))
+
+(def ^:dynamic *credentials* nil)
+
+(defmacro with-credentials
+  [login password & body]
+  `(binding [*credentials* (UsernamePasswordCredentialsProvider. ~login ~password)]
+     ~@body))
 
 (defn load-repo
   "Given a path (either to the parent folder or to the `.git` folder itself), load the Git repository"
@@ -157,6 +165,11 @@
 
 (declare git-cherry-pick)
 
+(defn clone-cmd [uri]
+  (-> (Git/cloneRepository)
+      (.setCredentialsProvider *credentials*)
+      (.setURI uri)))
+
 (defn git-clone
   ([uri]
      (git-clone uri (util/name-from-uri uri) "origin" "master" false))
@@ -167,8 +180,7 @@
   ([uri local-dir remote-name local-branch]
      (git-clone uri local-dir remote-name local-branch false))
   ([uri local-dir remote-name local-branch bare?]
-     (-> (Git/cloneRepository)
-         (.setURI uri)
+     (-> (clone-cmd uri)
          (.setDirectory (io/as-file local-dir))
          (.setRemote remote-name)
          (.setBranch local-branch)
@@ -183,8 +195,7 @@
              branch-name "master"
              bare false
              clone-all-branches true}}]
-  (doto (Git/cloneRepository)
-    (.setURI uri)
+  (doto (clone-cmd uri)
     (.setDirectory (io/as-file path))
     (.setRemote remote-name)
     (.setBranch branch-name)
@@ -205,8 +216,7 @@
   ([uri local-dir remote-name local-branch]
      (git-clone-full uri local-dir remote-name local-branch false))
   ([uri local-dir remote-name local-branch bare?]
-     (let [new-repo (-> (Git/cloneRepository)
-                        (.setURI uri)
+     (let [new-repo (-> (clone-cmd uri)
                         (.setDirectory (io/as-file local-dir))
                         (.setRemote remote-name)
                         (.setBranch local-branch)
@@ -290,20 +300,25 @@
          (.setAll true)
          (.call))))
 
+(defn fetch-cmd [^Git repo]
+  (-> repo
+      (.fetch)
+      (.setCredentialsProvider *credentials*)))
+
 (defn git-fetch
   "Fetch changes from upstream repository."
   (^org.eclipse.jgit.transport.FetchResult [^Git repo]
-     (-> repo .fetch .call))
+                                           (-> (fetch-cmd repo)
+                                               (.call)))
   (^org.eclipse.jgit.transport.FetchResult [^Git repo remote]
-     (-> repo
-       (.fetch)
-       (.setRemote remote)
-       (.call)))
+                                           (-> (fetch-cmd repo)
+                                               (.setRemote remote)
+                                               (.call)))
   (^org.eclipse.jgit.transport.FetchResult [^Git repo remote & refspecs]
-     (let [^FetchCommand cmd (.fetch repo)]
-       (.setRefSpecs cmd ^List (map ref-spec refspecs))
-       (.setRemote cmd remote)
-       (.call cmd))))
+                                           (let [^FetchCommand cmd (fetch-cmd repo)]
+                                             (.setRefSpecs cmd ^List (map ref-spec refspecs))
+                                             (.setRemote cmd remote)
+                                             (.call cmd))))
 
 (defn git-init
   "Initialize and load a new Git repository"
@@ -396,15 +411,21 @@
 
 (defn git-tag [])
 
+(defn ls-remote-cmd [^Git repo]
+  (-> repo
+      (.lsRemote)
+      (.setCredentialsProvider *credentials*)))
+
 (defn git-ls-remote
   ([^Git repo]
-     (-> repo .lsRemote .call))
+     (-> (ls-remote-cmd repo)
+         (.call)))
   ([^Git repo remote]
-     (-> repo .lsRemote
+     (-> (ls-remote-cmd repo)
          (.setRemote remote)
-         .call))
+         (.call)))
   ([^Git repo remote opts]
-     (-> repo .lsRemote
+     (-> (ls-remote-cmd repo)
          (.setRemote remote)
          (.setHeads (:heads opts false))
          (.setTags (:tags opts false))
@@ -494,21 +515,28 @@
   (doseq [subm (submodule-walk repo)]
     (git-fetch subm)))
 
+(defn submodule-update-cmd [^Git repo]
+  (-> repo
+      (.submoduleUpdate)
+      (.setCredentialsProvider *credentials*)))
+
 (defn git-submodule-update
   ([repo]
      "Fetch each submodule repo and update them."
      (git-submodule-fetch repo)
+     (-> (submodule-update-cmd repo)
+         (.call))
      (doseq [subm (submodule-walk repo)]
-       (-> subm
-           (.submoduleUpdate)
+       (-> (submodule-update-cmd subm)
            (.call))))
   ([repo path]
      (git-submodule-fetch repo)
+     (-> (submodule-update-cmd repo)
+         (.call))
      (doseq [subm (submodule-walk repo)]
-       (-> subm
-         (.submoduleUpdate)
-         (.addPath path)
-         (.call)))))
+       (-> (submodule-update-cmd subm)
+           (.addPath path)
+           (.call)))))
 
 (defn git-submodule-sync
   ([repo]
