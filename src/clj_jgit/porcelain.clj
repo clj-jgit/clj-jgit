@@ -320,6 +320,13 @@
                                              (.setRemote cmd remote)
                                              (.call cmd))))
 
+(defn git-fetch-all
+  "Fetch all refs from upstream repository"
+  ([^Git repo]
+     (git-fetch-all repo "origin"))
+  ([^Git repo remote]
+     (git-fetch-all repo remote "+refs/tags/*:refs/tags/*" "+refs/heads/*:refs/heads/*")))
+
 (defn git-init
   "Initialize and load a new Git repository"
   ([] (git-init "."))
