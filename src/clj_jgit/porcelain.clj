@@ -325,7 +325,7 @@
   ([^Git repo]
      (git-fetch-all repo "origin"))
   ([^Git repo remote]
-     (git-fetch-all repo remote "+refs/tags/*:refs/tags/*" "+refs/heads/*:refs/heads/*")))
+     (git-fetch repo remote "+refs/tags/*:refs/tags/*" "+refs/heads/*:refs/heads/*")))
 
 (defn git-init
   "Initialize and load a new Git repository"
