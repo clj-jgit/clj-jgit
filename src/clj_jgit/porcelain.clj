@@ -520,7 +520,7 @@
 (defn git-submodule-fetch
   [repo]
   (doseq [subm (submodule-walk repo)]
-    (git-fetch subm)))
+    (git-fetch-all subm)))
 
 (defn submodule-update-cmd [^Git repo]
   (-> repo
