@@ -14,8 +14,8 @@
            [java.util HashMap Date]))
 
 (declare change-kind create-tree-walk diff-formatter-for-changes
-         changed-files-in-first-commit parse-diff-entry
-         mark-all-heads-as-start-for!)
+         byte-array-diff-formatter-for-changes changed-files-in-first-commit 
+         parse-diff-entry mark-all-heads-as-start-for!)
 
 (defn find-rev-commit
   "Find RevCommit instance in RevWalk by commit-ish"
@@ -62,6 +62,16 @@
           entries (.scan df rev-parent rev-commit)]
       (map parse-diff-entry entries))
     (changed-files-in-first-commit repo rev-commit)))
+
+(defn changed-files-with-patch
+  "Patch with diff of all changes in RevCommit object"
+  [^Git repo ^RevCommit rev-commit]
+  (if-let [parent (first (.getParents rev-commit))]
+    (let [rev-parent ^RevCommit parent
+          out ^ByteArrayOutputStream (new ByteArrayOutputStream)
+          df ^DiffFormatter (byte-array-diff-formatter-for-changes repo out)]
+      (.format df rev-parent rev-commit)
+      out)))
 
 (defn changes-for
   "Find changes for commit-ish"
@@ -128,6 +138,13 @@
     (.setRepository (.getRepository repo))
     (.setDiffComparator RawTextComparator/DEFAULT)
     (.setDetectRenames false)))
+
+(defn- byte-array-diff-formatter-for-changes
+  [^Git repo ^ByteArrayOutputStream out]
+  (doto
+      (new DiffFormatter out)
+    (.setRepository (.getRepository repo))
+    (.setDiffComparator RawTextComparator/DEFAULT)))
 
 (defn- changed-files-in-first-commit
   [^Git repo ^RevCommit rev-commit]
