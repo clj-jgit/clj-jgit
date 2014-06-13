@@ -11,7 +11,8 @@
            [org.eclipse.jgit.lib FileMode Repository ObjectIdRef ObjectId AnyObjectId Ref]
            [org.eclipse.jgit.api Git LogCommand]
            [org.eclipse.jgit.internal.storage.file RefDirectory$LooseRef]
-           [java.util HashMap Date]))
+           [java.util HashMap Date]
+           [java.io ByteArrayOutputStream]))
 
 (declare change-kind create-tree-walk diff-formatter-for-changes
          byte-array-diff-formatter-for-changes changed-files-in-first-commit 
@@ -71,7 +72,7 @@
           out ^ByteArrayOutputStream (new ByteArrayOutputStream)
           df ^DiffFormatter (byte-array-diff-formatter-for-changes repo out)]
       (.format df rev-parent rev-commit)
-      out)))
+      (.toStrint out))))
 
 (defn changes-for
   "Find changes for commit-ish"
