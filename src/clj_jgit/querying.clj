@@ -72,7 +72,7 @@
           out ^ByteArrayOutputStream (new ByteArrayOutputStream)
           df ^DiffFormatter (byte-array-diff-formatter-for-changes repo out)]
       (.format df rev-parent rev-commit)
-      (.toStrint out))))
+      (.toString out))))
 
 (defn changes-for
   "Find changes for commit-ish"
