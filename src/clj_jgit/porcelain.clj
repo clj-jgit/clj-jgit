@@ -5,7 +5,7 @@
             [clj-jgit.internal :refer :all]
             [fs.core :as fs])
   (:import [java.io FileNotFoundException File]
-           [org.eclipse.jgit.lib RepositoryBuilder]
+           [org.eclipse.jgit.lib RepositoryBuilder AnyObjectId]
            [org.eclipse.jgit.api Git InitCommand StatusCommand AddCommand
             ListBranchCommand PullCommand MergeCommand LogCommand
             LsRemoteCommand Status ResetCommand$ResetType
@@ -659,3 +659,37 @@
                       (fs/delete-dir dir-path))
                     #(clean-loop (conj retries dir-path)))))))]
     (trampoline clean-loop #{})))
+
+(defn git-blame
+  ([^Git repo ^String path]
+     (git-blame repo path false))
+  ([^Git repo ^String path ^Boolean follow-renames?]
+     (-> repo
+         .blame
+         (.setFilePath path)
+         (.setFollowFileRenames follow-renames?)
+         .call))
+  ([^Git repo ^String path ^Boolean follow-renames? ^AnyObjectId start-commit]
+     (-> repo
+         .blame
+         (.setFilePath path)
+         (.setFollowFileRenames follow-renames?)
+         (.setStartCommit start-commit)
+         .call)))
+
+(defn blame-result
+  [blame]
+  (.computeAll blame)
+  (letfn [(blame-line [num]
+            {:author (util/person-ident (.getSourceAuthor blame num))
+             :commit (.getSourceCommit blame num)
+             :committer (util/person-ident (.getSourceCommitter blame num))
+             :line (.getSourceLine blame num)
+             :source-path (.getSourcePath blame num)})
+          (blame-seq [num]
+            (try
+              (cons (blame-line num)
+                    (lazy-seq (blame-seq (inc num))))
+              (catch ArrayIndexOutOfBoundsException e
+                nil)))]
+    (blame-seq 0)))

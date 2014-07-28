@@ -26,3 +26,8 @@
     (if (= (first path) \/)
       (apply str (rest path))
       path)))
+
+(defn person-ident [^org.eclipse.jgit.lib.PersonIdent person]
+  {:name (.getName person)
+   :email (.getEmailAddress person)
+   :timezone (.getTimeZone person)})
