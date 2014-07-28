@@ -1,4 +1,4 @@
-(defproject clj-jgit "0.7.4"
+(defproject clj-jgit "0.7.5"
   :description "Clojure wrapper for JGit"
   :dependencies [[org.eclipse.jgit/org.eclipse.jgit.java7 "3.3.2.201404171909-r"] 
                  [org.clojure/core.memoize "0.5.3"]
