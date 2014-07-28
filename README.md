@@ -1,4 +1,4 @@
-# clj-jgit [![Build Status](https://secure.travis-ci.org/clj-jgit/clj-jgit.png)](http://travis-ci.org/clj-jgit/clj-jgit) #
+# clj-jgit 
 
 Clojure wrapper for using the JGit library to manipulate Git repositories in a "pure Java" fashion.
 
@@ -68,6 +68,19 @@ This brief tutorial will show you how to:
 
 (git-clean my-repo :clean-dirs? true, :ignore? true)
 ;=> ...
+
+;; Blame
+(first (git-blame my-repo "README.md"))
+;=> {:author {:name "Ilya Sabanin", 
+              :email "ilya@sabanin.com", 
+              :timezone #<ZoneInfo ...>}, 
+     :commit #<RevCommit commit fabdf5cf4abb72231461177238349c21e23fa46a 1352414190 -----p>, 
+     :committer {:name "Ilya Sabanin", 
+                 :email "ilya@wildbit.com", 
+                 :timezone #<ZoneInfo ...>}, 
+     :line 66, 
+     :source-path "README.md"}
+
 ```
 
 ## Detailed Usage ##
