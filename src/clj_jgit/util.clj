@@ -28,6 +28,7 @@
       path)))
 
 (defn person-ident [^org.eclipse.jgit.lib.PersonIdent person]
-  {:name (.getName person)
-   :email (.getEmailAddress person)
-   :timezone (.getTimeZone person)})
+  (when person
+    {:name (.getName person)
+     :email (.getEmailAddress person)
+     :timezone (.getTimeZone person)}))

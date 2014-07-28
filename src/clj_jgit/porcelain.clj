@@ -668,28 +668,29 @@
          .blame
          (.setFilePath path)
          (.setFollowFileRenames follow-renames?)
-         .call))
+         .call
+         blame-result))
   ([^Git repo ^String path ^Boolean follow-renames? ^AnyObjectId start-commit]
      (-> repo
          .blame
          (.setFilePath path)
          (.setFollowFileRenames follow-renames?)
          (.setStartCommit start-commit)
-         .call)))
+         .call
+         blame-result)))
 
 (defn blame-result
   [blame]
   (.computeAll blame)
   (letfn [(blame-line [num]
-            {:author (util/person-ident (.getSourceAuthor blame num))
-             :commit (.getSourceCommit blame num)
-             :committer (util/person-ident (.getSourceCommitter blame num))
-             :line (.getSourceLine blame num)
-             :source-path (.getSourcePath blame num)})
+            (when-let [commit (.getSourceCommit blame num)]
+              {:author (util/person-ident (.getSourceAuthor blame num))
+               :commit commit
+               :committer (util/person-ident (.getSourceCommitter blame num))
+               :line (.getSourceLine blame num)
+               :source-path (.getSourcePath blame num)}))
           (blame-seq [num]
-            (try
-              (cons (blame-line num)
-                    (lazy-seq (blame-seq (inc num))))
-              (catch ArrayIndexOutOfBoundsException e
-                nil)))]
+            (when-let [cur (blame-line num)]
+              (cons cur
+                    (lazy-seq (blame-seq (inc num))))))]
     (blame-seq 0)))
