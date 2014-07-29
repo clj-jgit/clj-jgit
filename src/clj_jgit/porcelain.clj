@@ -660,6 +660,22 @@
                     #(clean-loop (conj retries dir-path)))))))]
     (trampoline clean-loop #{})))
 
+(defn blame-result
+  [blame]
+  (.computeAll blame)
+  (letfn [(blame-line [num]
+            (when-let [commit (.getSourceCommit blame num)]
+              {:author (util/person-ident (.getSourceAuthor blame num))
+               :commit commit
+               :committer (util/person-ident (.getSourceCommitter blame num))
+               :line (.getSourceLine blame num)
+               :source-path (.getSourcePath blame num)}))
+          (blame-seq [num]
+            (when-let [cur (blame-line num)]
+              (cons cur
+                    (lazy-seq (blame-seq (inc num))))))]
+    (blame-seq 0)))
+
 (defn git-blame
   ([^Git repo ^String path]
      (git-blame repo path false))
@@ -678,19 +694,3 @@
          (.setStartCommit start-commit)
          .call
          blame-result)))
-
-(defn blame-result
-  [blame]
-  (.computeAll blame)
-  (letfn [(blame-line [num]
-            (when-let [commit (.getSourceCommit blame num)]
-              {:author (util/person-ident (.getSourceAuthor blame num))
-               :commit commit
-               :committer (util/person-ident (.getSourceCommitter blame num))
-               :line (.getSourceLine blame num)
-               :source-path (.getSourcePath blame num)}))
-          (blame-seq [num]
-            (when-let [cur (blame-line num)]
-              (cons cur
-                    (lazy-seq (blame-seq (inc num))))))]
-    (blame-seq 0)))
