@@ -10,7 +10,7 @@
     [org.eclipse.jgit.api Git]
     [org.eclipse.jgit.lib Repository AnyObjectId ObjectId]
     [org.eclipse.jgit.revwalk RevWalk RevCommit]
-    [org.eclipse.jgit.storage.file RefDirectory$LooseUnpeeled]))
+    [org.eclipse.jgit.internal.storage.file RefDirectory$LooseUnpeeled]))
 
 (deftest querying-tests
   (testing "branch-list-with-heads"
