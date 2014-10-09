@@ -20,7 +20,7 @@ This brief tutorial will show you how to:
 ```clj
 ;; Clone a repository into a folder of my choosing
 (def my-repo
-  (git-clone-full "https://github.com/semperos/clj-jgit.git" "local-folder/clj-jgit")
+  (git-clone-full "https://github.com/clj-jgit/clj-jgit.git" "local-folder/clj-jgit")
 ;=> #<Git org.eclipse.jgit.api.Git@1689405>
 
 ;; A bit redundant for a fresh repo, but always good to check the repo status
