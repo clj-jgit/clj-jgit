@@ -19,7 +19,8 @@
            [clojure.lang Keyword]
            [java.util List]
            [org.eclipse.jgit.api.errors JGitInternalException]
-           [org.eclipse.jgit.transport UsernamePasswordCredentialsProvider]))
+           [org.eclipse.jgit.transport UsernamePasswordCredentialsProvider]
+           [org.eclipse.jgit.treewalk TreeWalk]))
 
 (declare log-builder)
 
@@ -694,3 +695,14 @@
          (.setStartCommit start-commit)
          .call
          blame-result)))
+
+(defn get-blob-id
+  [repo commit path]
+  (let [tree-walk (TreeWalk/forPath (.getRepository repo) path (.getTree commit))]
+    (when tree-walk
+      (.getObjectId tree-walk 0))))
+
+(defn get-blob
+  [repo commit path]
+  (when-let [blob-id (get-blob-id repo commit path)]
+    (.getName blob-id)))
