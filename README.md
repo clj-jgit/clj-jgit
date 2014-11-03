@@ -8,6 +8,8 @@ You can view latest auto-generated API documentation here: [clj-jgit.github.io/c
 
 Last stable version is available on [Clojars](http://clojars.org/clj-jgit).
 
+[![Clojars Project](http://clojars.org/clj-jgit/latest-version.svg)](http://clojars.org/clj-jgit)
+
 ## Quickstart Tutorial ##
 
 This brief tutorial will show you how to: 
