@@ -665,7 +665,9 @@
   [blame]
   (.computeAll blame)
   (letfn [(blame-line [num]
-            (when-let [commit (.getSourceCommit blame num)]
+            (when-let [commit (try
+                                (.getSourceCommit blame num)
+                                (catch ArrayIndexOutOfBoundsException _ nil))]
               {:author (util/person-ident (.getSourceAuthor blame num))
                :commit commit
                :committer (util/person-ident (.getSourceCommitter blame num))
