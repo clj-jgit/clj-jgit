@@ -672,6 +672,7 @@
                :commit commit
                :committer (util/person-ident (.getSourceCommitter blame num))
                :line (.getSourceLine blame num)
+               :line-contents (-> blame .getResultContents (.getString num))
                :source-path (.getSourcePath blame num)}))
           (blame-seq [num]
             (when-let [cur (blame-line num)]
