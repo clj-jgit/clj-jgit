@@ -15,7 +15,7 @@
            [java.io ByteArrayOutputStream]))
 
 (declare change-kind create-tree-walk diff-formatter-for-changes
-         byte-array-diff-formatter-for-changes changed-files-in-first-commit 
+         byte-array-diff-formatter-for-changes changed-files-in-first-commit
          parse-diff-entry mark-all-heads-as-start-for!)
 
 (defn find-rev-commit
@@ -54,14 +54,18 @@
       (remove nil?)
       doall)))
 
+(defn changed-files-between-commits
+  "List of files changed between two RevCommit objects"
+  [^Git repo ^RevCommit old-rev-commit ^RevCommit new-rev-commit]
+    (let [df ^DiffFormatter (diff-formatter-for-changes repo)
+          entries (.scan df old-rev-commit new-rev-commit)]
+      (map parse-diff-entry entries)))
+
 (defn changed-files
   "List of files changed in RevCommit object"
   [^Git repo ^RevCommit rev-commit]
   (if-let [parent (first (.getParents rev-commit))]
-    (let [rev-parent ^RevCommit parent
-          df ^DiffFormatter (diff-formatter-for-changes repo)
-          entries (.scan df rev-parent rev-commit)]
-      (map parse-diff-entry entries))
+    (changed-files-between-commits repo parent rev-commit)
     (changed-files-in-first-commit repo rev-commit)))
 
 (defn changed-files-with-patch
