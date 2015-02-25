@@ -105,5 +105,22 @@
                                                     :message "Merge pull request #2 from vijaykiran/master\n\nInit Tests", 
                                                     :branches ["refs/heads/master"], 
                                                     :merge true, 
-                                                    :id "0d3d1c2e7b6c47f901fcae9ef661a22948c64573"}))))
+                                                    :id "0d3d1c2e7b6c47f901fcae9ef661a22948c64573"})))
 
+  (testing "changes-for should return nil on invalid commits"
+    (is (nil?
+         (with-tmp-repo "target/tmp"
+           (let [tmp-file "target/tmp/tmp.txt"]
+             (spit tmp-file "1")
+             (git-add repo tmp-file)
+             (git-commit repo "first commit")
+             (changes-for repo "invalid"))))))
+
+  (testing "find-rev-commit should return nil on invalid commits"
+    (is (nil?
+         (with-tmp-repo "target/tmp"
+           (let [tmp-file "target/tmp/tmp.txt"]
+             (spit tmp-file "1")
+             (git-add repo tmp-file)
+             (git-commit repo "first commit")
+             (find-rev-commit repo (new-rev-walk repo) "invalid")))))))

@@ -19,10 +19,12 @@
          parse-diff-entry mark-all-heads-as-start-for!)
 
 (defn find-rev-commit
-  "Find RevCommit instance in RevWalk by commit-ish"
+  "Find RevCommit instance in RevWalk by commit-ish. Returns nil if the commit is not found."
   [^Git repo ^RevWalk rev-walk commit-ish]
-  (->> (resolve-object commit-ish repo)
-    (bound-commit repo rev-walk)))
+  (let [object (resolve-object commit-ish repo)]
+    (if (nil? object)
+      nil
+      (bound-commit repo rev-walk object))))
 
 (defn branch-list-with-heads
   "List of branches for a repo in pairs of [branch-ref branch-tip-commit]"
@@ -79,11 +81,13 @@
       (.toString out))))
 
 (defn changes-for
-  "Find changes for commit-ish"
+  "Find changes for commit-ish. Returns nil if the commit is not found."
   [^Git repo commit-ish]
-  (->> commit-ish
-    (find-rev-commit repo (new-rev-walk repo))
-    (changed-files repo)))
+  (let [rev-commit (->> commit-ish
+                        (find-rev-commit repo (new-rev-walk repo)))]
+    (if (nil? rev-commit)
+      nil
+      (changed-files repo rev-commit))))
 
 (defn rev-list
   "List of all revision in repo"
