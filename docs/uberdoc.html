@@ -3028,8 +3028,8 @@ net.brehaut.ClojureTools = (function (SH) {
     build_tree: build_tree
   };
 })(SyntaxHighlighter);
-</script><title>clj-jgit -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">clj-jgit</h1><h2 class="project-version">0.8.0</h2><br /><p>Clojure wrapper for JGit</p>
-</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.eclipse.jgit/org.eclipse.jgit.java7</td><td class="dotted"><hr /></td><td class="dep-version">3.5.0.201409260305-r</td></tr><tr><td class="dep-name">org.clojure/core.memoize</td><td class="dotted"><hr /></td><td class="dep-version">0.5.3</td></tr><tr><td class="dep-name">fs</td><td class="dotted"><hr /></td><td class="dep-version">1.3.2</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#clj-jgit.internal">clj-jgit.internal</a></li><li><a href="#clj-jgit.porcelain">clj-jgit.porcelain</a></li><li><a href="#clj-jgit.querying">clj-jgit.querying</a></li><li><a href="#clj-jgit.util">clj-jgit.util</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clj-jgit.internal" name="clj-jgit.internal"><h1 class="project-name">clj-jgit.internal</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+</script><title>clj-jgit -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">clj-jgit</h1><h2 class="project-version">0.8.3</h2><br /><p>Clojure wrapper for JGit</p>
+</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.eclipse.jgit/org.eclipse.jgit.java7</td><td class="dotted"><hr /></td><td class="dep-version">3.5.0.201409260305-r</td></tr><tr><td class="dep-name">fs</td><td class="dotted"><hr /></td><td class="dep-version">1.3.2</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#clj-jgit.internal">clj-jgit.internal</a></li><li><a href="#clj-jgit.porcelain">clj-jgit.porcelain</a></li><li><a href="#clj-jgit.querying">clj-jgit.querying</a></li><li><a href="#clj-jgit.util">clj-jgit.util</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clj-jgit.internal" name="clj-jgit.internal"><h1 class="project-name">clj-jgit.internal</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns clj-jgit.internal
   (:import
     [org.eclipse.jgit.revwalk RevWalk RevCommit RevCommitList]
@@ -3665,11 +3665,14 @@ net.brehaut.ClojureTools = (function (SH) {
   [blame]
   (.computeAll blame)
   (letfn [(blame-line [num]
-            (when-let [commit (.getSourceCommit blame num)]
+            (when-let [commit (try
+                                (.getSourceCommit blame num)
+                                (catch ArrayIndexOutOfBoundsException _ nil))]
               {:author (util/person-ident (.getSourceAuthor blame num))
                :commit commit
                :committer (util/person-ident (.getSourceCommitter blame num))
                :line (.getSourceLine blame num)
+               :line-contents (-&gt; blame .getResultContents (.getString num))
                :source-path (.getSourcePath blame num)}))
           (blame-seq [num]
             (when-let [cur (blame-line num)]
@@ -3719,12 +3722,14 @@ net.brehaut.ClojureTools = (function (SH) {
            [java.util HashMap Date]
            [java.io ByteArrayOutputStream]))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(declare change-kind create-tree-walk diff-formatter-for-changes
-         byte-array-diff-formatter-for-changes changed-files-in-first-commit 
-         parse-diff-entry mark-all-heads-as-start-for!)</pre></td></tr><tr><td class="docs"><p>Find RevCommit instance in RevWalk by commit-ish</p>
+         byte-array-diff-formatter-for-changes changed-files-in-first-commit
+         parse-diff-entry mark-all-heads-as-start-for!)</pre></td></tr><tr><td class="docs"><p>Find RevCommit instance in RevWalk by commit-ish. Returns nil if the commit is not found.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn find-rev-commit
   [^Git repo ^RevWalk rev-walk commit-ish]
-  (-&gt;&gt; (resolve-object commit-ish repo)
-    (bound-commit repo rev-walk)))</pre></td></tr><tr><td class="docs"><p>List of branches for a repo in pairs of [branch-ref branch-tip-commit]</p>
+  (let [object (resolve-object commit-ish repo)]
+    (if (nil? object)
+      nil
+      (bound-commit repo rev-walk object))))</pre></td></tr><tr><td class="docs"><p>List of branches for a repo in pairs of [branch-ref branch-tip-commit]</p>
 </td><td class="codes"><pre class="brush: clojure">(defn branch-list-with-heads
   ([^Git repo]
     (branch-list-with-heads repo (new-rev-walk repo)))
@@ -3748,14 +3753,16 @@ net.brehaut.ClojureTools = (function (SH) {
           (when (commit-in-branch? repo rev-walk branch-tip-commit bound-commit)
             (.getName branch-ref))))
       (remove nil?)
-      doall)))</pre></td></tr><tr><td class="docs"><p>List of files changed in RevCommit object</p>
+      doall)))</pre></td></tr><tr><td class="docs"><p>List of files changed between two RevCommit objects</p>
+</td><td class="codes"><pre class="brush: clojure">(defn changed-files-between-commits
+  [^Git repo ^RevCommit old-rev-commit ^RevCommit new-rev-commit]
+    (let [df ^DiffFormatter (diff-formatter-for-changes repo)
+          entries (.scan df old-rev-commit new-rev-commit)]
+      (map parse-diff-entry entries)))</pre></td></tr><tr><td class="docs"><p>List of files changed in RevCommit object</p>
 </td><td class="codes"><pre class="brush: clojure">(defn changed-files
   [^Git repo ^RevCommit rev-commit]
   (if-let [parent (first (.getParents rev-commit))]
-    (let [rev-parent ^RevCommit parent
-          df ^DiffFormatter (diff-formatter-for-changes repo)
-          entries (.scan df rev-parent rev-commit)]
-      (map parse-diff-entry entries))
+    (changed-files-between-commits repo parent rev-commit)
     (changed-files-in-first-commit repo rev-commit)))</pre></td></tr><tr><td class="docs"><p>Patch with diff of all changes in RevCommit object</p>
 </td><td class="codes"><pre class="brush: clojure">(defn changed-files-with-patch
   [^Git repo ^RevCommit rev-commit]
@@ -3764,12 +3771,14 @@ net.brehaut.ClojureTools = (function (SH) {
           out ^ByteArrayOutputStream (new ByteArrayOutputStream)
           df ^DiffFormatter (byte-array-diff-formatter-for-changes repo out)]
       (.format df rev-parent rev-commit)
-      (.toString out))))</pre></td></tr><tr><td class="docs"><p>Find changes for commit-ish</p>
+      (.toString out))))</pre></td></tr><tr><td class="docs"><p>Find changes for commit-ish. Returns nil if the commit is not found.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn changes-for
   [^Git repo commit-ish]
-  (-&gt;&gt; commit-ish
-    (find-rev-commit repo (new-rev-walk repo))
-    (changed-files repo)))</pre></td></tr><tr><td class="docs"><p>List of all revision in repo</p>
+  (let [rev-commit (-&gt;&gt; commit-ish
+                        (find-rev-commit repo (new-rev-walk repo)))]
+    (if (nil? rev-commit)
+      nil
+      (changed-files repo rev-commit))))</pre></td></tr><tr><td class="docs"><p>List of all revision in repo</p>
 </td><td class="codes"><pre class="brush: clojure">(defn rev-list
   ([^Git repo]
     (rev-list repo (new-rev-walk repo)))
