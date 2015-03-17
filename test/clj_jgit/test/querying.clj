@@ -24,7 +24,7 @@
   (testing "branches-for"
     (read-only-repo
       (let [first-commit (resolve-object "38dd57264cf5c05fb77211c8347d1f16e4474623" repo)]
-        (is (= ["refs/heads/master"] (branches-for repo first-commit))))))
+        (is (some #(= % "refs/heads/master") (branches-for repo first-commit))))))
 
   (testing "changed-files" 
     (read-only-repo
