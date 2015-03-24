@@ -488,19 +488,22 @@
 
 (defmacro with-identity
   "Creates an identity to use for SSH authentication."
-  [{:keys [name private public passphrase options exclusive identities]
-    :or {name "jgit-identity"
-         passphrase ""
-         options {"StrictHostKeyChecking" "no"}
-         exclusive false}} & body]
-  `(binding [*ssh-identity-name* ~name
-             *ssh-prvkey* ~private
-             *ssh-pubkey* ~public
-             *ssh-identities* ~identities
-             *ssh-passphrase* ~passphrase
-             *ssh-session-config* ~options
-             *ssh-exclusive-identity* ~exclusive]
-     ~@body))
+  [config & body]
+  `(let [name# (get ~config :name "jgit-identity")
+         private# (get ~config :private)
+         public# (get ~config :public)
+         passphrase# (get ~config :passphrase "")
+         options# (get ~config :options {"StrictHostKeyChecking" "no"})
+         exclusive# (get ~config :exclusive false)
+         identities# (get ~config :identities)]
+     (binding [*ssh-identity-name* name#
+               *ssh-prvkey* private#
+               *ssh-pubkey* public#
+               *ssh-identities* identities#
+               *ssh-passphrase* passphrase#
+               *ssh-session-config* options#
+               *ssh-exclusive-identity* exclusive#]
+       ~@body)))
 
 (defn submodule-walk
   ([repo]

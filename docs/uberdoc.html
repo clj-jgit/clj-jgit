@@ -3506,19 +3506,22 @@ net.brehaut.ClojureTools = (function (SH) {
                         (.getBytes passphrase)))))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(SshSessionFactory/setInstance jsch-factory)</pre></td></tr><tr><td class="docs"><p>Creates an identity to use for SSH authentication.</p>
 </td><td class="codes"><pre class="brush: clojure">(defmacro with-identity
-  [{:keys [name private public passphrase options exclusive identities]
-    :or {name &quot;jgit-identity&quot;
-         passphrase &quot;&quot;
-         options {&quot;StrictHostKeyChecking&quot; &quot;no&quot;}
-         exclusive false}} &amp; body]
-  `(binding [*ssh-identity-name* ~name
-             *ssh-prvkey* ~private
-             *ssh-pubkey* ~public
-             *ssh-identities* ~identities
-             *ssh-passphrase* ~passphrase
-             *ssh-session-config* ~options
-             *ssh-exclusive-identity* ~exclusive]
-     ~@body))</pre></td></tr><tr><td class="docs">
+  [config &amp; body]
+  `(let [name# (get ~config :name &quot;jgit-identity&quot;)
+         private# (get ~config :private)
+         public# (get ~config :public)
+         passphrase# (get ~config :passphrase &quot;&quot;)
+         options# (get ~config :options {&quot;StrictHostKeyChecking&quot; &quot;no&quot;})
+         exclusive# (get ~config :exclusive false)
+         identities# (get ~config :identities)]
+     (binding [*ssh-identity-name* name#
+               *ssh-prvkey* private#
+               *ssh-pubkey* public#
+               *ssh-identities* identities#
+               *ssh-passphrase* passphrase#
+               *ssh-session-config* options#
+               *ssh-exclusive-identity* exclusive#]
+       ~@body)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn submodule-walk
   ([repo]
      (-&gt;&gt; (submodule-walk (.getRepository repo) 0)
