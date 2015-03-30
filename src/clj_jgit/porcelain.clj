@@ -506,6 +506,7 @@
   ([repo]
      (->> (submodule-walk (.getRepository repo) 0)
           (flatten)
+          (filter identity)
           (map #(Git/wrap %))))
   ([repo level]
      (when (< level 3)
