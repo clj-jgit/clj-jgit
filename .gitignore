@@ -13,3 +13,6 @@ sandbox*
 .lein-repl-history
 /target
 .nrepl-port
+.idea
+*.iml
+pom.xml*
