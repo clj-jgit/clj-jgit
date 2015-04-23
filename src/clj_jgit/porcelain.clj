@@ -40,6 +40,14 @@
      (.exists bare) (io/as-file path))))
 
 (def ^:dynamic *credentials* nil)
+(def ^:dynamic *ssh-identity-name* "")
+(def ^:dynamic *ssh-prvkey* nil)
+(def ^:dynamic *ssh-pubkey* nil)
+(def ^:dynamic *ssh-passphrase* "")
+(def ^:dynamic *ssh-identities* [])
+(def ^:dynamic *ssh-exclusive-identity* false)
+(def ^:dynamic *ssh-session-config* {"StrictHostKeyChecking" "no"
+                                     "UserKnownHostsFile" "/dev/null"})
 
 (defmacro with-credentials
   [login password & body]
@@ -455,14 +463,6 @@
          (.setMode ^ResetCommand$ResetType (reset-modes mode-sym))
          (.call))))
 
-(def ^:dynamic *ssh-identity-name* "")
-(def ^:dynamic *ssh-prvkey* "")
-(def ^:dynamic *ssh-pubkey* "")
-(def ^:dynamic *ssh-passphrase* "")
-(def ^:dynamic *ssh-identities* [])
-(def ^:dynamic *ssh-exclusive-identity* false)
-(def ^:dynamic *ssh-session-config* {})
-
 (def jsch-factory
   (proxy [JschConfigSessionFactory] []
     (configure [hc session]
@@ -493,7 +493,7 @@
          private# (get ~config :private)
          public# (get ~config :public)
          passphrase# (get ~config :passphrase "")
-         options# (get ~config :options {"StrictHostKeyChecking" "no"})
+         options# (get ~config :options *ssh-session-config*)
          exclusive# (get ~config :exclusive false)
          identities# (get ~config :identities)]
      (binding [*ssh-identity-name* name#
