@@ -477,9 +477,9 @@
                         (.getBytes *ssh-pubkey*)
                         (.getBytes *ssh-passphrase*)))
         (doseq [{:keys [name private-key public-key passphrase]
-                 :or {passphrase ""
-                      name (str "key-" (.hashCode private-key))}} *ssh-identities*]
-          (.addIdentity jsch name
+                 :or {passphrase ""}} *ssh-identities*]
+          (.addIdentity jsch 
+                        (or name (str "key-" (.hashCode private-key)))
                         (.getBytes private-key)
                         (.getBytes public-key)
                         (.getBytes passphrase)))))))
