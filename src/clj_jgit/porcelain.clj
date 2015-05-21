@@ -477,12 +477,12 @@
                         (.getBytes *ssh-pubkey*)
                         (.getBytes *ssh-passphrase*)))
         (doseq [{:keys [name private-key public-key passphrase]
-                 :or {passphrase ""
-                      name (str "key-" (.hashCode private-key))}} *ssh-identities*]
-          (.addIdentity jsch name
-                        (.getBytes private-key)
-                        (.getBytes public-key)
-                        (.getBytes passphrase)))))))
+                 :or {passphrase ""}} *ssh-identities*]
+          (let [name (or name (str "key-" (.hashCode private-key)))]
+            (.addIdentity jsch name
+                          (.getBytes private-key)
+                          (.getBytes public-key)
+                          (.getBytes passphrase))))))))
 
 (SshSessionFactory/setInstance jsch-factory)
 
