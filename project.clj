@@ -1,6 +1,6 @@
-(defproject clj-jgit "0.8.8"
+(defproject clj-jgit "0.8.9"
   :description "Clojure wrapper for JGit"
-  :dependencies [[org.eclipse.jgit/org.eclipse.jgit.java7 "3.7.0.201502260915-r" :exclusions [com.jcraft/jsch]]
+  :dependencies [[org.eclipse.jgit/org.eclipse.jgit "4.0.1.201506240215-r" :exclusions [com.jcraft/jsch]]
                  [fs "1.3.2"]
                  [com.jcraft/jsch "0.1.52"]]
   :profiles {:dev {:dependencies [[org.clojure/clojure "1.5.1"]
