@@ -24,7 +24,7 @@
   (if (= path "/")
     "/"
     (if (= (first path) \/)
-      (apply str (rest path))
+      (subs path 1)
       path)))
 
 (defn person-ident [^org.eclipse.jgit.lib.PersonIdent person]
