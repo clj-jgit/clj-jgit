@@ -477,9 +477,13 @@
                         (.getBytes *ssh-prvkey* )
                         (.getBytes *ssh-pubkey*)
                         (.getBytes *ssh-passphrase*)))
+        (when (and *ssh-identity-name* (not (and *ssh-prvkey* *ssh-pubkey*)))
+          (if (empty? *ssh-passphrase*)
+            (.addIdentity jsch *ssh-identity-name*)
+            (.addIdentity jsch *ssh-identity-name* (.getBytes *ssh-passphrase*))))
         (doseq [{:keys [name private-key public-key passphrase]
                  :or {passphrase ""}} *ssh-identities*]
-          (.addIdentity jsch 
+          (.addIdentity jsch
                         (or name (str "key-" (.hashCode private-key)))
                         (.getBytes private-key)
                         (.getBytes public-key)
