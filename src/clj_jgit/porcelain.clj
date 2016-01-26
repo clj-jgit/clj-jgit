@@ -232,8 +232,9 @@
                         (.setBare bare?)
                         (.call))
            fetch-result ^FetchResult (git-fetch new-repo)
-           merge-result (git-merge new-repo
-                                   (first (.getAdvertisedRefs fetch-result)))]
+           first-ref (first (.getAdvertisedRefs fetch-result))
+           merge-result (when first-ref
+                          (git-merge new-repo first-ref))]
        {:repo new-repo,
         :fetch-result fetch-result,
         :merge-result  merge-result})))
