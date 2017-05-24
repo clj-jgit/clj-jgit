@@ -394,13 +394,33 @@
            (.call)))))
 
 (defn git-pull
-  "NOT WORKING: Requires work with configuration"
-  [^Git repo]
-  (-> repo
-      (.pull)
-      (.call)))
+  "Pull from a remote, defaults to origin. Example usage:
 
-(defn git-push [])
+  (gitp/with-identity {:name \"~/.ssh/id_rsa\" :exclusive true}
+    (gitp/git-pull repo))
+  "
+  ([^Git repo]
+   (git-pull repo "origin"))
+  ([^Git repo remote]
+    (-> repo
+        (.pull)
+        (.setRemote remote)
+        (.call))))
+
+(defn git-push
+  "Push current branch to a remote, defaults to origin. Example usage:
+
+  (gitp/with-identity {:name \"~/.ssh/id_rsa\" :exclusive true}
+    (gitp/git-push repo))
+  "
+  ([^Git repo]
+    (git-push repo "origin"))
+  ([^Git repo remote]
+    (-> repo
+      (.push)
+      (.setRemote remote)
+      (.call))))
+
 (defn git-rebase [])
 (defn git-revert [])
 (defn git-rm
