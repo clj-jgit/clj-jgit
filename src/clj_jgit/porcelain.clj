@@ -408,18 +408,22 @@
         (.call))))
 
 (defn git-push
-  "Push current branch to a remote, defaults to origin. Example usage:
+  "Push current branch to a remote.
 
-  (gitp/with-identity {:name \"~/.ssh/id_rsa\" :exclusive true}
-    (gitp/git-push repo))
+   Options:
+     :remote    The remote to use. (default: \"origin\").
+     :tags      Also push tags to the remote. (default: false)
+
+   Example usage:
+     (gitp/with-identity {:name \"~/.ssh/id_rsa\" :exclusive true}
+       (gitp/git-push repo :remote \"daveyarwood\" :tags true))
   "
-  ([^Git repo]
-    (git-push repo "origin"))
-  ([^Git repo remote]
-    (-> repo
-      (.push)
-      (.setRemote remote)
-      (.call))))
+  ([^Git repo & {:keys [remote tags]}]
+    (as-> repo x
+      (.push x)
+      (.setRemote x (or remote "origin"))
+      (if tags (.setPushTags x) x)
+      (.call x))))
 
 (defn git-rebase [])
 (defn git-revert [])
@@ -446,7 +450,31 @@
       (apply merge (for [field fields]
                      {field (into #{} ((field status-fns) status))})))))
 
-(defn git-tag [])
+(defn git-tag-create
+  "Creates an annotated tag with the provided name and (optional) message."
+  [^Git repo tag-name & [tag-message]]
+  (as-> repo x
+    (.tag x)
+    (.setAnnotated x true)
+    (.setName x tag-name)
+    (if tag-message (.setMessage x tag-message) x)
+    (.call x)))
+
+(defn git-tag-delete
+  "Deletes a tag with the provided name(s)."
+  [^Git repo & tag-names]
+  (-> repo
+      (.tagDelete)
+      (.setTags (into-array tag-names))
+      (.call)))
+
+(defn git-tag-list
+  "Lists the tags in a repo, returning them as a seq of strings."
+  [^Git repo]
+  (->> repo
+       (.tagList)
+       (.call)
+       (map #(->> % .getName (re-matches #"refs/tags/(.*)") second))))
 
 (defn ls-remote-cmd [^Git repo]
   (-> repo

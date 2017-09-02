@@ -45,3 +45,23 @@
                 (do (git-checkout repo sha),
                     (count (git-branch-current repo))) ; char count suggests sha
                 (git-branch-attached? repo)]))))))
+
+(deftest test-tag-functions
+  (with-tmp-repo "target/tmp"
+    ;; setup: the repo must have at least one commit (i.e. have a HEAD) in order
+    ;; to create a tag
+    (git-commit repo "initial commit")
+    (testing "there are initially no tags"
+      (is (= () (git-tag-list repo))))
+    (testing "after creating a tag, the tag is in the list"
+      (git-tag-create repo "foo")
+      (is (= ["foo"] (git-tag-list repo))))
+    (testing "after creating another tag, both tags are in the list"
+      (git-tag-create repo "bar" "bar tag message goes here")
+      (is (= #{"foo" "bar"} (set (git-tag-list repo)))))
+    (testing "after deleting one tag, the other tag is still in the list"
+      (git-tag-delete repo "foo")
+      (is (= ["bar"] (git-tag-list repo))))
+    (testing "after deleting the other tag, there are no tags in the list"
+      (git-tag-delete repo "bar")
+      (is (= () (git-tag-list repo))))))
