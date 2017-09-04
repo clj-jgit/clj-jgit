@@ -1,4 +1,4 @@
-(defproject clj-jgit "0.8.10"
+(defproject clj-jgit "0.9.1-SNAPSHOT"
   :description "Clojure wrapper for JGit"
   :dependencies [[org.eclipse.jgit/org.eclipse.jgit "4.8.0.201706111038-r" :exclusions [com.jcraft/jsch]]
                  [fs "1.3.3"]
