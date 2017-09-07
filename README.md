@@ -91,11 +91,11 @@ This brief tutorial will show you how to:
 (git-tag-create my-repo "v2.0.0")
 ;=> #<org.eclipse.jgit.internal.storage.file.RefDirectory$LooseUnpeeled, Name: refs/tags/v2.0.0, ObjectId: ...
 (git-tag-list my-repo)
-("v0.0.1" "v0.0.2" "v0.0.3" "v0.8.10" "v2.0.0")
+;=> ("v0.0.1" "v0.0.2" "v0.0.3" "v0.8.10" "v2.0.0")
 (git-tag-delete my-repo "v2.0.0")
-["refs/tags/v2.0.0"]
+;=> ["refs/tags/v2.0.0"]
 (git-tag-list my-repo)
-("v0.0.1" "v0.0.2" "v0.0.3" "v0.8.10")
+;=> ("v0.0.1" "v0.0.2" "v0.0.3" "v0.8.10")
 ```
 
 ## Detailed Usage ##
