@@ -591,22 +591,22 @@
       (.setCredentialsProvider *credentials*)))
 
 (defn git-submodule-update
+  "Fetch each submodule repo and update them."
   ([repo]
-     "Fetch each submodule repo and update them."
-     (git-submodule-fetch repo)
-     (-> (submodule-update-cmd repo)
-         (.call))
-     (doseq [subm (submodule-walk repo)]
-       (-> (submodule-update-cmd subm)
-           (.call))))
+   (git-submodule-fetch repo)
+   (-> (submodule-update-cmd repo)
+       (.call))
+   (doseq [subm (submodule-walk repo)]
+     (-> (submodule-update-cmd subm)
+         (.call))))
   ([repo path]
-     (git-submodule-fetch repo)
-     (-> (submodule-update-cmd repo)
-         (.call))
-     (doseq [subm (submodule-walk repo)]
-       (-> (submodule-update-cmd subm)
-           (.addPath path)
-           (.call)))))
+   (git-submodule-fetch repo)
+   (-> (submodule-update-cmd repo)
+       (.call))
+   (doseq [subm (submodule-walk repo)]
+     (-> (submodule-update-cmd subm)
+         (.addPath path)
+         (.call)))))
 
 (defn git-submodule-sync
   ([repo]
