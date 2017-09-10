@@ -2,8 +2,7 @@
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
             [clj-jgit.util :as util]
-            [clj-jgit.internal :refer :all]
-            [fs.core :as fs])
+            [clj-jgit.internal :refer :all])
   (:import [java.io FileNotFoundException File]
            [org.eclipse.jgit.lib RepositoryBuilder AnyObjectId]
            [org.eclipse.jgit.api Git InitCommand StatusCommand AddCommand
@@ -719,7 +718,7 @@
                                            (last))]
                     (if (retries dir-path)
                       (throw e)
-                      (fs/delete-dir dir-path))
+                      (util/recursive-delete-file dir-path true))
                     #(clean-loop (conj retries dir-path)))))))]
     (trampoline clean-loop #{})))
 

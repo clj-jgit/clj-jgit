@@ -1,4 +1,16 @@
-(ns clj-jgit.util)
+(ns clj-jgit.util
+  (:require [clojure.java.io :as io]))
+
+(defn recursive-delete-file
+  "Delete file f. If f is a directory, recursively deletes all files and directories within the directory. Raises an exception if it fails unless silently is true."
+  [f & [silently]]
+  (let [file (io/file f)]
+    (if (.exists file)
+      (do (doseq [child (reverse (file-seq file))]
+            (io/delete-file child silently))
+          true)
+      (or silently
+          (throw (java.io.IOException. (str "Couldn't delete " f)))))))
 
 (defn name-from-uri
   "Given a URI to a Git resource, derive the name (for use in cloning to a directory)"
