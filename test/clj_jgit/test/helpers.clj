@@ -1,6 +1,8 @@
 (ns clj-jgit.test.helpers
-  (:require [fs.core :as fs])
-  (:use clj-jgit.porcelain))
+  (:require [clj-jgit.util :as util]
+            [clojure.java.io :as io])
+  (:use clj-jgit.porcelain)
+  (:import [java.io File]))
 
 ; Using clj-jgit repo for read-only tests
 (def read-only-repo-path (System/getProperty "user.dir"))
@@ -14,9 +16,20 @@
    producing only the results of expressions in body."
   [repo-path & body]
   `(do
-     (fs/delete-dir ~repo-path)
-     (fs/mkdir ~repo-path)
+     (util/recursive-delete-file ~repo-path true)
+     (.mkdir (io/file ~repo-path))
      (git-init ~repo-path)
      (let [outcome# (with-repo ~repo-path ~@body)]
-       (fs/delete-dir ~repo-path)
+       (util/recursive-delete-file ~repo-path true)
        outcome#)))
+
+(defn get-temp-dir
+  "Returns a temporary directory"
+  []
+  (let [temp (File/createTempFile "test" "clj-jgit")]
+    (if (.exists temp)
+      (do
+        (.delete temp)
+        (.mkdir temp)
+        (.deleteOnExit temp)))
+    temp))
