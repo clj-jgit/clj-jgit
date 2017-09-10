@@ -20,7 +20,7 @@
 
 (deftest test-git-init
   (let [repo-dir (get-temp-dir)]
-     (is #(nil? %) (git-init repo-dir))))
+    (is (not (nil? (git-init repo-dir))))))
 
 (deftest porcelain-tests
   (testing "with-repo macro"
