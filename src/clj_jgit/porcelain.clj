@@ -2,8 +2,7 @@
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
             [clj-jgit.util :as util]
-            [clj-jgit.internal :refer :all]
-            [fs.core :as fs])
+            [clj-jgit.internal :refer :all])
   (:import [java.io FileNotFoundException File]
            [org.eclipse.jgit.lib RepositoryBuilder AnyObjectId]
            [org.eclipse.jgit.api Git InitCommand StatusCommand AddCommand
@@ -68,11 +67,13 @@
      (FileNotFoundException. (str "The Git repository at '" path "' could not be located.")))))
 
 (defmacro with-repo
-  "Binds `repo` to a repository handle"
+  "Load Git repository at `path` and bind it to `repo`, then evaluate `body`.
+  Also provides a fresh `rev-walk` instance for `repo` which is closed on form exit."
   [path & body]
   `(let [~'repo (load-repo ~path)
          ~'rev-walk (new-rev-walk ~'repo)]
-     ~@body))
+     (try ~@body
+      (finally (close-rev-walk ~'rev-walk)))))
 
 (defn git-add
   "The `file-pattern` is either a single file name (exact, not a pattern) or the name of a directory. If a directory is supplied, all files within that directory will be added. If `only-update?` is set to `true`, only files which are already part of the index will have their changes staged (i.e. no previously untracked files will be added to the index)."
@@ -394,18 +395,21 @@
            (.call)))))
 
 (defn git-pull
-  "Pull from a remote, defaults to origin. Example usage:
+  "Pull from a remote.
+
+   Options:
+     :remote    The remote to use. (default: \"origin\")
+
+  Example usage:
 
   (gitp/with-identity {:name \"~/.ssh/id_rsa\" :exclusive true}
-    (gitp/git-pull repo))
+    (gitp/git-pull repo :remote \"my-remote\"))
   "
-  ([^Git repo]
-   (git-pull repo "origin"))
-  ([^Git repo remote]
-    (-> repo
-        (.pull)
-        (.setRemote remote)
-        (.call))))
+  ([^Git repo & {:keys [remote]}]
+    (as-> repo x
+      (.pull x)
+      (.setRemote x (or remote "origin"))
+      (.call x))))
 
 (defn git-push
   "Push current branch to a remote.
@@ -586,22 +590,22 @@
       (.setCredentialsProvider *credentials*)))
 
 (defn git-submodule-update
+  "Fetch each submodule repo and update them."
   ([repo]
-     "Fetch each submodule repo and update them."
-     (git-submodule-fetch repo)
-     (-> (submodule-update-cmd repo)
-         (.call))
-     (doseq [subm (submodule-walk repo)]
-       (-> (submodule-update-cmd subm)
-           (.call))))
+   (git-submodule-fetch repo)
+   (-> (submodule-update-cmd repo)
+       (.call))
+   (doseq [subm (submodule-walk repo)]
+     (-> (submodule-update-cmd subm)
+         (.call))))
   ([repo path]
-     (git-submodule-fetch repo)
-     (-> (submodule-update-cmd repo)
-         (.call))
-     (doseq [subm (submodule-walk repo)]
-       (-> (submodule-update-cmd subm)
-           (.addPath path)
-           (.call)))))
+   (git-submodule-fetch repo)
+   (-> (submodule-update-cmd repo)
+       (.call))
+   (doseq [subm (submodule-walk repo)]
+     (-> (submodule-update-cmd subm)
+         (.addPath path)
+         (.call)))))
 
 (defn git-submodule-sync
   ([repo]
@@ -714,7 +718,7 @@
                                            (last))]
                     (if (retries dir-path)
                       (throw e)
-                      (fs/delete-dir dir-path))
+                      (util/recursive-delete-file dir-path true))
                     #(clean-loop (conj retries dir-path)))))))]
     (trampoline clean-loop #{})))
 

@@ -18,12 +18,16 @@ This brief tutorial will show you how to:
 2. Create a local branch for your changes
 3. Checkout that branch, and
 4. Add and commit those changes
+5. Manage tags
 
 ```clj
-;; Clone a repository into a folder of my choosing
+;; First require or use the porcelain namespace, assuming a quick REPL session:
+(use 'clj-jgit.porcelain)
+
+;; Clone a repository into a folder of my choosing and keep the jgit repository object at my-repo
 (def my-repo
-  (git-clone-full "https://github.com/clj-jgit/clj-jgit.git" "local-folder/clj-jgit")
-;=> #<Git org.eclipse.jgit.api.Git@1689405>
+  (:repo (git-clone-full "https://github.com/clj-jgit/clj-jgit.git" "local-folder/clj-jgit")))
+;=> #'user/my-repo
 
 ;; A bit redundant for a fresh repo, but always good to check the repo status
 ;; before making any changes
@@ -83,6 +87,15 @@ This brief tutorial will show you how to:
      :line 66, 
      :source-path "README.md"}
 
+;; Tagging
+(git-tag-create my-repo "v2.0.0")
+;=> #<org.eclipse.jgit.internal.storage.file.RefDirectory$LooseUnpeeled, Name: refs/tags/v2.0.0, ObjectId: ...
+(git-tag-list my-repo)
+;=> ("v0.0.1" "v0.0.2" "v0.0.3" "v0.8.10" "v2.0.0")
+(git-tag-delete my-repo "v2.0.0")
+;=> ["refs/tags/v2.0.0"]
+(git-tag-list my-repo)
+;=> ("v0.0.1" "v0.0.2" "v0.0.3" "v0.8.10")
 ```
 
 ## Detailed Usage ##
@@ -96,6 +109,20 @@ Currently, this library leverages the "porcelain" API exposed by JGit, which all
 ```
 
 JGit's default `git-clone` simply clones the `.git` folder, but doesn't pull down the actual project files. This library's `git-clone-full` function, on the other hand, performs a `git-clone` following by a `git-fetch` of the master branch and a `git-merge`.
+
+### Authentication
+
+Any command that may require authentication (clone, push, etc) can be wrapped with the `with-identity` macro.
+
+```clj
+;; Use current user's ssh key, no password
+(with-identity {:name "~/.ssh/id_rsa" :exclusive true}
+  (git-push my-repo :tags true))
+
+;; Use some other key that has a password
+(with-identity {:name "/path/to/the/private/key" :passphrase "$ecReT" :exclusive true}
+  (git-pull my-repo))
+```
 
 ### Loading an Existing Repository ###
 

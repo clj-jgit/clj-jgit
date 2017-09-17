@@ -7,20 +7,9 @@
     [org.eclipse.jgit.api Git]
     [org.eclipse.jgit.revwalk RevWalk]))
 
-(defn- get-temp-dir
-  "Returns a temporary directory"
-  []
-  (let [temp (File/createTempFile "test" "repo")]
-    (if (.exists temp)
-      (do
-        (.delete temp)
-        (.mkdir temp)
-        (.deleteOnExit temp)))
-    temp))
-
 (deftest test-git-init
   (let [repo-dir (get-temp-dir)]
-     (is #(nil? %) (git-init repo-dir))))
+    (is (not (nil? (git-init repo-dir))))))
 
 (deftest porcelain-tests
   (testing "with-repo macro"

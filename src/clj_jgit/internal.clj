@@ -11,9 +11,15 @@
   (RefSpec. str))
 
 (defn new-rev-walk
-  "Creates a new RevWalk instance (mutable)"
+  "Creates a new RevWalk instance (mutable), it's a good idea to use `close-rev-walk` once you are done. ;)"
   ^org.eclipse.jgit.revwalk.RevWalk [^Git repo]
   (RevWalk. (.getRepository repo)))
+
+(defn close-rev-walk
+  "If given `rev-walk` is a JGit RevWalk instance release any of it's used resources, returns nil either way"
+  [rev-walk]
+  (when (instance? org.eclipse.jgit.revwalk.RevWalk rev-walk)
+    (.close rev-walk)))
 
 (defn new-tree-walk
   "Create new recursive TreeWalk instance (mutable)"
