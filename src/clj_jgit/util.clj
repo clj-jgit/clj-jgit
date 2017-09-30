@@ -10,7 +10,7 @@
             (io/delete-file child silently))
           true)
       (or silently
-          (throw (java.io.IOException. (str "Couldn't delete " f)))))))
+          (throw (java.io.IOException. (str "Couldn't find " f)))))))
 
 (defn name-from-uri
   "Given a URI to a Git resource, derive the name (for use in cloning to a directory)"
