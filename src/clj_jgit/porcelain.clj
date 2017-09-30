@@ -2,8 +2,7 @@
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
             [clj-jgit.util :as util]
-            [clj-jgit.internal :refer :all]
-            [fs.core :as fs])
+            [clj-jgit.internal :refer :all])
   (:import [java.io FileNotFoundException File]
            [org.eclipse.jgit.lib RepositoryBuilder AnyObjectId]
            [org.eclipse.jgit.api Git InitCommand StatusCommand AddCommand
@@ -591,22 +590,22 @@
       (.setCredentialsProvider *credentials*)))
 
 (defn git-submodule-update
+  "Fetch each submodule repo and update them."
   ([repo]
-     "Fetch each submodule repo and update them."
-     (git-submodule-fetch repo)
-     (-> (submodule-update-cmd repo)
-         (.call))
-     (doseq [subm (submodule-walk repo)]
-       (-> (submodule-update-cmd subm)
-           (.call))))
+   (git-submodule-fetch repo)
+   (-> (submodule-update-cmd repo)
+       (.call))
+   (doseq [subm (submodule-walk repo)]
+     (-> (submodule-update-cmd subm)
+         (.call))))
   ([repo path]
-     (git-submodule-fetch repo)
-     (-> (submodule-update-cmd repo)
-         (.call))
-     (doseq [subm (submodule-walk repo)]
-       (-> (submodule-update-cmd subm)
-           (.addPath path)
-           (.call)))))
+   (git-submodule-fetch repo)
+   (-> (submodule-update-cmd repo)
+       (.call))
+   (doseq [subm (submodule-walk repo)]
+     (-> (submodule-update-cmd subm)
+         (.addPath path)
+         (.call)))))
 
 (defn git-submodule-sync
   ([repo]
@@ -719,7 +718,7 @@
                                            (last))]
                     (if (retries dir-path)
                       (throw e)
-                      (fs/delete-dir dir-path))
+                      (util/recursive-delete-file dir-path true))
                     #(clean-loop (conj retries dir-path)))))))]
     (trampoline clean-loop #{})))
 
