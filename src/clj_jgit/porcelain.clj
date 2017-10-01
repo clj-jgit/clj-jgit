@@ -18,7 +18,7 @@
            [clojure.lang Keyword]
            [java.util List]
            [org.eclipse.jgit.api.errors JGitInternalException]
-           [org.eclipse.jgit.transport UsernamePasswordCredentialsProvider]
+           [org.eclipse.jgit.transport UsernamePasswordCredentialsProvider URIish]
            [org.eclipse.jgit.treewalk TreeWalk]))
 
 (declare log-builder)
@@ -347,6 +347,30 @@
         (.setDirectory (io/as-file target-dir))
         (.setBare bare)
         (.call))))
+
+(defn git-remote-add
+  "Add a new remote to given repo and return the JGit RemoteAddCommand instance"
+  [^Git repo name ^String uri]
+  (doto (.remoteAdd repo)
+        (.setName name)
+        (.setUri (URIish. uri))
+        (.call)))
+
+(defn git-remote-remove
+  "Remove a remote with given name from repo and return the JGit RemoteRemoveCommand instance"
+  [^Git repo name]
+  (doto (.remoteRemove repo)
+        (.setName name)
+        (.call)))
+
+(defn git-remote-list
+  "Return a seq of vectors with format [name [^URIish ..]] representing all configured remotes for given repo"
+  [^Git repo]
+  (->> repo
+       .remoteList
+       .call
+       (map (fn [r]
+              [(.getName r) (.getURIs r)]))))
 
 (defn git-log
   "Return a seq of all commit objects"

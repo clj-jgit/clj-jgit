@@ -61,3 +61,18 @@
     (testing "after deleting the other tag, there are no tags in the list"
       (git-tag-delete repo "bar")
       (is (= () (git-tag-list repo))))))
+
+(deftest test-remote-functions
+  (with-tmp-repo "target/tmp"
+    (let [remote-name "origin"
+          remote-uri "git@github.com:clj-jgit/clj-jgit.git"]
+      (testing "git-remote-list works and fresh repo doesn't have any remotes"
+        (is (empty? (git-remote-list repo))))
+      (testing "git-remote-add works and name/uri match inputs"
+        (git-remote-add repo remote-name remote-uri)
+        (let [[added-name uri-vec] (-> repo git-remote-list first)]
+          (is (= remote-name added-name))
+          (is (= remote-uri (-> uri-vec first .toString)))))
+      (testing "git-remote-remove works and remotes list is empty again"
+        (git-remote-remove repo remote-name)
+        (is (empty? (git-remote-list repo)))))))
