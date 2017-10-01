@@ -4,8 +4,10 @@
         [clojure.test])
   (:import
     [java.io File]
-    [org.eclipse.jgit.api Git]
-    [org.eclipse.jgit.revwalk RevWalk]))
+    [org.eclipse.jgit.api Git PullResult]
+    [org.eclipse.jgit.transport PushResult]
+    [org.eclipse.jgit.revwalk RevWalk]
+    [org.eclipse.jgit.api.errors NoHeadException]))
 
 (deftest test-git-init
   (let [repo-dir (get-temp-dir)]
@@ -76,3 +78,21 @@
       (testing "git-remote-remove works and remotes list is empty again"
         (git-remote-remove repo remote-name)
         (is (empty? (git-remote-list repo)))))))
+
+(deftest test-push-pull-functions
+  (let [repo-a (git-init (get-temp-dir))
+        repo-b (git-init (get-temp-dir))
+        bare-dir (get-temp-dir)
+        repo-bare (git-init bare-dir true)
+        commit-msg "this is a test"]
+    (testing "repo-a and repo-b have no commits"
+      (is (thrown? NoHeadException (git-log repo-a)))
+      (is (thrown? NoHeadException (git-log repo-b))))
+    (testing "git-push works with test commit for repo-a using repo-bare as remote"
+      (git-commit repo-a commit-msg)
+      (git-remote-add repo-a "origin" (.getAbsolutePath bare-dir))
+      (is (instance? PushResult (-> repo-a git-push first))))
+    (testing "git-pull works for repo-b using repo-bare as remote and repo-b has a commit with matching message"
+      (git-remote-add repo-b "origin" (.getAbsolutePath bare-dir))
+      (is (instance? PullResult (git-pull repo-b)))
+      (is (= commit-msg (-> repo-b git-log first .getFullMessage))))))
