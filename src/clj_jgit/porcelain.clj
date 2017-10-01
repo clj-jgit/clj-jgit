@@ -339,13 +339,14 @@
      (git-fetch repo remote "+refs/tags/*:refs/tags/*" "+refs/heads/*:refs/heads/*")))
 
 (defn git-init
-  "Initialize and load a new Git repository"
+  "Initialize and return a new Git repository, if no options are passed a non-bare repo is created at user.dir"
   ([] (git-init "."))
-  ([target-dir]
-     (let [comm (InitCommand.)]
-       (-> comm
-           (.setDirectory (io/as-file target-dir))
-           (.call)))))
+  ([^String target-dir] (git-init target-dir false))
+  ([^String target-dir ^Boolean bare]
+    (-> (InitCommand.)
+        (.setDirectory (io/as-file target-dir))
+        (.setBare bare)
+        (.call))))
 
 (defn git-log
   "Return a seq of all commit objects"

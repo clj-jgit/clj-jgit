@@ -11,6 +11,13 @@
   (let [repo-dir (get-temp-dir)]
     (is (not (nil? (git-init repo-dir))))))
 
+(deftest test-git-init-bare
+  (testing "git-init bare option works"
+    (let [repo-dir (get-temp-dir)]
+      (is (-> (git-init repo-dir true)
+              .getRepository
+              .isBare)))))
+
 (deftest porcelain-tests
   (testing "with-repo macro"
     (read-only-repo
