@@ -1,4 +1,5 @@
 (ns clj-jgit.test.porcelain
+  (:require [clojure.pprint :as pp])
   (:use [clj-jgit.test.helpers]
         [clj-jgit.porcelain]
         [clojure.test])
@@ -96,3 +97,33 @@
       (git-remote-add repo-b "origin" (.getAbsolutePath bare-dir))
       (is (instance? PullResult (git-pull repo-b)))
       (is (= commit-msg (-> repo-b git-log first .getFullMessage))))))
+
+(deftest test-git-notes-functions
+  (with-tmp-repo "target/tmp"
+    (git-commit repo "init commit")
+
+    (testing "No notes for a fresh new repository on ref commits"
+      (is (= 0 (count (git-notes repo)))))
+    (testing "No notes for not existing ref"
+      (is (= 0 (count (git-notes repo "not-valid-ref")))))
+    (testing "Add and retrieve a note on default ref"
+      (git-notes-add repo "note test 1")
+      (is (= 1 (count (git-notes repo)))))
+    (testing "Add and retrieve a note on 'custom' ref"
+      (git-notes-add repo "note test 2" "custom")
+      (is (= 1 (count (git-notes repo "custom")))))
+    (testing "Read notes on default ref"
+      (is (= 1 (count (git-notes-show repo))))
+      (is (= "note test 1" (first (git-notes-show repo))))
+      (git-notes-add repo "note test 1\nnote test 1.1")
+      (is (= 2 (count (git-notes-show repo))))
+      (is (= "note test 1" (first (git-notes-show repo))))
+      (is (= "note test 1.1" (second (git-notes-show repo)))))
+    (testing "Read notes on 'custom' ref"
+      (is (= 1 (count (git-notes-show repo "custom"))))
+      (is (= "note test 2" (first (git-notes-show repo "custom")))))
+    (testing "Append note on default ref"
+      (is (= 2 (count (git-notes-show repo))))
+      (git-notes-append repo "append test")
+      (is (= 3 (count (git-notes-show repo))))
+      (is (= "append test" (last (git-notes-show repo)))))))
