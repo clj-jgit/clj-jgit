@@ -819,11 +819,6 @@
   ([^Git repo]
     (git-notes-show repo "commits")))
 
-(defn get-head-commit-object "Return HEAD RevCommit instance" [^Git repo ]
-  (let [repository (-> repo .getRepository)
-        head-id (-> repository (.resolve "HEAD"))]
-    (-> (RevWalk. repository) (.parseCommit head-id))))
-
 (defn git-notes-add
   "Add note for a given commit (defaults to HEAD) with the given ref (defaults to 'commits')
   It overwrites existing note for the commit"
