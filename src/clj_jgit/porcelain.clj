@@ -831,7 +831,7 @@
       .call))
   ([^Git repo ^String message ^String ref]
     (->> repo
-         get-head-commit-object
+         get-head-commit
          (git-notes-add repo message ref)))
   ([^Git repo ^String message]
     (git-notes-add repo message "commits")))
@@ -846,7 +846,7 @@
           (git-notes-add repo $ ref commit)))
   ([^Git repo ^String message ^String ref]
     (->> repo
-         get-head-commit-object
+         get-head-commit
          (git-notes-append repo message ref)))
   ([^Git repo ^String message]
     (git-notes-append repo message "commits")))

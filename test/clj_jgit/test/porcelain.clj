@@ -1,5 +1,4 @@
 (ns clj-jgit.test.porcelain
-  (:require [clojure.pprint :as pp])
   (:use [clj-jgit.test.helpers]
         [clj-jgit.porcelain]
         [clojure.test])

@@ -1,11 +1,11 @@
 (ns clj-jgit.test.internal
-  (:use 
+  (:use
     [clj-jgit.test.helpers]
     [clj-jgit.porcelain]
     [clj-jgit.querying]
     [clj-jgit.internal]
     [clojure.test])
-  (:import 
+  (:import
     [org.eclipse.jgit.lib ObjectId]
     [org.eclipse.jgit.revwalk RevWalk RevCommit]
     [org.eclipse.jgit.treewalk TreeWalk]))
@@ -24,8 +24,8 @@
   (testing "bound-commit"
     (read-only-repo
       (are
-        [commit-ish] (instance? RevCommit 
-                                (bound-commit repo 
+        [commit-ish] (instance? RevCommit
+                                (bound-commit repo
                                               (new-rev-walk repo)
                                               (resolve-object commit-ish repo)))
         "38dd57264cf5c05fb77211c8347d1f16e4474623" ; initial commit
@@ -33,6 +33,10 @@
         "master^" ; commit before master's head
         )))
 
-  (testing "new-tree-walk" 
+  (testing "new-tree-walk"
     (read-only-repo
-      (is (instance? TreeWalk (new-tree-walk repo (find-rev-commit repo (new-rev-walk repo) "master")))))))
+      (is (instance? TreeWalk (new-tree-walk repo (find-rev-commit repo (new-rev-walk repo) "master"))))))
+
+  (testing "get-head-commit"
+    (read-only-repo
+      (is (instance? RevCommit (get-head-commit repo))))))
