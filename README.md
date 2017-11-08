@@ -1,4 +1,4 @@
-# clj-jgit 
+# clj-jgit
 
 Clojure wrapper for using the JGit library to manipulate Git repositories in a "pure Java" fashion.
 
@@ -12,7 +12,7 @@ Last stable version is available on [Clojars](http://clojars.org/clj-jgit).
 
 ## Quickstart Tutorial ##
 
-This brief tutorial will show you how to: 
+This brief tutorial will show you how to:
 
 1. Clone a remote repository
 2. Create a local branch for your changes
@@ -77,14 +77,14 @@ This brief tutorial will show you how to:
 
 ;; Blame
 (first (git-blame my-repo "README.md"))
-;=> {:author {:name "Ilya Sabanin", 
-              :email "ilya@sabanin.com", 
-              :timezone #<ZoneInfo ...>}, 
-     :commit #<RevCommit commit fabdf5cf4abb72231461177238349c21e23fa46a 1352414190 -----p>, 
-     :committer {:name "Ilya Sabanin", 
-                 :email "ilya@wildbit.com", 
-                 :timezone #<ZoneInfo ...>}, 
-     :line 66, 
+;=> {:author {:name "Ilya Sabanin",
+              :email "ilya@sabanin.com",
+              :timezone #<ZoneInfo ...>},
+     :commit #<RevCommit commit fabdf5cf4abb72231461177238349c21e23fa46a 1352414190 -----p>,
+     :committer {:name "Ilya Sabanin",
+                 :email "ilya@wildbit.com",
+                 :timezone #<ZoneInfo ...>},
+     :line 66,
      :source-path "README.md"}
 
 ;; Tagging
@@ -161,6 +161,30 @@ This uses internal JGit API, so it may require some additional knowledge of JGit
 ```
 
 ```clj
+;; Notes Add
+(git-notes-add my-repo "my note")
+;=> (#object[org.eclipse.jgit.notes.Note 0x1237ddce "Note[3c14d1f8917761rc71db03170866055ef88b585f -> 10500018fca9b3425b50de67a7258a12cba0c076]"])
+```
+
+```clj
+;; Notes Append
+(git-notes-add my-repo "my appended note")
+;=> (#object[org.eclipse.jgit.notes.Note 0x1237ddce "Note[3c14d1f8917761rc71db03170866055ef88b585f -> 10500018fca9b3425b50de67a7258a12cba0c076]"])
+```
+
+```clj
+;; Notes List
+(git-notes my-repo)
+;=> (#object[org.eclipse.jgit.notes.Note 0x1237ddce "Note[3c14d1f8917761rc71db03170866055ef88b585f -> 10500018fca9b3425b50de67a7258a12cba0c076]"])
+```
+
+```clj
+;; Notes Show
+(git-notes-show my-repo)
+;=> ["my note" "my appended note"]
+```
+
+```clj
 (ns clj-jgit.querying)
 
 ;; Creates a RevWalk instance needed to traverse the commits for the repo.
@@ -170,7 +194,7 @@ This uses internal JGit API, so it may require some additional knowledge of JGit
 
 ;; List of pairs of branch refs and RevCommits associated with them
 (branch-list-with-heads repo rev-walk)
-;=> ([#<org.eclipse.jgit.storage.file.RefDirectory$LooseUnpeeled, Name: refs/heads/master, ObjectId: 3b9c98bc151bb4920f9799cfa6c32c536ed64348> 
+;=> ([#<org.eclipse.jgit.storage.file.RefDirectory$LooseUnpeeled, Name: refs/heads/master, ObjectId: 3b9c98bc151bb4920f9799cfa6c32c536ed64348>
       #<RevCommit commit 3b9c98bc151bb4920f9799cfa6c32c536ed64348 1339922123 -----p>])
 
 ;; Find an ObjectId instance for a repo and given commit-ish, tree-ish or blob
@@ -191,26 +215,26 @@ This uses internal JGit API, so it may require some additional knowledge of JGit
 (commit-info repo (find-rev-commit repo rev-walk "38dd57264cf"))
 
 ; Returns
-{:repo #<Git org.eclipse.jgit.api.Git@21d306ef>, 
-:changed_files [[".gitignore" :add] 
-                ["README.md" :add] 
-                ["project.clj" :add] 
-                ["src/clj_jgit/core.clj" :add] 
-                ["src/clj_jgit/util/print.clj" :add] 
-                ["test/clj_jgit/test/core.clj" :add]], 
-:raw #<RevCommit commit 38dd57264cf5c05fb77211c8347d1f16e4474623 1304645414 ----sp>, 
-:author "Daniel Gregoire", 
-:email "daniel.l.gregoire@gmail.com", 
-:message "Initial commit", 
-:branches ("refs/heads/master"), 
-:merge false, 
-:time #<Date Fri May 06 09:30:14 KRAT 2011>, 
+{:repo #<Git org.eclipse.jgit.api.Git@21d306ef>,
+:changed_files [[".gitignore" :add]
+                ["README.md" :add]
+                ["project.clj" :add]
+                ["src/clj_jgit/core.clj" :add]
+                ["src/clj_jgit/util/print.clj" :add]
+                ["test/clj_jgit/test/core.clj" :add]],
+:raw #<RevCommit commit 38dd57264cf5c05fb77211c8347d1f16e4474623 1304645414 ----sp>,
+:author "Daniel Gregoire",
+:email "daniel.l.gregoire@gmail.com",
+:message "Initial commit",
+:branches ("refs/heads/master"),
+:merge false,
+:time #<Date Fri May 06 09:30:14 KRAT 2011>,
 :id "38dd57264cf5c05fb77211c8347d1f16e4474623"}
 
 ;; You can also combine this with Porcelain API, to get a list of all commits in a repo with detailed information
 (with-repo "/path/to/repo.git"
   (map #(commit-info repo %) (git-log repo)))
-  
+
 ;; Branches lookup is an expensive operation, especially for repos with many branches.
 ;; commit-info spends most of it time trying to detect list of branches commit belongs to.
 

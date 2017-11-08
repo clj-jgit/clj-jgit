@@ -19,7 +19,9 @@
            [java.util List]
            [org.eclipse.jgit.api.errors JGitInternalException]
            [org.eclipse.jgit.transport UsernamePasswordCredentialsProvider URIish]
-           [org.eclipse.jgit.treewalk TreeWalk]))
+           [org.eclipse.jgit.treewalk TreeWalk]
+           [java.nio.charset StandardCharsets]
+           [org.eclipse.jgit.revwalk RevWalk RevCommit]))
 
 (declare log-builder)
 
@@ -795,3 +797,56 @@
   [repo commit path]
   (when-let [blob-id (get-blob-id repo commit path)]
     (.getName blob-id)))
+
+(defn git-notes
+  "Return the list of notes object for a given ref (defaults to 'commits')."
+  ([^Git repo ^String ref]
+    (-> repo
+        .notesList
+        (.setNotesRef (str "refs/notes/" ref))
+        .call))
+  ([^Git repo]
+    (git-notes repo "commits")))
+
+(defn git-notes-show
+  "Return notes strings for the given ref (defaults to 'commits')."
+  ([^Git repo ^String ref]
+    (let [repository (-> repo .getRepository)]
+      (->> (git-notes repo ref)
+           (map #(String. (.getBytes (.open repository (.getData %))) (StandardCharsets/UTF_8)))
+           (map #(str/split % #"\n"))
+           (first))))
+  ([^Git repo]
+    (git-notes-show repo "commits")))
+
+(defn git-notes-add
+  "Add note for a given commit (defaults to HEAD) with the given ref (defaults to 'commits')
+  It overwrites existing note for the commit"
+  ([^Git repo ^String message ^String ref ^RevCommit commit]
+    (-> repo
+      .notesAdd
+      (.setMessage message)
+      (.setNotesRef (str "refs/notes/" ref))
+      (.setObjectId commit)
+      .call))
+  ([^Git repo ^String message ^String ref]
+    (->> repo
+         get-head-commit
+         (git-notes-add repo message ref)))
+  ([^Git repo ^String message]
+    (git-notes-add repo message "commits")))
+
+(defn git-notes-append
+  "Append note for a given commit (defaults to HEAD) with the given ref (defaults to 'commits')
+  It concatenates notes with \n char"
+  ([^Git repo ^String message ^String ref ^RevCommit commit]
+    (as-> (git-notes-show repo ref) $
+          (conj $ message)
+          (str/join "\n" $)
+          (git-notes-add repo $ ref commit)))
+  ([^Git repo ^String message ^String ref]
+    (->> repo
+         get-head-commit
+         (git-notes-append repo message ref)))
+  ([^Git repo ^String message]
+    (git-notes-append repo message "commits")))
