@@ -471,7 +471,7 @@
 
 (def jsch-factory
   (proxy [JschConfigSessionFactory] []
-      (configure [hc session]
+    (configure [hc session]
       (let [jsch (.getJSch this hc FS/DETECTED)]
         (doseq [[key val] *ssh-session-config*]
           (.setConfig session key val))
