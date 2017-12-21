@@ -461,11 +461,17 @@
      (-> repo .reset
          (.setRef ref)
          (.setMode ^ResetCommand$ResetType (reset-modes mode-sym))
+         (.call)))
+  ([^Git repo ref mode-sym path]
+     (-> repo .reset
+         (.setRef ref)
+         (.setMode ^ResetCommand$ResetType (reset-modes mode-sym))
+         (.addPath path)
          (.call))))
 
 (def jsch-factory
   (proxy [JschConfigSessionFactory] []
-    (configure [hc session]
+      (configure [hc session]
       (let [jsch (.getJSch this hc FS/DETECTED)]
         (doseq [[key val] *ssh-session-config*]
           (.setConfig session key val))
@@ -478,7 +484,7 @@
                         (.getBytes *ssh-passphrase*)))
         (doseq [{:keys [name private-key public-key passphrase]
                  :or {passphrase ""}} *ssh-identities*]
-          (.addIdentity jsch 
+          (.addIdentity jsch
                         (or name (str "key-" (.hashCode private-key)))
                         (.getBytes private-key)
                         (.getBytes public-key)
