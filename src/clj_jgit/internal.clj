@@ -17,7 +17,7 @@
 
 (defn close-rev-walk
   "If given `rev-walk` is a JGit RevWalk instance release any of it's used resources, returns nil either way"
-  [rev-walk]
+  [^org.eclipse.jgit.revwalk.RevWalk rev-walk]
   (when (instance? org.eclipse.jgit.revwalk.RevWalk rev-walk)
     (.close rev-walk)))
 
@@ -36,7 +36,7 @@
 
 (defprotocol Resolvable
   "Protocol for things that resolve ObjectId's."
-  (resolve-object [commit-ish repo]
+  (^org.eclipse.jgit.lib.ObjectId resolve-object [commit-ish repo]
     "Find ObjectId instance for any Git name: commit-ish, tree-ish or blob. Accepts ObjectId instances and just passes them through."))
 
 (extend-type String

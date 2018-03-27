@@ -177,10 +177,10 @@
 
 (declare git-cherry-pick)
 
-(defn clone-cmd [uri]
-  (-> (Git/cloneRepository)
-      (.setCredentialsProvider *credentials*)
-      (.setURI uri)))
+(defn ^org.eclipse.jgit.api.CloneCommand clone-cmd [^String uri]
+  (doto (Git/cloneRepository)
+    (.setCredentialsProvider *credentials*)
+    (.setURI uri)))
 
 (defn git-clone
   ([uri]
@@ -313,7 +313,7 @@
          (.setAll true)
          (.call))))
 
-(defn fetch-cmd [^Git repo]
+(defn ^org.eclipse.jgit.api.FetchCommand fetch-cmd [^Git repo]
   (-> repo
       (.fetch)
       (.setCredentialsProvider *credentials*)))
@@ -371,7 +371,7 @@
   (->> repo
        .remoteList
        .call
-       (map (fn [r]
+       (map (fn [^org.eclipse.jgit.transport.RemoteConfig r]
               [(.getName r) (.getURIs r)]))))
 
 (defn git-log
@@ -505,9 +505,9 @@
   (->> repo
        (.tagList)
        (.call)
-       (map #(->> % .getName (re-matches #"refs/tags/(.*)") second))))
+       (map #(->> ^org.eclipse.jgit.lib.Ref % .getName (re-matches #"refs/tags/(.*)") second))))
 
-(defn ls-remote-cmd [^Git repo]
+(defn ^org.eclipse.jgit.api.LsRemoteCommand ls-remote-cmd [^Git repo]
   (-> repo
       (.lsRemote)
       (.setCredentialsProvider *credentials*)))
@@ -545,28 +545,28 @@
 
 (def jsch-factory
   (proxy [JschConfigSessionFactory] []
-    (configure [hc session]
-      (let [jsch (.getJSch this hc FS/DETECTED)]
+    (configure [^org.eclipse.jgit.transport.OpenSshConfig$Host hc ^com.jcraft.jsch.Session session]
+      (let [jsch (.getJSch this hc FS/DETECTED)]    ; Unfortunately there doesn't appear to be a way to get rid of this reflection warning - see https://groups.google.com/forum/#!topic/clojure/x8F-WYIk2Nk for example
         (doseq [[key val] *ssh-session-config*]
           (.setConfig session key val))
         (when *ssh-exclusive-identity*
-          (.removeAllIdentity jsch))
+          (.removeAllIdentity ^com.jcraft.jsch.JSch jsch))
         (when (and *ssh-prvkey* *ssh-pubkey* *ssh-passphrase*)
-          (.addIdentity jsch *ssh-identity-name*
-                        (.getBytes *ssh-prvkey* )
-                        (.getBytes *ssh-pubkey*)
-                        (.getBytes *ssh-passphrase*)))
+          (.addIdentity ^com.jcraft.jsch.JSch jsch *ssh-identity-name*
+                        (.getBytes ^String *ssh-prvkey* )
+                        (.getBytes ^String *ssh-pubkey*)
+                        (.getBytes ^String *ssh-passphrase*)))
         (when (and *ssh-identity-name* (not (and *ssh-prvkey* *ssh-pubkey*)))
           (if (empty? *ssh-passphrase*)
-            (.addIdentity jsch *ssh-identity-name*)
-            (.addIdentity jsch *ssh-identity-name* (.getBytes *ssh-passphrase*))))
+            (.addIdentity ^com.jcraft.jsch.JSch jsch ^String *ssh-identity-name*)
+            (.addIdentity ^com.jcraft.jsch.JSch jsch ^String *ssh-identity-name* (.getBytes ^String *ssh-passphrase*))))
         (doseq [{:keys [name private-key public-key passphrase]
                  :or {passphrase ""}} *ssh-identities*]
-          (.addIdentity jsch
+          (.addIdentity ^com.jcraft.jsch.JSch jsch
                         (or name (str "key-" (.hashCode private-key)))
-                        (.getBytes private-key)
-                        (.getBytes public-key)
-                        (.getBytes passphrase)))))))
+                        (.getBytes ^String private-key)
+                        (.getBytes ^String public-key)
+                        (.getBytes ^String passphrase)))))))
 
 (SshSessionFactory/setInstance jsch-factory)
 
@@ -590,12 +590,12 @@
        ~@body)))
 
 (defn submodule-walk
-  ([repo]
+  ([^Git repo]
      (->> (submodule-walk (.getRepository repo) 0)
           (flatten)
           (filter identity)
           (map #(Git/wrap %))))
-  ([repo level]
+  ([^Git repo level]
      (when (< level 3)
        (let [gen (SubmoduleWalk/forIndex repo)
              repos (transient [])]
@@ -607,25 +607,25 @@
               (flatten))))))
 
 (defn git-submodule-fetch
-  [repo]
+  [^Git repo]
   (doseq [subm (submodule-walk repo)]
     (git-fetch-all subm)))
 
-(defn submodule-update-cmd [^Git repo]
+(defn ^org.eclipse.jgit.api.SubmoduleUpdateCommand submodule-update-cmd [^Git repo]
   (-> repo
       (.submoduleUpdate)
       (.setCredentialsProvider *credentials*)))
 
 (defn git-submodule-update
   "Fetch each submodule repo and update them."
-  ([repo]
+  ([^Git repo]
    (git-submodule-fetch repo)
    (-> (submodule-update-cmd repo)
        (.call))
    (doseq [subm (submodule-walk repo)]
      (-> (submodule-update-cmd subm)
          (.call))))
-  ([repo path]
+  ([^Git repo path]
    (git-submodule-fetch repo)
    (-> (submodule-update-cmd repo)
        (.call))
@@ -635,33 +635,33 @@
          (.call)))))
 
 (defn git-submodule-sync
-  ([repo]
+  ([^Git repo]
      (.. repo submoduleSync call)
      (doseq [subm (submodule-walk repo)]
-       (.. subm submoduleSync call)))
-  ([repo path]
+       (.. ^Git subm submoduleSync call)))
+  ([^Git repo path]
      (.. repo submoduleSync call)
      (doseq [subm (submodule-walk repo)]
-       (-> subm
+       (-> ^Git subm
            (.submoduleSync)
            (.addPath path)
            (.call)))))
 
 (defn git-submodule-init
-  ([repo]
+  ([^Git repo]
      (.. repo submoduleInit call)
      (doseq [subm (submodule-walk repo)]
-       (.. subm submoduleInit call)))
-  ([repo path]
+       (.. ^Git subm submoduleInit call)))
+  ([^Git repo path]
      (.. repo submoduleInit call)
      (doseq [subm (submodule-walk repo)]
-       (-> subm
+       (-> ^Git subm
            (.submoduleInit)
            (.addPath path)
            (.call)))))
 
 (defn git-submodule-add
-  [repo uri path]
+  [^Git repo uri path]
   (-> repo
       (.submoduleAdd)
       (.setURI uri)
@@ -701,7 +701,7 @@
   ([^Git repo ^String ref-id]
      (let [stashes (git-list-stash repo)
            target (first (filter #(= ref-id (second %))
-                                 (map-indexed #(vector %1 (.getName %2)) stashes)))]
+                                 (map-indexed #(vector %1 (.getName ^org.eclipse.jgit.revwalk.RevCommit %2)) stashes)))]
        (when-not (nil? target)
          (-> repo
              .stashDrop
@@ -750,7 +750,7 @@
     (trampoline clean-loop #{})))
 
 (defn blame-result
-  [blame]
+  [^org.eclipse.jgit.blame.BlameResult blame]
   (.computeAll blame)
   (letfn [(blame-line [num]
             (when-let [commit (try
@@ -787,11 +787,11 @@
          .call
          blame-result)))
 
-(defn get-blob-id
-  [repo commit path]
+(defn ^org.eclipse.jgit.lib.ObjectId get-blob-id
+  [^Git repo ^org.eclipse.jgit.revwalk.RevCommit commit ^String path]
   (let [tree-walk (TreeWalk/forPath (.getRepository repo) path (.getTree commit))]
     (when tree-walk
-      (.getObjectId tree-walk 0))))
+      (.getObjectId ^org.eclipse.jgit.treewalk.TreeWalk tree-walk 0))))
 
 (defn get-blob
   [repo commit path]
@@ -813,7 +813,7 @@
   ([^Git repo ^String ref]
     (let [repository (-> repo .getRepository)]
       (->> (git-notes repo ref)
-           (map #(String. (.getBytes (.open repository (.getData %))) (StandardCharsets/UTF_8)))
+           (map #(String. (.getBytes (.open repository (.getData ^org.eclipse.jgit.notes.Note %))) (StandardCharsets/UTF_8)))
            (map #(str/split % #"\n"))
            (first))))
   ([^Git repo]
