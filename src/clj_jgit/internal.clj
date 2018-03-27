@@ -17,9 +17,9 @@
 
 (defn close-rev-walk
   "If given `rev-walk` is a JGit RevWalk instance release any of it's used resources, returns nil either way"
-  [^org.eclipse.jgit.revwalk.RevWalk rev-walk]
+  [rev-walk]
   (when (instance? org.eclipse.jgit.revwalk.RevWalk rev-walk)
-    (.close rev-walk)))
+    (.close ^org.eclipse.jgit.revwalk.RevWalk rev-walk)))
 
 (defn new-tree-walk
   "Create new recursive TreeWalk instance (mutable)"
