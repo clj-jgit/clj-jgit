@@ -24,7 +24,7 @@
      ~@body))
 
 (defmethod print-method org.eclipse.jgit.internal.storage.file.RefDirectory$LooseRef
-  [o w]
+  [^org.eclipse.jgit.internal.storage.file.RefDirectory$LooseRef o w]
   (print-simple
    (str "#<" (.replaceFirst (str (.getClass o)) "class " "") ", "
         "Name: " (.getName o) ", "
