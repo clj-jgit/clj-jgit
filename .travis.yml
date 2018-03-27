@@ -3,6 +3,9 @@ dist: trusty
 sudo: false
 lein: 2.8.1
 
+git:
+  depth: 9999999
+
 addons:
   apt:
     packages:
