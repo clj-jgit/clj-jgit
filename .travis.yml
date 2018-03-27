@@ -1,4 +1,5 @@
 language: clojure
+dist: trusty
 sudo: false
 lein: 2.8.1
 
@@ -8,11 +9,10 @@ addons:
       - openjdk-6-jdk
 
 jdk:
-  - oraclejdk9
+  - openjdk6
+  - openjdk7
   - openjdk8
   - oraclejdk8
-  - openjdk7
-  - oraclejdk7
-  - openjdk6
+  - oraclejdk9
 
 script: lein with-profile dev do check, test
