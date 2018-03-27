@@ -1,7 +1,17 @@
+sudo: false
+dist: trusty
+addons:
+  apt:
+    packages:
+      - openjdk-6-jdk
 language: clojure
-lein: lein2
+lein: 2.8.1
 jdk:
+  - oraclejdk9
+  - openjdk8
+  - oraclejdk8
   - openjdk7
   - oraclejdk7
   - openjdk6
-script: "lein2 with-profile dev test"
+
+script: lein with-profile dev do check, test
