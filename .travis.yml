@@ -3,13 +3,13 @@ dist: trusty
 sudo: false
 lein: 2.8.1
 
-git:
-  depth: 9999999
-
 # Note: the latest versions of JGit only support JVM 1.8+
 jdk:
   - openjdk8
   - oraclejdk8
   - oraclejdk9
+
+# Tests need complete git history, but Travis always clones with --depth=50
+before_script: git fetch --unshallow
 
 script: lein with-profile dev do check, test
