@@ -436,6 +436,7 @@
     (as-> repo x
       (.pull x)
       (.setRemote x (or remote "origin"))
+      (.setCredentialsProvider x *credentials*)
       (.call x))))
 
 (defn git-push
@@ -454,6 +455,7 @@
       (.push x)
       (.setRemote x (or remote "origin"))
       (if tags (.setPushTags x) x)
+      (.setCredentialsProvider x *credentials*)
       (.call x))))
 
 (defn git-rebase [])
