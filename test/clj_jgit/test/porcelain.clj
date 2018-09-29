@@ -3,20 +3,19 @@
         [clj-jgit.porcelain]
         [clojure.test])
   (:import
-    [java.io File]
-    [org.eclipse.jgit.api Git PullResult]
-    [org.eclipse.jgit.transport PushResult]
-    [org.eclipse.jgit.revwalk RevWalk]
-    [org.eclipse.jgit.api.errors NoHeadException]))
+    (org.eclipse.jgit.api Git PullResult)
+    (org.eclipse.jgit.api.errors NoHeadException)
+    (org.eclipse.jgit.revwalk RevWalk RevCommit)
+    (org.eclipse.jgit.transport PushResult)))
 
 (deftest test-git-init
   (let [repo-dir (get-temp-dir)]
-    (is (not (nil? (git-init repo-dir))))))
+    (is (not (nil? (git-init :dir repo-dir))))))
 
 (deftest test-git-init-bare
   (testing "git-init bare option works"
     (let [repo-dir (get-temp-dir)]
-      (is (-> (git-init repo-dir true)
+      (is (-> (git-init :dir repo-dir :bare? true)
               .getRepository
               .isBare)))))
 
@@ -40,7 +39,7 @@
                             (re-matches #"^commit ([^\s]+) .*") second)]
                [(git-branch-attached? repo)
                 (git-branch-current repo)
-                (do (git-checkout repo sha),
+                (do (git-checkout repo :name sha),
                     (count (git-branch-current repo))) ; char count suggests sha
                 (git-branch-attached? repo)]))))))
 
@@ -55,7 +54,7 @@
       (git-tag-create repo "foo")
       (is (= ["foo"] (git-tag-list repo))))
     (testing "after creating another tag, both tags are in the list"
-      (git-tag-create repo "bar" "bar tag message goes here")
+      (git-tag-create repo "bar" :message "bar tag message goes here")
       (is (= #{"foo" "bar"} (set (git-tag-list repo)))))
     (testing "after deleting one tag, the other tag is still in the list"
       (git-tag-delete repo "foo")
@@ -80,10 +79,10 @@
         (is (empty? (git-remote-list repo)))))))
 
 (deftest test-push-pull-functions
-  (let [repo-a (git-init (get-temp-dir))
-        repo-b (git-init (get-temp-dir))
+  (let [repo-a (git-init :dir (get-temp-dir))
+        repo-b (git-init :dir (get-temp-dir))
         bare-dir (get-temp-dir)
-        repo-bare (git-init bare-dir true)
+        _ (git-init :dir bare-dir :bare? true)
         commit-msg "this is a test"]
     (testing "repo-a and repo-b have no commits"
       (is (thrown? NoHeadException (git-log repo-a)))
@@ -95,7 +94,7 @@
     (testing "git-pull works for repo-b using repo-bare as remote and repo-b has a commit with matching message"
       (git-remote-add repo-b "origin" (.getAbsolutePath bare-dir))
       (is (instance? PullResult (git-pull repo-b)))
-      (is (= commit-msg (-> repo-b git-log first .getFullMessage))))))
+      (is (= commit-msg (-> repo-b git-log ^RevCommit first .getFullMessage))))))
 
 (deftest test-git-notes-functions
   (with-tmp-repo "target/tmp"
@@ -104,13 +103,13 @@
     (testing "No notes for a fresh new repository on ref commits"
       (is (= 0 (count (git-notes repo)))))
     (testing "No notes for not existing ref"
-      (is (= 0 (count (git-notes repo "not-valid-ref")))))
+      (is (= 0 (count (git-notes repo :ref "not-valid-ref")))))
     (testing "Add and retrieve a note on default ref"
       (git-notes-add repo "note test 1")
       (is (= 1 (count (git-notes repo)))))
     (testing "Add and retrieve a note on 'custom' ref"
-      (git-notes-add repo "note test 2" "custom")
-      (is (= 1 (count (git-notes repo "custom")))))
+      (git-notes-add repo "note test 2" :ref "custom")
+      (is (= 1 (count (git-notes repo :ref "custom")))))
     (testing "Read notes on default ref"
       (is (= 1 (count (git-notes-show repo))))
       (is (= "note test 1" (first (git-notes-show repo))))
@@ -119,8 +118,8 @@
       (is (= "note test 1" (first (git-notes-show repo))))
       (is (= "note test 1.1" (second (git-notes-show repo)))))
     (testing "Read notes on 'custom' ref"
-      (is (= 1 (count (git-notes-show repo "custom"))))
-      (is (= "note test 2" (first (git-notes-show repo "custom")))))
+      (is (= 1 (count (git-notes-show repo :ref "custom"))))
+      (is (= "note test 2" (first (git-notes-show repo :ref "custom")))))
     (testing "Append note on default ref"
       (is (= 2 (count (git-notes-show repo))))
       (git-notes-append repo "append test")

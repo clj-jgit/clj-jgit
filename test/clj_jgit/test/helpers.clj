@@ -18,14 +18,14 @@
   `(do
      (util/recursive-delete-file ~repo-path true)
      (.mkdir (io/file ~repo-path))
-     (git-init ~repo-path)
+     (git-init :dir ~repo-path)
      (let [outcome# (with-repo ~repo-path ~@body)]
        (util/recursive-delete-file ~repo-path true)
        outcome#)))
 
 (defn get-temp-dir
   "Returns a temporary directory"
-  []
+  ^File []
   (let [temp (File/createTempFile "test" "clj-jgit")]
     (if (.exists temp)
       (do

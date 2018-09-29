@@ -1,29 +1,29 @@
 (ns clj-jgit.internal
   (:import
-    [org.eclipse.jgit.revwalk RevWalk RevCommit RevCommitList]
-    [org.eclipse.jgit.treewalk TreeWalk]
-    [org.eclipse.jgit.lib ObjectId ObjectIdRef Repository]
-    [org.eclipse.jgit.api Git]
-    [org.eclipse.jgit.transport RefSpec]))
+    (clojure.lang Sequential)
+    (org.eclipse.jgit.api Git)
+    (org.eclipse.jgit.lib ObjectId ObjectIdRef Repository RefDatabase)
+    (org.eclipse.jgit.transport RefSpec)
+    (org.eclipse.jgit.revwalk RevWalk RevCommit)
+    (org.eclipse.jgit.treewalk TreeWalk)))
 
-(defn ref-spec
-  ^org.eclipse.jgit.transport.RefSpec [str]
+(defn ref-spec ^RefSpec [str]
   (RefSpec. str))
 
 (defn new-rev-walk
   "Creates a new RevWalk instance (mutable), it's a good idea to use `close-rev-walk` once you are done. ;)"
-  ^org.eclipse.jgit.revwalk.RevWalk [^Git repo]
+  ^RevWalk [^Git repo]
   (RevWalk. (.getRepository repo)))
 
 (defn close-rev-walk
   "If given `rev-walk` is a JGit RevWalk instance release any of it's used resources, returns nil either way"
   [rev-walk]
-  (when (instance? org.eclipse.jgit.revwalk.RevWalk rev-walk)
-    (.close ^org.eclipse.jgit.revwalk.RevWalk rev-walk)))
+  (when (instance? RevWalk rev-walk)
+    (.close ^RevWalk rev-walk)))
 
 (defn new-tree-walk
   "Create new recursive TreeWalk instance (mutable)"
-  ^org.eclipse.jgit.treewalk.TreeWalk [^Git repo ^RevCommit rev-commit]
+  ^TreeWalk [^Git repo ^RevCommit rev-commit]
   (doto
     (TreeWalk. (.getRepository repo))
     (.addTree (.getTree rev-commit))
@@ -31,41 +31,46 @@
 
 (defn bound-commit
   "Find a RevCommit object in a RevWalk and bound to it."
-  ^org.eclipse.jgit.revwalk.RevCommit [^Git repo ^RevWalk rev-walk ^ObjectId rev-commit]
+  ^RevCommit [^Git repo ^RevWalk rev-walk ^ObjectId rev-commit]
   (.parseCommit rev-walk rev-commit))
 
 (defprotocol Resolvable
   "Protocol for things that resolve ObjectId's."
-  (resolve-object ^org.eclipse.jgit.lib.ObjectId [commit-ish repo]
+  (resolve-object ^ObjectId [commit-ish repo]
     "Find ObjectId instance for any Git name: commit-ish, tree-ish or blob. Accepts ObjectId instances and just passes them through."))
 
 (extend-type String
   Resolvable
   (resolve-object
-    ^org.eclipse.jgit.lib.ObjectId [^String commit-ish ^Git repo]
+    ^ObjectId [^String commit-ish ^Git repo]
     (.resolve (.getRepository repo) commit-ish)))
 
 (extend-type ObjectId
   Resolvable
   (resolve-object
-    ^org.eclipse.jgit.lib.ObjectId [commit-ish ^Git repo]
+    ^ObjectId [commit-ish ^Git repo]
     commit-ish))
 
 (extend-type ObjectIdRef
   Resolvable
   (resolve-object
-    ^org.eclipse.jgit.lib.ObjectId [commit-ish ^Git repo]
+    ^ObjectId [commit-ish ^Git repo]
     (.getObjectId commit-ish)))
+
+(extend-type Sequential
+  Resolvable
+  (resolve-object [refs ^Git repo]
+    (map #(resolve-object % repo) refs)))
 
 (extend-type Git
   Resolvable
   (resolve-object
-    ^org.eclipse.jgit.lib.ObjectId [^Git repo commit-ish]
+    ^ObjectId [^Git repo commit-ish]
     "For compatibility with previous implementation of resolve-object, which would take repo as a first argument."
     (resolve-object commit-ish repo)))
 
 (defn ref-database
-  ^org.eclipse.jgit.lib.RefDatabase [^Git repo]
+  ^RefDatabase [^Git repo]
   (.getRefDatabase ^Repository (.getRepository repo)))
 
 (defn get-refs

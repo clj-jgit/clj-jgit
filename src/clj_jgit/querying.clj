@@ -1,18 +1,16 @@
 (ns clj-jgit.querying
-  (:require [clojure.java.io :as io]
-            [clojure.string :as string]
-            [clj-jgit.util :as util]
+  (:require [clojure.string :as string]
+            [clj-jgit.internal :refer :all]
             [clj-jgit.porcelain :as porcelain]
-            [clj-jgit.internal :refer :all])
-  (:import [org.eclipse.jgit.diff DiffFormatter DiffEntry]
-           [org.eclipse.jgit.util.io DisabledOutputStream]
-           [org.eclipse.jgit.diff RawTextComparator]
-           [org.eclipse.jgit.revwalk RevWalk RevCommit RevCommitList]
-           [org.eclipse.jgit.lib FileMode Repository ObjectIdRef ObjectId AnyObjectId Ref]
-           [org.eclipse.jgit.api Git LogCommand]
-           [org.eclipse.jgit.internal.storage.file RefDirectory$LooseRef]
-           [java.util HashMap Date]
-           [java.io ByteArrayOutputStream]))
+            [clj-jgit.util :as util])
+  (:import (java.io ByteArrayOutputStream)
+           (java.util HashMap Date)
+           (org.eclipse.jgit.api Git)
+           (org.eclipse.jgit.diff DiffFormatter DiffEntry RawTextComparator)
+           (org.eclipse.jgit.internal.storage.file RefDirectory$LooseRef)
+           (org.eclipse.jgit.lib ObjectIdRef ObjectId AnyObjectId Ref)
+           (org.eclipse.jgit.revwalk RevWalk RevCommit RevCommitList)
+           (org.eclipse.jgit.util.io DisabledOutputStream)))
 
 (declare change-kind create-tree-walk diff-formatter-for-changes
          byte-array-diff-formatter-for-changes changed-files-in-first-commit
