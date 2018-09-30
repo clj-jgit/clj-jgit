@@ -10,6 +10,6 @@ jdk:
   - oraclejdk9
 
 # Tests need complete git history, but Travis always clones with --depth=50
-before_script: git fetch --unshallow
+before_script: git fetch --unshallow && git fetch origin refs/heads/master:refs/heads/master
 
 script: lein with-profile dev do check, test
