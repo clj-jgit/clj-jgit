@@ -30,9 +30,6 @@
            (org.eclipse.jgit.treewalk TreeWalk)
            (org.eclipse.jgit.util FS)))
 
-
-(declare log-builder)
-
 (defmulti discover-repo "Discover a Git repository in a path." type)
 
 (defmethod discover-repo File
@@ -91,18 +88,18 @@
   added recursively. Fileglobs (e.g. *.txt) are not yet supported.
 
   Options:
-    :only-update?           If set to true, the command only matches `file-patterns` against already tracked files in
+    :update?                If set to true, the command only matches `file-patterns` against already tracked files in
                             the index rather than the working tree. That means that it will never stage new files, but
                             that it will stage modified new contents of tracked files and that it will remove files from
                             the index if the corresponding files in the working tree have been removed. (default: false)
     :working-tree-iterator  Provide your own WorkingTreeIterator. (default: nil)
   "
-  [^Git repo file-patterns & {:keys [only-update? working-tree-iterator]
-                              :or   {only-update?          false
+  [^Git repo file-patterns & {:keys [update? working-tree-iterator]
+                              :or   {update?               false
                                      working-tree-iterator nil}}]
   (as-> (.add repo) cmd
       ^AddCommand (doseq-cmd-fn! cmd #(.addFilepattern ^AddCommand %1 %2) file-patterns)
-      (.setUpdate cmd only-update?)
+      (.setUpdate cmd update?)
       (if (some? working-tree-iterator)
         (.setWorkingTreeIterator cmd working-tree-iterator) cmd)
       (.call cmd)))
@@ -464,7 +461,7 @@
   "Fetch changes from upstream repository.
 
   Options:
-    :callback           Register a progress callback. See JGit CloneCommand.Callback interface. (default: nil)
+    :callback           Register a progress callback. See JGit FetchCommand.Callback interface. (default: nil)
     :check-fetched?     If set to true, objects received will be checked for validity. (default: false)
     :dry-run?           Whether to do a dry run. (default: false)
     :force?             Update refs affected by the fetch forcefully? (default: false)
@@ -873,7 +870,7 @@
                              strategy :recursive}}]
   (let [revert-cmd (.revert repo)]
     (as-> revert-cmd cmd
-          ^RevertCommand (doseq-cmd-fn! cmd #(.include ^RevertCommand %1 ^AnyObjectId %2) (resolve-object repo commits))
+          ^RevertCommand (doseq-cmd-fn! cmd #(.include ^RevertCommand %1 ^AnyObjectId %2) (resolve-object commits repo))
           (if (some? our-commit-name)
             (.setOurCommitName cmd our-commit-name) cmd)
           (if (some? monitor)
@@ -1154,7 +1151,7 @@
   "Update all submodules of given `repo`.
 
   Options:
-    callback        Set a CloneCommand.Callback for submodule this clone operation. (default: nil)
+    callback        Set a CloneCommand.Callback for this submodule clone operation. (default: nil)
     fetch?          Whether to fetch the submodules before we update them. (default: true)
     fetch-callback  Set a FetchCommand.Callback for submodule fetch operation. (default: nil)
     monitor         Set a progress monitor. See JGit ProgressMonitor interface. (default: nil)
