@@ -65,7 +65,7 @@ This brief tutorial will show you how to:
 ;=> {:untracked #{}, :removed #{}, :modified #{}, :missing #{}, :changed #{}, :added #{"foo.txt"}}
 
 ;; Now commit your changes, specifying author and committer if desired
-(git-commit my-repo "Add file foo.txt" {"Daniel Gregoire" "daniel@example.com"})
+(git-commit my-repo "Add file foo.txt" {:name "Daniel Gregoire" :email "daniel@example.com"})
 ;=> #<RevCommit commit 5e116173db370bf400b3514a4b093ec3d98a2666 1310135270 -----p>
 
 ;; Status clean
