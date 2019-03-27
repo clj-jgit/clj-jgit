@@ -35,7 +35,7 @@
              (spit tmp-file "1")
              (git-add repo tmp-file)
              (git-commit repo "first commit")
-             (let [sha (->> repo git-log first str
+             (let [sha (->> repo git-log first :id str
                             (re-matches #"^commit ([^\s]+) .*") second)]
                [(git-branch-attached? repo)
                 (git-branch-current repo)
@@ -94,7 +94,7 @@
     (testing "git-pull works for repo-b using repo-bare as remote and repo-b has a commit with matching message"
       (git-remote-add repo-b "origin" (.getAbsolutePath bare-dir))
       (is (instance? PullResult (git-pull repo-b)))
-      (is (= commit-msg (-> repo-b git-log ^RevCommit first .getFullMessage))))))
+      (is (= commit-msg (-> repo-b git-log first :msg))))))
 
 (deftest test-git-notes-functions
   (with-tmp-repo "target/tmp"

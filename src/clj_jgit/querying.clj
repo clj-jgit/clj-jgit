@@ -31,7 +31,7 @@
   ([^Git repo ^RevWalk rev-walk]
     (letfn [(zip-commits [^ObjectIdRef branch-ref]
                          [branch-ref (bound-commit repo rev-walk (.getObjectId branch-ref))])]
-           (let [branches (porcelain/git-branch-list repo)]
+           (let [branches (porcelain/git-branch-list repo :jgit? true)]
              (doall (map zip-commits branches))))))
 
 (defn commit-in-branch?
