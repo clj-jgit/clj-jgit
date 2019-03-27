@@ -75,4 +75,5 @@
   (when person
     {:name     (.getName person)
      :email    (.getEmailAddress person)
+     :date     (.getWhen person)
      :timezone (.getTimeZone person)}))
