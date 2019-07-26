@@ -5,7 +5,7 @@
            (org.eclipse.jgit.lib PersonIdent)))
 
 (defn recursive-delete-file
-  "Delete file f. If f is a directory, recursively deletes all files and directories within the directory. Raises an
+  "Delete file `f`. If `f` is a directory, recursively deletes all files and directories within the directory. Raises an
   exception if it fails, unless `silently` is true."
   [f & [silently]]
   (let [file (io/file f)]
@@ -21,23 +21,16 @@
   [obj]
   (if (sequential? obj) obj (vector obj)))
 
-(defmacro doseq-obj-fn! [cmd-instance type f args]
-  (vary-meta `(let [c# ~cmd-instance]
-                (doseq [p# (seq?! ~args)]
-                  (~f c# p#))
-                c#)
-             assoc :tag type))
-
 (defn doseq-cmd-fn!
   "Repeatedly executes function `f` for each entry in `param-seq`. The function is passed the `cmd-instance` as first
-  arg and a single `param-seq` entry as second arg. If param-seq isn't sequential? it's wrapped into a vector.
+  arg and a single `param-seq` entry as second arg. If `param-seq` isn't sequential? it's wrapped into a vector.
   Returns given `cmd-instance`.
 
   Example that executes `.addFilepattern` on a JGit AddCommand instance for each given file, nicely threaded:
 
-  (-> (.add repo)
-      (doseq-cmd-fn! #(.addFilepattern ^AddCommand %1 %2) [\"file1.txt\" \"file2.txt\"])
-      (.call))
+      (-> (.add repo)
+        (doseq-cmd-fn! #(.addFilepattern ^AddCommand %1 %2) [\"file1.txt\" \"file2.txt\"])
+        (.call))
   "
   [cmd-instance f param-seq]
     (doseq [p (seq?! param-seq)]
@@ -71,7 +64,9 @@
       (subs path 1)
       path)))
 
-(defn person-ident [^PersonIdent person]
+(defn person-ident
+  "Convert given JGit `PersonIdent` object into a map"
+  [^PersonIdent person]
   (when person
     {:name     (.getName person)
      :email    (.getEmailAddress person)
