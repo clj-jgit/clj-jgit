@@ -25,55 +25,54 @@ This brief tutorial will show you how to:
 (use 'clj-jgit.porcelain)
 
 ;; Clone a repository into a folder of my choosing and keep the jgit repository object at my-repo
-(def my-repo
-  (:repo (git-clone-full "https://github.com/clj-jgit/clj-jgit.git" "local-folder/clj-jgit")))
+(def my-repo (git-clone "https://github.com/clj-jgit/clj-jgit.git" :dir "local-folder/clj-jgit"))
 ;=> #'user/my-repo
 
 ;; A bit redundant for a fresh repo, but always good to check the repo status
 ;; before making any changes
 (git-status my-repo)
-;=> {:untracked #{}, :removed #{}, :modified #{}, :missing #{}, :changed #{}, :added #{}}
+;=> {:added #{}, :changed #{}, :missing #{}, :modified #{}, :removed #{}, :untracked #{}}
 
 ;; List existing branches
 (git-branch-list my-repo)
-;=> (#<LooseUnpeeled Ref[refs/heads/master=526f58f0b09621ce27fbae575991c8311a515430]>)
+;=> ("master")
 
 ;; Create a new local branch to store our changes
 (git-branch-create my-repo "my-branch")
-;=> #<LooseUnpeeled Ref[refs/heads/my-branch=526f58f0b09621ce27fbae575991c8311a515430]>
+;=> #<org.eclipse.jgit.internal.storage.file.RefDirectory$LooseUnpeeled, Name: refs/heads/my-branch, ...>
 
 ;; Prove to ourselves that it was created
 (git-branch-list my-repo)
-;=> (#<LooseUnpeeled Ref[refs/heads/master=526f58f0b09621ce27fbae575991c8311a515430]> #<LooseUnpeeled Ref[refs/heads/my-branch=526f58f0b09621ce27fbae575991c8311a515430]>)
+;=> ("master" "my-branch")
 
 ;; Check out our new branch
 
 (git-checkout my-repo "my-branch")
-;=> #<LooseUnpeeled Ref[refs/heads/my-branch=526f58f0b09621ce27fbae575991c8311a515430]>
+;=> #<org.eclipse.jgit.internal.storage.file.RefDirectory$LooseUnpeeled, Name: refs/heads/my-branch, ...>
 
 ;; Now go off and make your changes.
 ;; For example, let's say we added a file "foo.txt" at the base of the project.
 (git-status my-repo)
-;=> {:untracked #{"foo.txt"}, :removed #{}, :modified #{}, :missing #{}, :changed #{}, :added #{}}
+;=> {:added #{}, :changed #{}, :missing #{}, :modified #{}, :removed #{}, :untracked #{"foo.txt"}}
 
 ;; Add the file to the index
 (git-add my-repo "foo.txt")
-;=> #<DirCache org.eclipse.jgit.dircache.DirCache@81db25>
+;=> #object[org.eclipse.jgit.dircache.DirCache 0x3d9e3c3a "org.eclipse.jgit.dircache.DirCache@3d9e3c3a"]
 
 ;; Check for status change
 (git-status my-repo)
-;=> {:untracked #{}, :removed #{}, :modified #{}, :missing #{}, :changed #{}, :added #{"foo.txt"}}
+;=> {:added #{"foo.txt"}, :changed #{}, :missing #{}, :modified #{}, :removed #{}, :untracked #{}}
 
 ;; Now commit your changes, specifying author and committer if desired
-(git-commit my-repo "Add file foo.txt" {:name "Daniel Gregoire" :email "daniel@example.com"})
-;=> #<RevCommit commit 5e116173db370bf400b3514a4b093ec3d98a2666 1310135270 -----p>
+(git-commit my-repo "Add file foo.txt" :committer {:name "Daniel Gregoire" :email "daniel@example.com"})
+;=> #object[org.eclipse.jgit.revwalk.RevCommit 0x7283e79c "commit b6feeb3baab8fa0422390b2d2a737b1e21610401 -----p"]
 
 ;; Status clean
 (git-status my-repo)
-;=> {:untracked #{}, :removed #{}, :modified #{}, :missing #{}, :changed #{}, :added #{}}
+;=> {:added #{}, :changed #{}, :missing #{}, :modified #{}, :removed #{}, :untracked #{}}
 
-(git-clean my-repo :clean-dirs? true, :ignore? true)
-;=> ...
+(git-clean my-repo :dirs? true, :ignore? true)
+;=> #{}
 
 ;; Blame
 (first (git-blame my-repo "README.md"))
@@ -100,33 +99,36 @@ This brief tutorial will show you how to:
 
 ## Detailed Usage ##
 
-Currently, this library leverages the "porcelain" API exposed by JGit, which allows the use of methods/functions similar to the ones available on the command-line when using Git for "basic" purposes. If enough interest arises, this tool will wrap more of the lower-level functions in the future, but for now it acts as a basic Java replacement for the command-line version of Git.
+Currently, this library leverages the "porcelain" API exposed by JGit, which allows the use of methods/functions similar
+to the ones available on the command-line when using Git for "basic" purposes. If enough interest arises, this tool will
+wrap more of the lower-level functions in the future, but for now it acts as a basic Java replacement for the
+command-line version of Git.
 
 ### Cloning a Repository ###
 
 ```clj
-(git-clone-full "url-to-read-only-repo" "optional-local-folder")
+(git-clone "url-to-repo" :dir "optional-local-folder")
 ```
-
-JGit's default `git-clone` simply clones the `.git` folder, but doesn't pull down the actual project files. This library's `git-clone-full` function, on the other hand, performs a `git-clone` following by a `git-fetch` of the master branch and a `git-merge`.
 
 ### Authentication
 
-Any command that may require authentication (clone, push, etc) can be wrapped with the `with-identity` macro.
+Per default JGit expects a standard SSH key setup in `~/.ssh`, things should just work unless your key is password
+protected. For further configuration any command may be wrapped with the `with-credentials` or `with-identity` macro:
 
 ```clj
-;; Use current user's ssh key, no password
-(with-identity {:name "~/.ssh/id_rsa" :exclusive true}
+;; Use custom SSH key location with key pw, also accept all unknown server keys and add them to `known_hosts` file:
+(with-identity {:name "my.key" :key-dir "/some/path" pw: "$ecRet" :trust-all? true}
   (git-push my-repo :tags true))
 
-;; Use some other key that has a password
-(with-identity {:name "/path/to/the/private/key" :passphrase "$ecReT" :exclusive true}
+;; Use user/pw auth instead of key based auth
+(with-credentials {:user "someuser" :pw "$ecReT"}
   (git-pull my-repo))
 ```
 
 ### Loading an Existing Repository ###
 
-In order to use most of the functions in JGit's API, you need to have a repository object to play with. Here are ways to load an existing repository:
+In order to use most of the functions in JGit's API, you need to have a repository object to play with. Here are ways to
+load an existing repository:
 
 ```clj
 ;; Simples method is to point to the folder
@@ -146,12 +148,12 @@ This uses internal JGit API, so it may require some additional knowledge of JGit
 (ns clj-jgit.porcelain)
 
 ;; Log
-(git-log my-repo)
-;=> (#<RevCommit commit 36748f70c687e8d2bc92d262692cd03ffc6c2473 1304696936 ----sp> ...)
+(git-log my-repo :max-count 1)
+;=> ({:id #object[org.eclipse.jgit.revwalk.RevCommit], :msg "fix git-commit docs, typo in readme", :author ...
 
 ;; Log for range
-(git-log my-repo "36748f70" "master^3")
-;=> (#<RevCommit commit 36748f70c687e8d2bc92d262692cd03ffc6c2473 1304696936 ----sp> ...)
+(git-log my-repo :since "5a7b97" :until "master^1")
+;=> ...
 ```
 
 ```clj
@@ -261,6 +263,6 @@ Cygwin will cause this library to hang. Make sure to remove `C:\cygwin\bin` from
 
 ## License
 
-Copyright (C) 2011 FIXME
+Copyright (C) 2019 FIXME
 
 Distributed under the Eclipse Public License, the same as Clojure.
