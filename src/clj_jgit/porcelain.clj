@@ -12,7 +12,7 @@
                                  StashCreateCommand StashApplyCommand BlameCommand ListBranchCommand$ListMode
                                  CreateBranchCommand$SetupUpstreamMode CheckoutCommand$Stage
                                  CommitCommand MergeCommand$FastForwardMode RevertCommand CreateBranchCommand
-                                 CheckoutCommand TransportConfigCallback TransportCommand ListBranchCommand TagCommand CleanCommand)
+                                 CheckoutCommand TransportConfigCallback TransportCommand ListBranchCommand TagCommand CleanCommand DeleteTagCommand)
            (org.eclipse.jgit.blame BlameResult)
            (org.eclipse.jgit.diff DiffAlgorithm$SupportedAlgorithm)
            (org.eclipse.jgit.lib RepositoryBuilder AnyObjectId PersonIdent BranchConfig$BranchRebaseMode ObjectId
@@ -443,7 +443,7 @@
         (if (some? name)
           (.setName cmd name) cmd)
         (if (some? paths)
-          (.addPaths cmd (into-array String (seq?! paths))) cmd)
+          (.addPaths cmd (seq?! paths)) cmd)
         (.setAllPaths cmd all-paths?)
         (.setCreateBranch cmd create-branch?)
         (.setForce cmd force?)
@@ -514,7 +514,7 @@
         (.setBranch cmd branch)
         (.setCloneAllBranches cmd clone-all?)
         (if (some? clone-branches)
-          (.setBranchesToClone cmd (into-array String (seq?! clone-branches))) cmd)
+          (.setBranchesToClone cmd (seq?! clone-branches)) cmd)
         (.setCloneSubmodules cmd clone-subs?)
         (if (some? callback)
           (.setCallback cmd callback) cmd)
@@ -1050,7 +1050,7 @@
         (if (some? monitor)
           (.setProgressMonitor cmd monitor) cmd)
         (if (some? options)
-          (.setPushOptions cmd (into-array String (seq?! options))) cmd)
+          (.setPushOptions cmd (seq?! options)) cmd)
         (if (some? output-stream)
           (.setOutputStream cmd output-stream) cmd)
         (if (some? ref-lease-specs)
@@ -1060,7 +1060,7 @@
                                       ^List (apply list)))
           cmd)
         (if (some? ref-specs)
-          (.setRefSpecs cmd ^List (into-array RefSpec (seq?! ref-specs))) cmd)
+          (.setRefSpecs cmd ^List (map #(RefSpec. %) (seq?! ref-specs))) cmd)
         (if (some? refs)
           (doseq-cmd-fn! cmd #(.add ^PushCommand %1 ^String %2) refs) cmd)
         (if (some? remote)
@@ -1248,7 +1248,7 @@
 (defn git-tag-delete
   "Deletes tag(s) with the provided name(s)."
   [^Git repo & tag-names]
-  (-> (.tagDelete repo)
+  (-> ^DeleteTagCommand (.tagDelete repo)
       (.setTags (into-array String tag-names))
       (.call)))
 
@@ -1594,7 +1594,7 @@
         (.setForce cmd force?)
         (.setIgnore cmd ignore?)
         (if (some? paths)
-          (.setPaths cmd (into-array String (seq?! paths))) cmd)
+          (.setPaths cmd (set (seq?! paths))) cmd)
         (.call cmd)))
 
 (defn blame-result
