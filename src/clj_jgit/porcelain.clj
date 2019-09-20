@@ -677,7 +677,7 @@
         (if (some? recurse-subs)
           (.setRecurseSubmodules cmd (recurse-subs fetch-recurse-submodules-modes)) cmd)
         (if (some? ref-specs)
-          (.setRefSpecs cmd ^List (into-array String (seq?! ref-specs))) cmd)
+          (.setRefSpecs cmd ^"[Ljava.lang.String;" (into-array String (seq?! ref-specs))) cmd)
         (if (some? remote)
           (.setRemote cmd remote) cmd)
         (if (some? rm-deleted-refs?)

@@ -91,6 +91,8 @@
       (git-commit repo-a commit-msg)
       (git-remote-add repo-a "origin" (.getAbsolutePath bare-dir))
       (is (instance? PushResult (-> repo-a git-push first))))
+    (testing "git-fetch works for repo-a"
+      (git-fetch-all repo-a))
     (testing "git-pull works for repo-b using repo-bare as remote and repo-b has a commit with matching message"
       (git-remote-add repo-b "origin" (.getAbsolutePath bare-dir))
       (is (instance? PullResult (git-pull repo-b)))
