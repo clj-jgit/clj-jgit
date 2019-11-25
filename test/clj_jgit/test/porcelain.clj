@@ -127,3 +127,12 @@
       (git-notes-append repo "append test")
       (is (= 3 (count (git-notes-show repo))))
       (is (= "append test" (last (git-notes-show repo)))))))
+
+(deftest test-stash-functions
+  (is (= nil
+         (with-tmp-repo "target/tmp"
+           (git-commit repo "init commit")
+           (let [tmp-file "target/tmp/tmp.txt"]
+             (spit tmp-file "1")
+             (git-stash-create repo)
+             (git-stash-drop repo))))))
