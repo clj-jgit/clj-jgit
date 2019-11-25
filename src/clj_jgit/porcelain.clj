@@ -1549,13 +1549,12 @@
 
     :all?       If true drop all stashed commits, if false only the :stash-id is dropped.
                 (default: false)
-    :stash-id   Integer with the stash id to drop. If nil the latest stash commit
-                (stash@{0}) is dropped.
-                  (default: nil)
+    :stash-id   Integer with the stash id to drop. Corresponds to stash@{stash-id}
+                (default: 0)
   "
   [^Git repo & {:keys [all? stash-id]
                 :or   {all?     false
-                       stash-id nil}}]
+                       stash-id 0}}]
   (-> (.stashDrop repo)
       (.setAll all?)
       (.setStashRef stash-id)
