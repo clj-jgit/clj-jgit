@@ -6,7 +6,8 @@
     (org.eclipse.jgit.api Git PullResult)
     (org.eclipse.jgit.api.errors NoHeadException)
     (org.eclipse.jgit.revwalk RevWalk RevCommit)
-    (org.eclipse.jgit.transport PushResult)))
+    (org.eclipse.jgit.transport PushResult)
+    (org.eclipse.jgit.lib ObjectId)))
 
 (deftest test-git-init
   (let [repo-dir (get-temp-dir)]
@@ -129,10 +130,15 @@
       (is (= "append test" (last (git-notes-show repo)))))))
 
 (deftest test-stash-functions
-  (is (= nil
-         (with-tmp-repo "target/tmp"
-           (git-commit repo "init commit")
-           (let [tmp-file "target/tmp/tmp.txt"]
-             (spit tmp-file "1")
-             (git-stash-create repo)
-             (git-stash-drop repo))))))
+  (with-tmp-repo "target/tmp"
+    (let [tmp-file "target/tmp/tmp.txt"]
+      (spit tmp-file "1")
+      (git-add repo "tmp.txt")
+      (git-commit repo "init commit")
+      (spit tmp-file "2")
+      (testing "Valid git-stash-create returns RevCommit"
+        (is (instance? RevCommit (git-stash-create repo))))
+      (testing "Valid git-stash-apply returns ObjectId"
+        (is (instance? ObjectId (git-stash-apply repo))))
+      (testing "Valid git-stash-drop with defaults doesn't throw"
+        (is (nil? (git-stash-drop repo)))))))
