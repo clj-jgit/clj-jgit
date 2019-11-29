@@ -32,7 +32,7 @@
       (testing "git-config-load returns a StoredConfig Object"
         (is (instance? StoredConfig conf)))
       (testing "git-config-get returns expected value"
-        (is (= "simple" (git-config-get conf "push.default"))))
+        (is (nil? (git-config-get conf "branch.master.remote"))))
       (testing "git-config-set returns a StoredConfig Object"
         (is (instance? StoredConfig (git-config-set conf "branch.master.remote" "foobar"))))
       (testing "git-config-save actually persists the config"
