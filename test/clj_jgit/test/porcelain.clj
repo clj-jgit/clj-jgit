@@ -7,7 +7,7 @@
     (org.eclipse.jgit.api.errors NoHeadException)
     (org.eclipse.jgit.revwalk RevWalk RevCommit)
     (org.eclipse.jgit.transport PushResult)
-    (org.eclipse.jgit.lib ObjectId)))
+    (org.eclipse.jgit.lib ObjectId StoredConfig)))
 
 (deftest test-git-init
   (let [repo-dir (get-temp-dir)]
@@ -25,6 +25,20 @@
     (read-only-repo
       (is (instance? Git repo))
       (is (instance? RevWalk rev-walk)))))
+
+(deftest test-git-config-functions
+  (with-tmp-repo "target/tmp"
+    (let [conf (git-config-load repo)]
+      (testing "git-config-load returns a StoredConfig Object"
+        (is (instance? StoredConfig conf)))
+      (testing "git-config-get returns expected value"
+        (is (= "simple" (git-config-get conf "push.default"))))
+      (testing "git-config-set returns a StoredConfig Object"
+        (is (instance? StoredConfig (git-config-set conf "branch.master.remote" "foobar"))))
+      (testing "git-config-save actually persists the config"
+        (is nil? (git-config-save conf))
+        (is (= "foobar" (-> (git-config-load repo)
+                            (git-config-get "branch.master.remote"))))))))
 
 (deftest test-current-branch-functions
   (is (= [true

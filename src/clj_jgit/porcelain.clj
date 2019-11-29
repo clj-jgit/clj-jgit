@@ -16,7 +16,7 @@
            (org.eclipse.jgit.blame BlameResult)
            (org.eclipse.jgit.diff DiffAlgorithm$SupportedAlgorithm)
            (org.eclipse.jgit.lib RepositoryBuilder AnyObjectId PersonIdent BranchConfig$BranchRebaseMode ObjectId
-                                 SubmoduleConfig$FetchRecurseSubmodulesMode Ref Repository)
+                                 SubmoduleConfig$FetchRecurseSubmodulesMode Ref Repository StoredConfig)
            (org.eclipse.jgit.merge MergeStrategy)
            (org.eclipse.jgit.notes Note)
            (org.eclipse.jgit.revwalk RevCommit)
@@ -596,6 +596,34 @@
                 (not (clojure.string/blank? reflog-comment)))
           (.setReflogComment cmd reflog-comment) cmd)
         (.call cmd)))
+
+(defn ^StoredConfig git-config-load [^Git repo]
+  "Return mutable JGit StoredConfig object for given `repo`."
+  (-> repo .getRepository .getConfig))
+
+(defn git-config-save [^StoredConfig git-config]
+  "Save given `git-config` to repo's `.git/config` file."
+  (.save git-config))
+
+(defn parse-git-config-key [^String config-key]
+  "Parse given Git `config-key` and return a vector of format [section subsection name]."
+  (let [keys (str/split config-key #"\.")]
+    (case (count keys)
+      2 [(first keys) nil (last keys)]
+      3 keys
+      (throw (Exception. (str "Invalid config-key: " config-key))))))
+
+(defn git-config-get [^StoredConfig git-config ^String config-key]
+  "Return Git config value as string for given Git `config-key`. Note that this only checks the repo's `.git/config`
+  file, global defaults will always return nil if not explicitly set for current repo."
+  (->> (parse-git-config-key config-key)
+       (apply #(.getString git-config % %2 %3))))
+
+(defn ^StoredConfig git-config-set [^StoredConfig git-config ^String config-key config-value]
+  "Set given `config-value` for given Git `config-key`, always returns the passed JGit StoredConfig object."
+  (->> (parse-git-config-key config-key)
+       (apply #(.setString git-config % %2 %3 (str config-value))))
+  git-config)
 
 (defn fetch-cmd ^FetchCommand [^Git repo]
   (-> (.fetch repo)
