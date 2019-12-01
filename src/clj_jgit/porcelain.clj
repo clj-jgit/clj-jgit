@@ -16,15 +16,15 @@
            (org.eclipse.jgit.blame BlameResult)
            (org.eclipse.jgit.diff DiffAlgorithm$SupportedAlgorithm)
            (org.eclipse.jgit.lib RepositoryBuilder AnyObjectId PersonIdent BranchConfig$BranchRebaseMode ObjectId
-                                 SubmoduleConfig$FetchRecurseSubmodulesMode Ref Repository StoredConfig)
+                                 SubmoduleConfig$FetchRecurseSubmodulesMode Ref Repository StoredConfig GpgConfig)
            (org.eclipse.jgit.merge MergeStrategy)
            (org.eclipse.jgit.notes Note)
            (org.eclipse.jgit.revwalk RevCommit)
            (org.eclipse.jgit.submodule SubmoduleWalk)
            (org.eclipse.jgit.transport.sshd SshdSessionFactory DefaultProxyDataFactory JGitKeyCache KeyPasswordProvider)
-           (org.eclipse.jgit.transport FetchResult OpenSshConfig$Host)
+           (org.eclipse.jgit.transport FetchResult)
            (org.eclipse.jgit.transport UsernamePasswordCredentialsProvider URIish RefSpec RefLeaseSpec TagOpt
-                                       RemoteConfig CredentialsProvider CredentialItem$YesNoType SshTransport)
+                                       RemoteConfig CredentialsProvider CredentialItem$CharArrayType CredentialItem$YesNoType SshTransport)
            (org.eclipse.jgit.treewalk TreeWalk)
            (java.security GeneralSecurityException)))
 
@@ -529,6 +529,34 @@
           (.setRemote cmd remote) cmd)
         (.call cmd)))
 
+(defn ^CredentialsProvider signing-pass-provider [^String key-pw]
+  "Return a new `CredentialsProvider` instance for given `key-pw`."
+  (proxy [CredentialsProvider] []
+    (supports [items]
+      (if (some? (->> items
+                      (filter #(when (instance? CredentialItem$CharArrayType %) true))
+                      first))
+        true
+        false))
+    (get [uri items]
+      (let [^CredentialItem$CharArrayType pw-item (->> items
+                                                       (filter #(when (instance? CredentialItem$CharArrayType %) true))
+                                                       first)]
+        (if (some? pw-item)
+          (do (.setValue pw-item (char-array key-pw)) true)
+          false)))
+    (isInteractive []
+      false)))
+
+(declare git-config-load)
+
+(defn gpg-config [^Git repo]
+  "Return commit signing config for given `repo`."
+  (let [config (GpgConfig. (git-config-load repo))]
+    {:sign?       (.isSignCommits config)
+     :signing-key (.getSigningKey config)
+     :key-format  (.getKeyFormat config)}))
+
 (defn git-commit
   "Record changes to given `repo`.
 
@@ -568,8 +596,16 @@
     :reflog-comment     Override the message written to the reflog or pass nil to specify
                         that no reflog should be written. If an empty string is passed
                         Git's default reflog msg is used. (default: \"\")
+    :sign?              Sign the commit? If nil the git config is used (commit.gpgSign).
+                        Note that unprotected GPG keys are currently not supported by JGit.
+                        (default: nil)
+    :signing-pw         The key password for the default credentials provider.
+                        (default: nil)
+    :signing-provider   Pass a custom CredentialsProvider instance, overrides :signing-pw.
+                        (default: nil)
   "
-  [^Git repo message & {:keys [all? allow-empty? amend? author committer insert-change-id? no-verify? only reflog-comment]
+  [^Git repo message & {:keys [all? allow-empty? amend? author committer insert-change-id? no-verify? only
+                               reflog-comment sign? signing-pw signing-provider]
                         :or   {all?              false
                                allow-empty?      true
                                amend?            false
@@ -578,24 +614,39 @@
                                insert-change-id? false
                                no-verify?        false
                                only              nil
-                               reflog-comment    ""}}]
-  (as-> (.commit repo) ^CommitCommand cmd
-        (.setAll cmd all?)
-        (.setAllowEmpty cmd allow-empty?)
-        (.setAmend cmd amend?)
-        (if (some? author)
-          (.setAuthor cmd (:name author) (:email author)) cmd)
-        (if (some? committer)
-          (.setCommitter cmd (:name committer) (:email committer)) cmd)
-        (.setInsertChangeId cmd insert-change-id?)
-        (.setMessage cmd message)
-        (.setNoVerify cmd no-verify?)
-        (if (some? only)
-          (doseq-cmd-fn! cmd #(.setOnly ^CommitCommand %1 %2) only) cmd)
-        (if (or (nil? reflog-comment)
-                (not (clojure.string/blank? reflog-comment)))
-          (.setReflogComment cmd reflog-comment) cmd)
-        (.call cmd)))
+                               reflog-comment    ""
+                               sign?             nil
+                               signing-pw        nil
+                               signing-provider  nil}}]
+  (let [sign? (if (some? sign?)
+                sign?
+                (:sign? (gpg-config repo)))]
+    (as-> (.commit repo) ^CommitCommand cmd
+          (.setAll cmd all?)
+          (.setAllowEmpty cmd allow-empty?)
+          (.setAmend cmd amend?)
+          (if (some? author)
+            (.setAuthor cmd (:name author) (:email author)) cmd)
+          (if (some? committer)
+            (.setCommitter cmd (:name committer) (:email committer)) cmd)
+          (.setInsertChangeId cmd insert-change-id?)
+          (.setMessage cmd message)
+          (.setNoVerify cmd no-verify?)
+          (if (some? only)
+            (doseq-cmd-fn! cmd #(.setOnly ^CommitCommand %1 %2) only) cmd)
+          (if (or (nil? reflog-comment)
+                  (not (clojure.string/blank? reflog-comment)))
+            (.setReflogComment cmd reflog-comment) cmd)
+          (.setSign cmd sign?)
+          (if (and sign? (some? signing-pw))
+            ; see https://bugs.eclipse.org/bugs/show_bug.cgi?id=553116
+            (do (.setCredentialsProvider cmd (signing-pass-provider signing-pw)) cmd)
+            cmd)
+          (if (and sign? (some? signing-provider))
+            ; see https://bugs.eclipse.org/bugs/show_bug.cgi?id=553116
+            (do (.setCredentialsProvider cmd signing-provider) cmd)
+            cmd)
+          (.call cmd))))
 
 (defn ^StoredConfig git-config-load [^Git repo]
   "Return mutable JGit StoredConfig object for given `repo`."
@@ -611,11 +662,11 @@
     (case (count keys)
       2 [(first keys) nil (last keys)]
       3 keys
-      (throw (Exception. (str "Invalid config-key: " config-key))))))
+      (throw (Exception. (str "Invalid config-key format: " config-key))))))
 
 (defn git-config-get [^StoredConfig git-config ^String config-key]
-  "Return Git config value as string for given Git `config-key`. Note that this only checks the repo's `.git/config`
-  file, global defaults will always return nil if not explicitly set for current repo."
+  "Return Git config value as string for given Git `config-key`. Note that config keys that are not explicitly set in
+  global/current repo config will always return nil and not the default value."
   (->> (parse-git-config-key config-key)
        (apply #(.getString git-config % %2 %3))))
 
