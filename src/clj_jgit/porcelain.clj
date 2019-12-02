@@ -5,6 +5,7 @@
             [clj-jgit.util :as util :refer [seq?! doseq-cmd-fn!]])
   (:import (java.io File FileNotFoundException IOException)
            (java.nio.charset StandardCharsets)
+           (java.security GeneralSecurityException)
            (java.util List)
            (org.eclipse.jgit.api Git InitCommand StatusCommand AddCommand PullCommand MergeCommand LogCommand
                                  LsRemoteCommand Status ResetCommand$ResetType FetchCommand PushCommand CloneCommand
@@ -12,7 +13,8 @@
                                  StashCreateCommand StashApplyCommand BlameCommand ListBranchCommand$ListMode
                                  CreateBranchCommand$SetupUpstreamMode CheckoutCommand$Stage
                                  CommitCommand MergeCommand$FastForwardMode RevertCommand CreateBranchCommand
-                                 CheckoutCommand TransportConfigCallback TransportCommand ListBranchCommand TagCommand CleanCommand DeleteTagCommand)
+                                 CheckoutCommand TransportConfigCallback TransportCommand ListBranchCommand TagCommand
+                                 CleanCommand DeleteTagCommand)
            (org.eclipse.jgit.blame BlameResult)
            (org.eclipse.jgit.diff DiffAlgorithm$SupportedAlgorithm)
            (org.eclipse.jgit.lib RepositoryBuilder AnyObjectId PersonIdent BranchConfig$BranchRebaseMode ObjectId
@@ -22,11 +24,10 @@
            (org.eclipse.jgit.revwalk RevCommit)
            (org.eclipse.jgit.submodule SubmoduleWalk)
            (org.eclipse.jgit.transport.sshd SshdSessionFactory DefaultProxyDataFactory JGitKeyCache KeyPasswordProvider)
-           (org.eclipse.jgit.transport FetchResult)
-           (org.eclipse.jgit.transport UsernamePasswordCredentialsProvider URIish RefSpec RefLeaseSpec TagOpt
-                                       RemoteConfig CredentialsProvider CredentialItem$CharArrayType CredentialItem$YesNoType SshTransport)
-           (org.eclipse.jgit.treewalk TreeWalk)
-           (java.security GeneralSecurityException)))
+           (org.eclipse.jgit.transport FetchResult UsernamePasswordCredentialsProvider URIish RefSpec RefLeaseSpec TagOpt
+                                       RemoteConfig CredentialsProvider CredentialItem$CharArrayType
+                                       CredentialItem$YesNoType SshTransport)
+           (org.eclipse.jgit.treewalk TreeWalk)))
 
 (defmulti discover-repo "Discover a Git repository in a path." type)
 
@@ -599,13 +600,15 @@
     :sign?              Sign the commit? If nil the git config is used (commit.gpgSign).
                         Note that unprotected GPG keys are currently not supported by JGit.
                         (default: nil)
+    :signing-key        The GPG key id used for signing. If nil the git config is used (user.signingKey).
+                        (default: nil)
     :signing-pw         The key password for the default credentials provider.
                         (default: nil)
     :signing-provider   Pass a custom CredentialsProvider instance, overrides :signing-pw.
                         (default: nil)
   "
   [^Git repo message & {:keys [all? allow-empty? amend? author committer insert-change-id? no-verify? only
-                               reflog-comment sign? signing-pw signing-provider]
+                               reflog-comment sign? signing-key signing-pw signing-provider]
                         :or   {all?              false
                                allow-empty?      true
                                amend?            false
@@ -616,6 +619,7 @@
                                only              nil
                                reflog-comment    ""
                                sign?             nil
+                               signing-key       nil
                                signing-pw        nil
                                signing-provider  nil}}]
   (let [sign? (if (some? sign?)
@@ -638,6 +642,8 @@
                   (not (clojure.string/blank? reflog-comment)))
             (.setReflogComment cmd reflog-comment) cmd)
           (.setSign cmd sign?)
+          (if (and sign? (some? signing-key))
+            (.setSigningKey cmd signing-key) cmd)
           (if (and sign? (some? signing-pw))
             ; see https://bugs.eclipse.org/bugs/show_bug.cgi?id=553116
             (do (.setCredentialsProvider cmd (signing-pass-provider signing-pw)) cmd)
