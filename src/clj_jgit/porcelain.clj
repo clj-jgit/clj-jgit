@@ -1393,7 +1393,7 @@
                     :merge
                     :mixed
                     :soft
-                  (default: :mixed)
+                  (default: :mixed, always nil if :paths is set)
     :monitor      Set a progress monitor. See JGit ProgressMonitor interface.
                   (default: nil)
     :paths        String or coll of strings with repository relative path(s) of file(s)
@@ -1409,7 +1409,8 @@
                        ref      nil
                        ref-log? true}}]
   (as-> (.reset repo) ^ResetCommand cmd
-        (.setMode cmd (mode reset-modes))
+        (if (nil? paths)
+          (.setMode cmd (mode reset-modes)) cmd)
         (if (some? monitor)
           (.setProgressMonitor cmd monitor) cmd)
         (if (some? paths)
