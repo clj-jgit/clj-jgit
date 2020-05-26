@@ -121,7 +121,7 @@ protected. For further configuration any command may be wrapped with the `with-c
   (git-push my-repo :tags true))
 
 ;; Use user/pw auth instead of key based auth
-(with-credentials {:user "someuser" :pw "$ecReT"}
+(with-credentials {:login "someuser" :pw "$ecReT"}
   (git-pull my-repo))
 ```
 
