@@ -447,7 +447,7 @@
           (.addPaths cmd (seq?! paths)) cmd)
         (.setAllPaths cmd all-paths?)
         (.setCreateBranch cmd create-branch?)
-        (.setForce cmd force?)
+        (.setForceRefUpdate cmd force?)
         (if (some? monitor)
           (.setProgressMonitor cmd monitor) cmd)
         (.setOrphan cmd orphan?)
