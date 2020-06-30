@@ -492,13 +492,20 @@
     :no-checkout?   If set to true no branch will be checked out after the clone.
                     This enhances performance of the clone command when there is no
                     need for a checked out branch. (default: false)
+    :mirror?        Set up a mirror of the source repository. This implies that a
+                    bare repository will be created. Compared to :bare?, :mirror?
+                    not only maps local branches of the source to local branches of
+                    the target, it maps all refs (including remote-tracking branches,
+                    notes etc.) and sets up a refspec configuration such that all
+                    these refs are overwritten by a git remote update in the target
+                    repository. (default: false)
     :monitor        Set a progress monitor. See JGit ProgressMonitor interface.
                     (default: nil)
     :remote         The remote name used to keep track of the upstream repository for the
                     clone operation. If no remote name is set, \"origin\" is used.
                     (default: nil)
   "
-  [uri & {:keys [bare? branch callback clone-all? clone-branches clone-subs? dir git-dir no-checkout? monitor remote]
+  [uri & {:keys [bare? branch callback clone-all? clone-branches clone-subs? dir git-dir no-checkout? mirror? monitor remote]
           :or   {bare?          false
                  branch         "master"
                  clone-all?     true
@@ -508,6 +515,7 @@
                  dir            nil
                  git-dir        nil
                  no-checkout?   false
+                 mirror?        false
                  monitor        nil
                  remote         nil}}]
   (as-> (clone-cmd uri) cmd
@@ -524,6 +532,7 @@
         (if (some? git-dir)
           (.setGitDir cmd (io/as-file git-dir)) cmd)
         (.setNoCheckout cmd no-checkout?)
+        (.setMirror cmd mirror?)
         (if (some? monitor)
           (.setProgressMonitor cmd monitor) cmd)
         (if (some? remote)
