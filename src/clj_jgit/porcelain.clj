@@ -228,6 +228,11 @@
      (try ~@body
           (finally (close-rev-walk ~'rev-walk)))))
 
+(defn git-shutdown
+  "Release all resources held by JGit process. Not mandatory, but prevents leaks when, for example, running in
+  a webapp."
+  [] (Git/shutdown))
+
 (defn git-add
   "Add file contents to the index. `file-patterns` is either a String with a repository-relative path of the
   file/directory to be added or coll of Strings with paths. If a directory name is given all files in the directory are
