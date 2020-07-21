@@ -466,6 +466,11 @@
 
 (declare git-cherry-pick)
 
+(defonce tag-opt
+         {:auto-follow  TagOpt/AUTO_FOLLOW
+          :fetch-tags   TagOpt/FETCH_TAGS
+          :no-tags      TagOpt/NO_TAGS})
+
 (defn clone-cmd ^CloneCommand [uri]
   (-> (Git/cloneRepository)
       (.setURI uri)
@@ -509,8 +514,15 @@
     :remote         The remote name used to keep track of the upstream repository for the
                     clone operation. If no remote name is set, \"origin\" is used.
                     (default: nil)
+    :tags           Set the tag option used for the remote configuration explicitly.
+                    Options:
+                      :auto-follow  - Automatically follow tags if we fetch the thing they point at.
+                      :fetch-tags   - Always fetch tags, even if we do not have the thing it points at.
+                      :no-tags      - Never fetch tags, even if we have the thing it points at.
+                    (default: :auto-follow)
   "
-  [uri & {:keys [bare? branch callback clone-all? clone-branches clone-subs? dir git-dir no-checkout? mirror? monitor remote]
+  [uri & {:keys [bare? branch callback clone-all? clone-branches clone-subs? dir git-dir no-checkout? mirror? monitor
+                 remote tags]
           :or   {bare?          false
                  branch         "master"
                  clone-all?     true
@@ -522,7 +534,8 @@
                  no-checkout?   false
                  mirror?        false
                  monitor        nil
-                 remote         nil}}]
+                 remote         nil
+                 tags           :auto-follow}}]
   (as-> (clone-cmd uri) cmd
         (.setBare cmd bare?)
         (.setBranch cmd branch)
@@ -542,6 +555,7 @@
           (.setProgressMonitor cmd monitor) cmd)
         (if (some? remote)
           (.setRemote cmd remote) cmd)
+        (.setTagOption cmd (tags tag-opt))
         (.call cmd)))
 
 (defn ^CredentialsProvider signing-pass-provider [^String key-pw]
