@@ -2865,8 +2865,8 @@ net.brehaut.ClojureTools = (function (SH) {
     build_tree: build_tree
   };
 })(SyntaxHighlighter);
-</script><title>clj-jgit -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">clj-jgit</h1><h2 class="project-version">1.0.0-SNAPSHOT</h2><br /><p>Clojure wrapper for JGit</p>
-</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.eclipse.jgit/org.eclipse.jgit</td><td class="dotted"><hr /></td><td class="dep-version">5.4.0.201906121030-r</td></tr><tr><td class="dep-name">org.eclipse.jgit/org.eclipse.jgit.ssh.apache</td><td class="dotted"><hr /></td><td class="dep-version">5.4.0.201906121030-r</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#clj-jgit.querying">clj-jgit.querying</a></li><li><a href="#clj-jgit.util">clj-jgit.util</a></li><li><a href="#clj-jgit.internal">clj-jgit.internal</a></li><li><a href="#clj-jgit.porcelain">clj-jgit.porcelain</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clj-jgit.querying" name="clj-jgit.querying"><h1 class="project-name">clj-jgit.querying</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+</script><title>clj-jgit -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">clj-jgit</h1><h2 class="project-version">1.0.0</h2><br /><p>Clojure wrapper for JGit</p>
+</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.eclipse.jgit/org.eclipse.jgit</td><td class="dotted"><hr /></td><td class="dep-version">5.8.1.202007141445-r</td></tr><tr><td class="dep-name">org.eclipse.jgit/org.eclipse.jgit.ssh.apache</td><td class="dotted"><hr /></td><td class="dep-version">5.8.1.202007141445-r</td></tr><tr><td class="dep-name">org.eclipse.jgit/org.eclipse.jgit.gpg.bc</td><td class="dotted"><hr /></td><td class="dep-version">5.8.1.202007141445-r</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#clj-jgit.querying">clj-jgit.querying</a></li><li><a href="#clj-jgit.util">clj-jgit.util</a></li><li><a href="#clj-jgit.internal">clj-jgit.internal</a></li><li><a href="#clj-jgit.porcelain">clj-jgit.porcelain</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clj-jgit.querying" name="clj-jgit.querying"><h1 class="project-name">clj-jgit.querying</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns clj-jgit.querying
   (:require [clojure.string :as string]
             [clj-jgit.internal :refer :all]
@@ -3171,6 +3171,7 @@ net.brehaut.ClojureTools = (function (SH) {
             [clj-jgit.util :as util :refer [seq?! doseq-cmd-fn!]])
   (:import (java.io File FileNotFoundException IOException)
            (java.nio.charset StandardCharsets)
+           (java.security GeneralSecurityException)
            (java.util List)
            (org.eclipse.jgit.api Git InitCommand StatusCommand AddCommand PullCommand MergeCommand LogCommand
                                  LsRemoteCommand Status ResetCommand$ResetType FetchCommand PushCommand CloneCommand
@@ -3178,21 +3179,21 @@ net.brehaut.ClojureTools = (function (SH) {
                                  StashCreateCommand StashApplyCommand BlameCommand ListBranchCommand$ListMode
                                  CreateBranchCommand$SetupUpstreamMode CheckoutCommand$Stage
                                  CommitCommand MergeCommand$FastForwardMode RevertCommand CreateBranchCommand
-                                 CheckoutCommand TransportConfigCallback TransportCommand ListBranchCommand TagCommand CleanCommand)
+                                 CheckoutCommand TransportConfigCallback TransportCommand ListBranchCommand TagCommand
+                                 CleanCommand DeleteTagCommand)
            (org.eclipse.jgit.blame BlameResult)
            (org.eclipse.jgit.diff DiffAlgorithm$SupportedAlgorithm)
            (org.eclipse.jgit.lib RepositoryBuilder AnyObjectId PersonIdent BranchConfig$BranchRebaseMode ObjectId
-                                 SubmoduleConfig$FetchRecurseSubmodulesMode Ref Repository)
+                                 SubmoduleConfig$FetchRecurseSubmodulesMode Ref Repository StoredConfig GpgConfig)
            (org.eclipse.jgit.merge MergeStrategy)
            (org.eclipse.jgit.notes Note)
            (org.eclipse.jgit.revwalk RevCommit)
            (org.eclipse.jgit.submodule SubmoduleWalk)
            (org.eclipse.jgit.transport.sshd SshdSessionFactory DefaultProxyDataFactory JGitKeyCache KeyPasswordProvider)
-           (org.eclipse.jgit.transport FetchResult OpenSshConfig$Host)
-           (org.eclipse.jgit.transport UsernamePasswordCredentialsProvider URIish RefSpec RefLeaseSpec TagOpt
-                                       RemoteConfig CredentialsProvider CredentialItem$YesNoType SshTransport)
-           (org.eclipse.jgit.treewalk TreeWalk)
-           (java.security GeneralSecurityException)))</pre></td></tr><tr><td class="docs"><p>Discover a Git repository in a path.</p>
+           (org.eclipse.jgit.transport FetchResult UsernamePasswordCredentialsProvider URIish RefSpec RefLeaseSpec TagOpt
+                                       RemoteConfig CredentialsProvider CredentialItem$CharArrayType
+                                       CredentialItem$YesNoType SshTransport)
+           (org.eclipse.jgit.treewalk TreeWalk)))</pre></td></tr><tr><td class="docs"><p>Discover a Git repository in a path.</p>
 </td><td class="codes"><pre class="brush: clojure">(defmulti discover-repo  type)</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defmethod discover-repo File
   [^File file]
@@ -3367,7 +3368,10 @@ net.brehaut.ClojureTools = (function (SH) {
   `(let [~'repo (load-repo ~path)
          ~'rev-walk (new-rev-walk ~'repo)]
      (try ~@body
-          (finally (close-rev-walk ~'rev-walk)))))</pre></td></tr><tr><td class="docs"><p>Add file contents to the index. <code>file-patterns</code> is either a String with a repository-relative path of the
+          (finally (close-rev-walk ~'rev-walk)))))</pre></td></tr><tr><td class="docs"><p>Release all resources held by JGit process. Not mandatory, but prevents leaks when, for example, running in
+  a webapp.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn git-shutdown
+  [] (Git/shutdown))</pre></td></tr><tr><td class="docs"><p>Add file contents to the index. <code>file-patterns</code> is either a String with a repository-relative path of the
   file/directory to be added or coll of Strings with paths. If a directory name is given all files in the directory are
   added recursively. Fileglobs (e.g. *.txt) are not yet supported.</p>
 
@@ -3567,10 +3571,10 @@ Create a new tracking branch for a remote branch and make it the current branch:
         (if (some? name)
           (.setName cmd name) cmd)
         (if (some? paths)
-          (.addPaths cmd (into-array String (seq?! paths))) cmd)
+          (.addPaths cmd (seq?! paths)) cmd)
         (.setAllPaths cmd all-paths?)
         (.setCreateBranch cmd create-branch?)
-        (.setForce cmd force?)
+        (.setForceRefUpdate cmd force?)
         (if (some? monitor)
           (.setProgressMonitor cmd monitor) cmd)
         (.setOrphan cmd orphan?)
@@ -3582,6 +3586,10 @@ Create a new tracking branch for a remote branch and make it the current branch:
           (.setUpstreamMode cmd (upstream-mode branch-upstream-modes)) cmd)
         (.call cmd)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(declare git-cherry-pick)</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defonce tag-opt
+         {:auto-follow  TagOpt/AUTO_FOLLOW
+          :fetch-tags   TagOpt/FETCH_TAGS
+          :no-tags      TagOpt/NO_TAGS})</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn clone-cmd ^CloneCommand [uri]
   (-&gt; (Git/cloneRepository)
       (.setURI uri)
@@ -3610,14 +3618,28 @@ Create a new tracking branch for a remote branch and make it the current branch:
 :no-checkout?   If set to true no branch will be checked out after the clone.
                 This enhances performance of the clone command when there is no
                 need for a checked out branch. (default: false)
+:mirror?        Set up a mirror of the source repository. This implies that a
+                bare repository will be created. Compared to :bare?, :mirror?
+                not only maps local branches of the source to local branches of
+                the target, it maps all refs (including remote-tracking branches,
+                notes etc.) and sets up a refspec configuration such that all
+                these refs are overwritten by a git remote update in the target
+                repository. (default: false)
 :monitor        Set a progress monitor. See JGit ProgressMonitor interface.
                 (default: nil)
 :remote         The remote name used to keep track of the upstream repository for the
                 clone operation. If no remote name is set, "origin" is used.
                 (default: nil)
+:tags           Set the tag option used for the remote configuration explicitly.
+                Options:
+                  :auto-follow  - Automatically follow tags if we fetch the thing they point at.
+                  :fetch-tags   - Always fetch tags, even if we do not have the thing it points at.
+                  :no-tags      - Never fetch tags, even if we have the thing it points at.
+                (default: :auto-follow)
 </code></pre>
 </td><td class="codes"><pre class="brush: clojure">(defn git-clone
-  [uri &amp; {:keys [bare? branch callback clone-all? clone-branches clone-subs? dir git-dir no-checkout? monitor remote]
+  [uri &amp; {:keys [bare? branch callback clone-all? clone-branches clone-subs? dir git-dir no-checkout? mirror? monitor
+                 remote tags]
           :or   {bare?          false
                  branch         &quot;master&quot;
                  clone-all?     true
@@ -3627,14 +3649,16 @@ Create a new tracking branch for a remote branch and make it the current branch:
                  dir            nil
                  git-dir        nil
                  no-checkout?   false
+                 mirror?        false
                  monitor        nil
-                 remote         nil}}]
+                 remote         nil
+                 tags           :auto-follow}}]
   (as-&gt; (clone-cmd uri) cmd
         (.setBare cmd bare?)
         (.setBranch cmd branch)
         (.setCloneAllBranches cmd clone-all?)
         (if (some? clone-branches)
-          (.setBranchesToClone cmd (into-array String (seq?! clone-branches))) cmd)
+          (.setBranchesToClone cmd (seq?! clone-branches)) cmd)
         (.setCloneSubmodules cmd clone-subs?)
         (if (some? callback)
           (.setCallback cmd callback) cmd)
@@ -3643,11 +3667,38 @@ Create a new tracking branch for a remote branch and make it the current branch:
         (if (some? git-dir)
           (.setGitDir cmd (io/as-file git-dir)) cmd)
         (.setNoCheckout cmd no-checkout?)
+        (.setMirror cmd mirror?)
         (if (some? monitor)
           (.setProgressMonitor cmd monitor) cmd)
         (if (some? remote)
           (.setRemote cmd remote) cmd)
-        (.call cmd)))</pre></td></tr><tr><td class="docs"><p>Record changes to given <code>repo</code>.</p>
+        (.setTagOption cmd (tags tag-opt))
+        (.call cmd)))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn ^CredentialsProvider signing-pass-provider [^String key-pw]
+  &quot;Return a new `CredentialsProvider` instance for given `key-pw`.&quot;
+  (proxy [CredentialsProvider] []
+    (supports [items]
+      (if (some? (-&gt;&gt; items
+                      (filter #(when (instance? CredentialItem$CharArrayType %) true))
+                      first))
+        true
+        false))
+    (get [uri items]
+      (let [^CredentialItem$CharArrayType pw-item (-&gt;&gt; items
+                                                       (filter #(when (instance? CredentialItem$CharArrayType %) true))
+                                                       first)]
+        (if (some? pw-item)
+          (do (.setValue pw-item (char-array key-pw)) true)
+          false)))
+    (isInteractive []
+      false)))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(declare git-config-load)</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn gpg-config [^Git repo]
+  &quot;Return commit signing config for given `repo`.&quot;
+  (let [config (GpgConfig. (git-config-load repo))]
+    {:sign?       (.isSignCommits config)
+     :signing-key (.getSigningKey config)
+     :key-format  (.getKeyFormat config)}))</pre></td></tr><tr><td class="docs"><p>Record changes to given <code>repo</code>.</p>
 
 <pre><code>Options:
 
@@ -3685,9 +3736,19 @@ Create a new tracking branch for a remote branch and make it the current branch:
 :reflog-comment     Override the message written to the reflog or pass nil to specify
                     that no reflog should be written. If an empty string is passed
                     Git's default reflog msg is used. (default: "")
+:sign?              Sign the commit? If nil the git config is used (commit.gpgSign).
+                    Note that unprotected GPG keys are currently not supported by JGit.
+                    (default: nil)
+:signing-key        The GPG key id used for signing. If nil the git config is used (user.signingKey).
+                    (default: nil)
+:signing-pw         The key password for the default credentials provider.
+                    (default: nil)
+:signing-provider   Pass a custom CredentialsProvider instance, overrides :signing-pw.
+                    (default: nil)
 </code></pre>
 </td><td class="codes"><pre class="brush: clojure">(defn git-commit
-  [^Git repo message &amp; {:keys [all? allow-empty? amend? author committer insert-change-id? no-verify? only reflog-comment]
+  [^Git repo message &amp; {:keys [all? allow-empty? amend? author committer insert-change-id? no-verify? only
+                               reflog-comment sign? signing-key signing-pw signing-provider]
                         :or   {all?              false
                                allow-empty?      true
                                amend?            false
@@ -3696,24 +3757,65 @@ Create a new tracking branch for a remote branch and make it the current branch:
                                insert-change-id? false
                                no-verify?        false
                                only              nil
-                               reflog-comment    &quot;&quot;}}]
-  (as-&gt; (.commit repo) ^CommitCommand cmd
-        (.setAll cmd all?)
-        (.setAllowEmpty cmd allow-empty?)
-        (.setAmend cmd amend?)
-        (if (some? author)
-          (.setAuthor cmd (:name author) (:email author)) cmd)
-        (if (some? committer)
-          (.setCommitter cmd (:name committer) (:email committer)) cmd)
-        (.setInsertChangeId cmd insert-change-id?)
-        (.setMessage cmd message)
-        (.setNoVerify cmd no-verify?)
-        (if (some? only)
-          (doseq-cmd-fn! cmd #(.setOnly ^CommitCommand %1 %2) only) cmd)
-        (if (or (nil? reflog-comment)
-                (not (clojure.string/blank? reflog-comment)))
-          (.setReflogComment cmd reflog-comment) cmd)
-        (.call cmd)))</pre></td></tr><tr><td class="docs">
+                               reflog-comment    &quot;&quot;
+                               sign?             nil
+                               signing-key       nil
+                               signing-pw        nil
+                               signing-provider  nil}}]
+  (let [sign? (if (some? sign?)
+                sign?
+                (:sign? (gpg-config repo)))]
+    (as-&gt; (.commit repo) ^CommitCommand cmd
+          (.setAll cmd all?)
+          (.setAllowEmpty cmd allow-empty?)
+          (.setAmend cmd amend?)
+          (if (some? author)
+            (.setAuthor cmd (:name author) (:email author)) cmd)
+          (if (some? committer)
+            (.setCommitter cmd (:name committer) (:email committer)) cmd)
+          (.setInsertChangeId cmd insert-change-id?)
+          (.setMessage cmd message)
+          (.setNoVerify cmd no-verify?)
+          (if (some? only)
+            (doseq-cmd-fn! cmd #(.setOnly ^CommitCommand %1 %2) only) cmd)
+          (if (or (nil? reflog-comment)
+                  (not (clojure.string/blank? reflog-comment)))
+            (.setReflogComment cmd reflog-comment) cmd)
+          (.setSign cmd sign?)
+          (if (and sign? (some? signing-key))
+            (.setSigningKey cmd signing-key) cmd)
+          (if (and sign? (some? signing-pw))
+            ; see https://bugs.eclipse.org/bugs/show_bug.cgi?id=553116
+            (do (.setCredentialsProvider cmd (signing-pass-provider signing-pw)) cmd)
+            cmd)
+          (if (and sign? (some? signing-provider))
+            ; see https://bugs.eclipse.org/bugs/show_bug.cgi?id=553116
+            (do (.setCredentialsProvider cmd signing-provider) cmd)
+            cmd)
+          (.call cmd))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn ^StoredConfig git-config-load [^Git repo]
+  &quot;Return mutable JGit StoredConfig object for given `repo`.&quot;
+  (-&gt; repo .getRepository .getConfig))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn git-config-save [^StoredConfig git-config]
+  &quot;Save given `git-config` to repo's `.git/config` file.&quot;
+  (.save git-config))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn parse-git-config-key [^String config-key]
+  &quot;Parse given Git `config-key` and return a vector of format [section subsection name].&quot;
+  (let [keys (str/split config-key #&quot;\.&quot;)]
+    (case (count keys)
+      2 [(first keys) nil (last keys)]
+      3 keys
+      (throw (Exception. (str &quot;Invalid config-key format: &quot; config-key))))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn git-config-get [^StoredConfig git-config ^String config-key]
+  &quot;Return Git config value as string for given Git `config-key`. Note that config keys that are not explicitly set in
+  global/current repo config will always return nil and not the default value.&quot;
+  (-&gt;&gt; (parse-git-config-key config-key)
+       (apply #(.getString git-config % %2 %3))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn ^StoredConfig git-config-set [^StoredConfig git-config ^String config-key config-value]
+  &quot;Set given `config-value` for given Git `config-key`, always returns the passed JGit StoredConfig object.&quot;
+  (-&gt;&gt; (parse-git-config-key config-key)
+       (apply #(.setString git-config % %2 %3 (str config-value))))
+  git-config)</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn fetch-cmd ^FetchCommand [^Git repo]
   (-&gt; (.fetch repo)
       ^TransportCommand (.setCredentialsProvider *cred-provider*)
@@ -3790,7 +3892,7 @@ Create a new tracking branch for a remote branch and make it the current branch:
         (if (some? recurse-subs)
           (.setRecurseSubmodules cmd (recurse-subs fetch-recurse-submodules-modes)) cmd)
         (if (some? ref-specs)
-          (.setRefSpecs cmd ^List (into-array String (seq?! ref-specs))) cmd)
+          (.setRefSpecs cmd ^&quot;[Ljava.lang.String;&quot; (into-array String (seq?! ref-specs))) cmd)
         (if (some? remote)
           (.setRemote cmd remote) cmd)
         (if (some? rm-deleted-refs?)
@@ -4142,7 +4244,7 @@ user's ssh key for auth:
         (if (some? monitor)
           (.setProgressMonitor cmd monitor) cmd)
         (if (some? options)
-          (.setPushOptions cmd (into-array String (seq?! options))) cmd)
+          (.setPushOptions cmd (seq?! options)) cmd)
         (if (some? output-stream)
           (.setOutputStream cmd output-stream) cmd)
         (if (some? ref-lease-specs)
@@ -4152,7 +4254,7 @@ user's ssh key for auth:
                                       ^List (apply list)))
           cmd)
         (if (some? ref-specs)
-          (.setRefSpecs cmd ^List (into-array RefSpec (seq?! ref-specs))) cmd)
+          (.setRefSpecs cmd ^List (map #(RefSpec. %) (seq?! ref-specs))) cmd)
         (if (some? refs)
           (doseq-cmd-fn! cmd #(.add ^PushCommand %1 ^String %2) refs) cmd)
         (if (some? remote)
@@ -4329,7 +4431,7 @@ Options:
         (.call cmd)))</pre></td></tr><tr><td class="docs"><p>Deletes tag(s) with the provided name(s).</p>
 </td><td class="codes"><pre class="brush: clojure">(defn git-tag-delete
   [^Git repo &amp; tag-names]
-  (-&gt; (.tagDelete repo)
+  (-&gt; ^DeleteTagCommand (.tagDelete repo)
       (.setTags (into-array String tag-names))
       (.call)))</pre></td></tr><tr><td class="docs"><p>Lists the tags in a <code>repo</code>, returning them as a seq of strings.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn git-tag-list
@@ -4380,7 +4482,7 @@ Options:
                 :merge
                 :mixed
                 :soft
-              (default: :mixed)
+              (default: :mixed, always nil if :paths is set)
 :monitor      Set a progress monitor. See JGit ProgressMonitor interface.
               (default: nil)
 :paths        String or coll of strings with repository relative path(s) of file(s)
@@ -4397,7 +4499,8 @@ Options:
                        ref      nil
                        ref-log? true}}]
   (as-&gt; (.reset repo) ^ResetCommand cmd
-        (.setMode cmd (mode reset-modes))
+        (if (nil? paths)
+          (.setMode cmd (mode reset-modes)) cmd)
         (if (some? monitor)
           (.setProgressMonitor cmd monitor) cmd)
         (if (some? paths)
@@ -4602,14 +4705,13 @@ strategy        Keyword that sets the merge strategy to use during this update
 
 :all?       If true drop all stashed commits, if false only the :stash-id is dropped.
             (default: false)
-:stash-id   Integer with the stash id to drop. If nil the latest stash commit
-            (stash@{0}) is dropped.
-              (default: nil)
+:stash-id   Integer with the stash id to drop. Corresponds to stash@{stash-id}
+            (default: 0)
 </code></pre>
 </td><td class="codes"><pre class="brush: clojure">(defn git-stash-drop
   [^Git repo &amp; {:keys [all? stash-id]
                 :or   {all?     false
-                       stash-id nil}}]
+                       stash-id 0}}]
   (-&gt; (.stashDrop repo)
       (.setAll all?)
       (.setStashRef stash-id)
@@ -4644,7 +4746,7 @@ strategy        Keyword that sets the merge strategy to use during this update
         (.setForce cmd force?)
         (.setIgnore cmd ignore?)
         (if (some? paths)
-          (.setPaths cmd (into-array String (seq?! paths))) cmd)
+          (.setPaths cmd (set (seq?! paths))) cmd)
         (.call cmd)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn blame-result
   [^BlameResult blame]
