@@ -10,6 +10,12 @@ Last stable version is available on [Clojars](http://clojars.org/clj-jgit).
 
 [![Clojars Project](http://clojars.org/clj-jgit/latest-version.svg)](http://clojars.org/clj-jgit)
 
+Note: If you don't plan on signing commits you may exclude `org.eclipse.jgit/org.eclipse.jgit.gpg.bc`, i.e. for lein:
+
+```
+:dependencies [[clj-jgit "1.x.x" :exclusions [org.eclipse.jgit/org.eclipse.jgit.gpg.bc]]]
+```
+
 ## Quickstart Tutorial ##
 
 This brief tutorial will show you how to:
@@ -124,6 +130,36 @@ protected. For further configuration any command may be wrapped with the `with-c
 (with-credentials {:login "someuser" :pw "$ecReT"}
   (git-pull my-repo))
 ```
+
+### GPG signing of Commits
+
+A working GPG key setup is required for signing:
+
+```
+$ gpg --gen-key
+$ gpg --fingerprint
+pub   rsa4096 2019-12-01 [SC]
+      20AB A393 B992 6661 63BE  1346 5022 F878 A751 2BA8 <- the fingerprint
+uid           [ultimate] Foo Bar <foo@bar.net>
+sub   rsa4096 2018-12-01 [E]
+```
+
+GPG signing is used if:
+
+* enabled per commit: `(git-commit ... :signing? true :signing-key "A7512BA8")`
+* git is configured via `commit.gpgSign = true`, i.e.:
+
+```
+(-> my-repo
+    git-config-load
+    (git-config-set "commit.gpgSign" true)
+    (git-config-set "user.signingKey" "A7512BA8")
+    git-config-save)
+```
+
+Note: You may use as few as 2 digits of the fingerprint as long the id is unique in your keyring, no spaces.
+
+If GPG-signing a commit is requested but no GpgSigner is installed, an `org.eclipse.jgit.api.errors.ServiceUnavailableException` will be thrown. 
 
 ### Loading an Existing Repository ###
 
