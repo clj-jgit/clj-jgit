@@ -221,12 +221,11 @@
 
 (defmacro with-repo
   "Load Git repository at `path` and bind it to `repo`, then evaluate `body`.
-  Also provides a fresh `rev-walk` instance for `repo` which is closed on form exit."
+  Also provides a fresh `rev-walk` instance for `repo`."
   [path & body]
-  `(let [~'repo (load-repo ~path)
-         ~'rev-walk (new-rev-walk ~'repo)]
-     (try ~@body
-          (finally (close-rev-walk ~'rev-walk)))))
+  `(with-open [~'repo (load-repo ~path)
+               ~'rev-walk (new-rev-walk ~'repo)]
+     ~@body))
 
 (defn git-shutdown
   "Release all resources held by JGit process. Not mandatory, but prevents leaks when, for example, running in
