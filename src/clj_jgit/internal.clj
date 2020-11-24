@@ -78,10 +78,8 @@
   (.getRefs (ref-database repo) prefix))
 
 (defn get-head-commit "Return HEAD RevCommit instance" [^Git repo]
-  (let [rev-walk (new-rev-walk repo)]
-    (try
+  (with-open [rev-walk (new-rev-walk repo)]
       (as-> repo $
         (.getRepository $)
         (.resolve $ "HEAD")
-        (bound-commit repo rev-walk $))
-      (finally (close-rev-walk rev-walk)))))
+        (bound-commit repo rev-walk $))))
