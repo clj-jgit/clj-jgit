@@ -222,12 +222,17 @@
 (defn find-repo
   "Given a `path` located somewhere within a Git repository, load the repository"
   ^Git [path & {:keys [ceiling-dirs]}]
-  (-> (RepositoryBuilder.)
-      (.addCeilingDirectories ceiling-dirs)
-      (.readEnvironment)
-      (.findGitDir path)
-      (.build)
-      (Git.)))
+  (let [builder (-> (RepositoryBuilder.)
+                    (.addCeilingDirectories ceiling-dirs)
+                    (.readEnvironment)
+                    (.findGitDir path))]
+    (if (nil? (.getGitDir builder))
+      (throw
+       (FileNotFoundException. (str "Could not load a git repository at '" path "'")))
+      (-> builder
+          (.build)
+          (Git.)))))
+
 
 (defmacro with-repo
   "Load Git repository at `path` and bind it to `repo`, then evaluate `body`.
