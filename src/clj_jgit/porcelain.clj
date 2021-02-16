@@ -219,6 +219,16 @@
     (throw
       (FileNotFoundException. (str "The Git repository at '" path "' could not be located.")))))
 
+(defn find-repo
+  "Given a `path` located somewhere within a Git repository, load the repository"
+  ^Git [path & {:keys [ceiling-dirs]}]
+  (-> (RepositoryBuilder.)
+      (.addCeilingDirectories ceiling-dirs)
+      (.readEnvironment)
+      (.findGitDir path)
+      (.build)
+      (Git.)))
+
 (defmacro with-repo
   "Load Git repository at `path` and bind it to `repo`, then evaluate `body`.
   Also provides a fresh `rev-walk` instance for `repo`."
