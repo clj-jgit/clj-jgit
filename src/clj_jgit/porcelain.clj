@@ -226,13 +226,13 @@
                     (.addCeilingDirectories ceiling-dirs)
                     (.readEnvironment)
                     (.findGitDir path))]
-    (if (nil? (.getGitDir builder))
-      (throw
-       (FileNotFoundException. (str "Could not load a git repository at '" path "'"
-                                    "with ceiling dirs: " ceiling-dirs)))
+    (if (.getGitDir builder)
       (-> builder
           (.build)
-          (Git.)))))
+          (Git.))
+      (throw
+       (FileNotFoundException. (str "Could not load a git repository at '" path "'"
+                                    "with ceiling dirs: " ceiling-dirs))))))
 
 
 (defmacro with-repo
