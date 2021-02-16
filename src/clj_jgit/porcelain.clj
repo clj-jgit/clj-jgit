@@ -232,7 +232,7 @@
           (Git.))
       (throw
        (FileNotFoundException. (str "Could not load a git repository at '" path "'"
-                                    "with ceiling dirs: " ceiling-dirs))))))
+                                    " with ceiling dirs: " ceiling-dirs))))))
 
 
 (defmacro with-repo
