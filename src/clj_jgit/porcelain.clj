@@ -228,7 +228,8 @@
                     (.findGitDir path))]
     (if (nil? (.getGitDir builder))
       (throw
-       (FileNotFoundException. (str "Could not load a git repository at '" path "'")))
+       (FileNotFoundException. (str "Could not load a git repository at '" path "'"
+                                    "with ceiling dirs: " ceiling-dirs)))
       (-> builder
           (.build)
           (Git.)))))
