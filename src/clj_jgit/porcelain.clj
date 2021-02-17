@@ -219,7 +219,7 @@
     (throw
       (FileNotFoundException. (str "The Git repository at '" path "' could not be located.")))))
 
-(defn find-repo
+(defn find-git-directory
   "Given a `path` located somewhere within a Git repository, return a path to the `.git` directory."
   ^Git [path & {:keys [ceiling-dirs]}]
   (let [builder (-> (RepositoryBuilder.)
