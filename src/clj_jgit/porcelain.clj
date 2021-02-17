@@ -222,17 +222,15 @@
 (defn find-git-directory
   "Given a `path` located somewhere within a Git repository, return a path to the `.git` directory."
   ^Git [path & {:keys [ceiling-dirs]}]
-  (let [builder (-> (RepositoryBuilder.)
-                    (.addCeilingDirectories ceiling-dirs)
-                    (.readEnvironment)
-                    (.findGitDir path))]
-    (if (.getGitDir builder)
-      (-> builder
-          (.build)
-          (Git.))
-      (throw
-       (FileNotFoundException. (str "Could not load a git repository at '" path "'"
-                                    " with ceiling dirs: " ceiling-dirs))))))
+  (if-let [git-path (-> (RepositoryBuilder.)
+                        (.addCeilingDirectories ceiling-dirs)
+                        (.readEnvironment)
+                        (.findGitDir path)
+                        (.getGitDir))]
+    git-path
+    (throw
+      (FileNotFoundException. (str "Could not find a git repository for '" path "'"
+                                   " with ceiling dirs: " ceiling-dirs)))))
 
 (defmacro with-repo
   "Load Git repository at `path` and bind it to `repo`, then evaluate `body`.
