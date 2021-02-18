@@ -220,7 +220,8 @@
       (FileNotFoundException. (str "The Git repository at '" path "' could not be located.")))))
 
 (defn find-git-directory
-  "Given a `path` located somewhere within a Git repository, return a path to the `.git` directory."
+  "Given a `path` located somewhere within a Git repository, return a path to the `.git` directory.
+  A vector of ceiling directories can be provided to stop the search if any of those are reached."
   ^Git [path & {:keys [ceiling-dirs]}]
   (if-let [git-path (-> (RepositoryBuilder.)
                         (.addCeilingDirectories ceiling-dirs)
