@@ -230,8 +230,8 @@
                         (.getGitDir))]
     git-path
     (throw
-      (FileNotFoundException. (str "Could not find a git repository for '" path "'"
-                                   " with ceiling dirs: " ceiling-dirs)))))
+     (FileNotFoundException. (str "Could not find a git repository for '" path "'"
+                                  " with ceiling dirs: " ceiling-dirs)))))
 
 (defmacro with-repo
   "Load Git repository at `path` and bind it to `repo`, then evaluate `body`.
