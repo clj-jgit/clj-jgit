@@ -1,4 +1,4 @@
-(defproject clj-jgit "1.0.1"
+(defproject clj-jgit "1.0.2"
   :description "Clojure wrapper for JGit"
   :dependencies [[org.eclipse.jgit/org.eclipse.jgit "5.9.0.202009080501-r"]
                  [org.eclipse.jgit/org.eclipse.jgit.ssh.apache "5.9.0.202009080501-r"]
