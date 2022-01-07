@@ -1,8 +1,9 @@
-(defproject clj-jgit "1.0.1"
+(defproject clj-jgit "1.0.2"
   :description "Clojure wrapper for JGit"
-  :dependencies [[org.eclipse.jgit/org.eclipse.jgit "5.9.0.202009080501-r"]
-                 [org.eclipse.jgit/org.eclipse.jgit.ssh.apache "5.9.0.202009080501-r"]
-                 [org.eclipse.jgit/org.eclipse.jgit.gpg.bc "5.9.0.202009080501-r"]]
   :profiles {:dev {:dependencies [[org.clojure/clojure "1.10.1"]]}}
-  :plugins [[lein-marginalia "0.9.1"]]
+  :middleware [lein-tools-deps.plugin/resolve-dependencies-with-deps-edn]
+  :plugins [[lein-marginalia "0.9.1"]
+            [lein-tools-deps "0.4.5"]]
+  :lein-tools-deps/config {:config-files [:install :user :project]}
   :repositories {"jgit-repository" "https://repo.eclipse.org/content/groups/releases/"})
+
