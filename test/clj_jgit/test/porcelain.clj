@@ -42,7 +42,7 @@
 
 (deftest test-current-branch-functions
   (is (= [true
-          "master"
+          "main"
           40
           false]
          (with-tmp-repo "target/tmp"
