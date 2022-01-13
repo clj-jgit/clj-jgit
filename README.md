@@ -16,6 +16,8 @@ Note: If you don't plan on signing commits you may exclude `org.eclipse.jgit/org
 :dependencies [[clj-jgit "1.x.x" :exclusions [org.eclipse.jgit/org.eclipse.jgit.gpg.bc]]]
 ```
 
+Note: Java 11 or newer is required since `clj-jgit-1.0.2`
+
 ## Quickstart Tutorial ##
 
 This brief tutorial will show you how to:
