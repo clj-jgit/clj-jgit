@@ -811,20 +811,23 @@
 
     Options:
 
-    :bare?    Whether the repository is bare or not. (default: false)
-    :dir      The optional directory associated with the init operation. If no directory
-              is set, we'll use the current directory. (default: \".\")
-    :git-dir  Set the repository meta directory (.git). (default: nil = use default)
+    :bare?            Whether the repository is bare or not. (default: false)
+    :dir              The optional directory associated with the init operation. If no directory
+                      is set, we'll use the current directory. (default: \".\")
+    :git-dir          Set the repository meta directory (.git). (default: nil = use default)
+    :initial-branch   Set the initial branch of the new repository. (default: \"master\")
   "
-  [& {:keys [bare? dir git-dir]
-      :or   {bare?   false
-             dir     "."
-             git-dir nil}}]
+  [& {:keys [bare? dir git-dir initial-branch]
+      :or   {bare?          false
+             dir            "."
+             git-dir        nil
+             initial-branch "master"}}]
   (as-> (InitCommand.) cmd
         (.setBare cmd bare?)
         (.setDirectory cmd (io/as-file dir))
         (if (some? git-dir)
           (.setGitDir cmd (io/as-file git-dir)) cmd)
+        (.setInitialBranch cmd initial-branch)
         (.call cmd)))
 
 (defn git-remote-add
