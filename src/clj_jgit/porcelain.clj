@@ -4,7 +4,7 @@
             #_{:clj-kondo/ignore [:refer-all]}
             [clj-jgit.internal :refer :all]
             [clj-jgit.util :as util :refer [seq?! doseq-cmd-fn!]])
-  (:import (java.io File FileNotFoundException IOException)
+  (:import (java.io File FileNotFoundException IOException ByteArrayOutputStream)
            (java.nio.charset StandardCharsets)
            (java.security GeneralSecurityException)
            (java.util List)
@@ -14,7 +14,7 @@
                                  CreateBranchCommand$SetupUpstreamMode CheckoutCommand$Stage
                                  CommitCommand MergeCommand$FastForwardMode RevertCommand CreateBranchCommand
                                  CheckoutCommand TransportConfigCallback TransportCommand ListBranchCommand TagCommand
-                                 CleanCommand DeleteTagCommand)
+                                 CleanCommand DeleteTagCommand DiffCommand)
            (org.eclipse.jgit.blame BlameResult)
            (org.eclipse.jgit.diff DiffAlgorithm$SupportedAlgorithm)
            (org.eclipse.jgit.lib RepositoryBuilder AnyObjectId PersonIdent BranchConfig$BranchRebaseMode ObjectId
@@ -27,7 +27,8 @@
            (org.eclipse.jgit.transport FetchResult UsernamePasswordCredentialsProvider URIish RefSpec RefLeaseSpec TagOpt
                                        RemoteConfig CredentialsProvider CredentialItem$CharArrayType
                                        CredentialItem$YesNoType SshTransport)
-           (org.eclipse.jgit.treewalk TreeWalk)))
+           (org.eclipse.jgit.treewalk TreeWalk)
+           (org.eclipse.jgit.treewalk.filter PathFilter)))
 
 (defmulti discover-repo "Discover a Git repository in a path." type)
 
@@ -723,6 +724,72 @@
   (->> (parse-git-config-key config-key)
        (apply #(.setString git-config % %2 %3 (str config-value))))
   git-config)
+
+(defn git-diff
+  "Diff given `repo`, returns a OutputStream instance. Passing no other arguments is equivalent to running git status.
+  Use `:new-commit` and `:old-commit` to specify a range for the diff, i.e.:
+
+      (git-diff repo :old-commit \"aaae79\" :new-commit \"HEAD\")
+
+   Options:
+
+   :context-lines          `integer` that sets the number of lines of context shown before and after a modification.
+                           (default: 3)
+   :monitor                Set a progress monitor. See JGit ProgressMonitor interface.
+                           (default: nil)
+   :destination-prefix     A purely cosmetic `string` used for the new side in the output. Can be empty but not nil.
+                           (default: \"b/\")
+   :name-and-status-only?  If true only returns a vector with DiffEntries (filename and change status)
+                           (default: false)
+   :new-commit             Any `Resolvable` commit-ref used as end point for the diff.
+                           default: nil (HEAD)
+   :new-tree               Same as :new-tree but takes a CanonicalTreeParser instance. Takes precedence over :new-commit.
+                           default: nil (HEAD)
+   :old-commit             Any `Resolvable` commit-ref used as starting point for the diff.
+                           default: nil (HEAD)
+   :old-tree               Same as :old-tree but takes a CanonicalTreeParser instance. Takes precedence over :old-commit.
+                           default: nil (HEAD)
+   :path-filter            An `org.eclipse.jgit.treewalk.filter.TreeFilter` instance that limits the result, i.e.:
+                           `(PathFilter/create \"project.clj\")`. See `org.eclipse.jgit.treewalk.filter` namespace for
+                           all available filters or implement your own.
+                           (default: PathFilter/ALL)
+   :output-stream          The `OutputStream` instance the formatted diff is written to. Ignored if
+                           `:name-and-status-only?` is true.
+                           (default: ByteArrayOutputStream.)
+   :source-prefix          A purely cosmetic `string` used for the old side in the output. Can be empty but not nil.
+                           (default: \"a/\")
+"
+  [^Git repo & {:keys [cached? context-lines destination-prefix new-tree old-tree new-commit old-commit
+                       output-stream path-filter monitor name-and-status-only? source-prefix]
+                :or   {cached?               false
+                       context-lines         -1
+                       destination-prefix    "b/"
+                       monitor               nil
+                       name-and-status-only? false
+                       new-commit            nil
+                       new-tree              nil
+                       old-commit            nil
+                       old-tree              nil
+                       output-stream         (ByteArrayOutputStream.)
+                       path-filter           PathFilter/ALL
+                       source-prefix         "a/"}}]
+  (let [old-tree (or old-tree (canonical-tree-parser repo old-commit))
+        new-tree (or new-tree (canonical-tree-parser repo new-commit))
+        diff-entries (as-> (.diff repo) ^DiffCommand cmd
+                           (.setOutputStream cmd output-stream)
+                           (.setCached cmd cached?)
+                           (.setOldTree cmd old-tree)
+                           (.setNewTree cmd new-tree)
+                           (.setSourcePrefix cmd source-prefix)
+                           (.setDestinationPrefix cmd destination-prefix)
+                           (.setShowNameAndStatusOnly cmd name-and-status-only?)
+                           (.setContextLines cmd context-lines)
+                           (.setPathFilter cmd path-filter)
+                           (.setProgressMonitor cmd monitor)
+                           (.call cmd))]
+    (if name-and-status-only?
+      diff-entries
+      output-stream)))
 
 (defn fetch-cmd ^FetchCommand [^Git repo]
   (-> (.fetch repo)
