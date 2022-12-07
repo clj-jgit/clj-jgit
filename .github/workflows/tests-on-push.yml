@@ -43,7 +43,8 @@ jobs:
       - name: Get leiningen version
         run: lein -v
 
-      - name: Fetch master branch as it's referenced in some tests
+      - name: Setup master branch if it doesn't exist, referenced in some tests
+        if: ${{ env.GITHUB_REF_NAME != 'master' }}
         run: git fetch origin master:master
 
       - name: Run tests
