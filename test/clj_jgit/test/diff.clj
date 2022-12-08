@@ -3,7 +3,8 @@
         [clojure.test])
   (:import
     (java.io ByteArrayOutputStream)
-    (org.eclipse.jgit.diff Edit Edit$Type EditList RawText)))
+    (org.eclipse.jgit.diff DiffFormatter Edit Edit$Type EditList RawText)
+    (org.eclipse.jgit.util.io DisabledOutputStream)))
 
 (deftest test-get-raw-text
   (let [test-string "Foo"
@@ -23,6 +24,11 @@
       (is (instance? EditList diff-result-replace))
       (is (= (count diff-result-replace) 1))
       (is (= (-> diff-result-replace ^Edit first .getType) Edit$Type/REPLACE)))))
+
+(deftest test-get-diff-formatter
+    (testing "get-diff-formatter returns a DiffFormatter instance"
+      (let [formatter (get-diff-formatter :output-stream (DisabledOutputStream/INSTANCE))]
+        (is (instance? DiffFormatter formatter)))))
 
 (deftest test-diff-string-formatted
   (let [diff-out (diff-string-formatted "Foo" "Bar")
