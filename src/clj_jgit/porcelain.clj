@@ -557,8 +557,10 @@
         (.setTagOption cmd (tags tag-opt))
         (.call cmd)))
 
-(defn ^CredentialsProvider signing-pass-provider [^String key-pw]
+(defn signing-pass-provider
   "Return a new `CredentialsProvider` instance for given `key-pw`."
+  ^CredentialsProvider
+  [^String key-pw]
   (proxy [CredentialsProvider] []
     (supports [items]
       (if (some? (->> items
@@ -578,8 +580,9 @@
 
 (declare git-config-load)
 
-(defn gpg-config [^Git repo]
+(defn gpg-config
   "Return commit signing config for given `repo`."
+  [^Git repo]
   (let [config (GpgConfig. (git-config-load repo))]
     {:sign?       (.isSignCommits config)
      :signing-key (.getSigningKey config)
@@ -681,30 +684,37 @@
             cmd)
           (.call cmd))))
 
-(defn ^StoredConfig git-config-load [^Git repo]
+(defn git-config-load
   "Return mutable JGit StoredConfig object for given `repo`."
+  ^StoredConfig
+  [^Git repo]
   (-> repo .getRepository .getConfig))
 
-(defn git-config-save [^StoredConfig git-config]
+(defn git-config-save
   "Save given `git-config` to repo's `.git/config` file."
+  [^StoredConfig git-config]
   (.save git-config))
 
-(defn parse-git-config-key [^String config-key]
+(defn parse-git-config-key
   "Parse given Git `config-key` and return a vector of format [section subsection name]."
+  [^String config-key]
   (let [keys (str/split config-key #"\.")]
     (case (count keys)
       2 [(first keys) nil (last keys)]
       3 keys
       (throw (Exception. (str "Invalid config-key format: " config-key))))))
 
-(defn git-config-get [^StoredConfig git-config ^String config-key]
+(defn git-config-get
   "Return Git config value as string for given Git `config-key`. Note that config keys that are not explicitly set in
   global/current repo config will always return nil and not the default value."
+  [^StoredConfig git-config ^String config-key]
   (->> (parse-git-config-key config-key)
        (apply #(.getString git-config % %2 %3))))
 
-(defn ^StoredConfig git-config-set [^StoredConfig git-config ^String config-key config-value]
+(defn git-config-set
   "Set given `config-value` for given Git `config-key`, always returns the passed JGit StoredConfig object."
+  ^StoredConfig
+  [^StoredConfig git-config ^String config-key config-value]
   (->> (parse-git-config-key config-key)
        (apply #(.setString git-config % %2 %3 (str config-value))))
   git-config)

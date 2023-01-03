@@ -48,9 +48,8 @@
     (->>
       (for [[^ObjectIdRef branch-ref ^RevCommit branch-tip-commit] branch-list
             :when branch-tip-commit]
-        (do
-          (when (commit-in-branch? repo rev-walk branch-tip-commit bound-commit)
-            (.getName branch-ref))))
+        (when (commit-in-branch? repo rev-walk branch-tip-commit bound-commit)
+          (.getName branch-ref)))
       (remove nil?)
       doall)))
 
@@ -156,10 +155,14 @@
 (defn- changed-files-in-first-commit
   [^Git repo ^RevCommit rev-commit]
   (let [tree-walk (new-tree-walk repo rev-commit)
-        changes (transient [])]
-    (while (.next tree-walk)
-      (conj! changes [(util/normalize-path (.getPathString tree-walk)) :add]))
-    (persistent! changes)))
+        f (fn [tree-walk]
+            [(util/normalize-path (.getPathString tree-walk)) :add])]
+    (persistent! (loop [next? (.next tree-walk)
+                        changes (transient [(f tree-walk)])]
+                   (if-not next?
+                     changes
+                     (recur (.next tree-walk)
+                            (conj! changes (f tree-walk))))))))
 
 (defn- parse-diff-entry
   [^DiffEntry entry]
