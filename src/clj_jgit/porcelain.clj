@@ -990,7 +990,7 @@
 (defonce branch-rebase-modes
          {:interactive BranchConfig$BranchRebaseMode/INTERACTIVE
           :none        BranchConfig$BranchRebaseMode/NONE
-          :preserve    BranchConfig$BranchRebaseMode/PRESERVE
+          :merges      BranchConfig$BranchRebaseMode/MERGES
           :rebase      BranchConfig$BranchRebaseMode/REBASE})
 
 (defn git-pull
@@ -1011,8 +1011,7 @@
     :rebase-mode      Keyword that sets the rebase mode to use after fetching:
                         :rebase       Equivalent to --rebase: use rebase instead of merge
                                       after fetching.
-                        :preserve     Equivalent to --preserve-merges: rebase preserving
-                                      local merge commits.
+                        :merges       Equivalent to --rebase-merges: the local merge commits are included in the rebase.
                         :interactive  Equivalent to --interactive: use interactive rebase.
                         :none         Equivalent to --no-rebase: merge instead of rebasing.
                       When nil use the setting defined in the git configuration, either
