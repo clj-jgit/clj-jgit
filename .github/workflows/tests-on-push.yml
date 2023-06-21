@@ -1,6 +1,10 @@
 name: Run tests on push
 
-on: [push]
+on:
+  push:
+    branches:
+      - master
+  pull_request:
 
 jobs:
 
@@ -30,6 +34,11 @@ jobs:
           cli: 'latest'
           lein: 2.9.1
 
+      - name: Install clj-kondo
+        uses: DeLaGuardo/setup-clj-kondo@afc83dbbf4e7e32e04649e29dbf30668d30e9e3e
+        with:
+          version: '2023.05.26'
+
       - name: Cache clojure deps
         uses: actions/cache@v3
         with:
@@ -49,3 +58,6 @@ jobs:
 
       - name: Run tests
         run: lein with-profile dev do check, test
+
+      - name: Lint
+        run: clj-kondo --lint src --config '{:output {:pattern "::{{level}} file={{filename}},line={{row}},col={{col}}::{{message}}"}}'
