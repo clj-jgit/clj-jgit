@@ -1,5 +1,6 @@
 (ns clj-jgit.querying
   (:require [clojure.string :as string]
+            #_{:clj-kondo/ignore [:refer-all]}
             [clj-jgit.internal :refer :all]
             [clj-jgit.porcelain :as porcelain]
             [clj-jgit.util :as util])
@@ -34,6 +35,7 @@
            (let [branches (porcelain/git-branch-list repo :jgit? true)]
              (doall (map zip-commits branches))))))
 
+#_{:clj-kondo/ignore [:unused-binding]}
 (defn commit-in-branch?
   "Checks if commit is merged into branch"
   [^Git repo ^RevWalk rev-walk ^RevCommit branch-tip-commit ^ObjectId bound-commit]
@@ -70,7 +72,7 @@
 (defn changed-files-with-patch
   "Patch with diff of all changes in RevCommit object"
   [^Git repo ^RevCommit rev-commit]
-  (if-let [parent (first (.getParents rev-commit))]
+  (when-let [parent (first (.getParents rev-commit))]
     (let [rev-parent ^RevCommit parent
           out ^ByteArrayOutputStream (new ByteArrayOutputStream)
           df ^DiffFormatter (byte-array-diff-formatter-for-changes repo out)]
@@ -97,6 +99,7 @@
       (.source rev-walk)
       (.fillTo Integer/MAX_VALUE))))
 
+#_{:clj-kondo/ignore [:unused-binding]}
 (defn commit-info-without-branches
   [^Git repo ^RevWalk rev-walk ^RevCommit rev-commit]
   (let [ident (.getAuthorIdent rev-commit)
@@ -123,6 +126,7 @@
     (merge (commit-info-without-branches repo rev-walk rev-commit)
       {:branches (map #(.getName ^Ref %) (or (.get commit-map rev-commit) []))})))
 
+#_{:clj-kondo/ignore [:unused-binding]}
 (defn- mark-all-heads-as-start-for!
   [^Git repo ^RevWalk rev-walk]
   (doseq [[objId ref] (.getAllRefsByPeeledObjectId (.getRepository repo))]
@@ -175,6 +179,7 @@
       (= new-path "dev/null") [old-path change-kind]
       :else [old-path change-kind new-path])))
 
+#_{:clj-kondo/ignore [:unused-binding]}
 (defn rev-list-for
   ([^Git repo ^RevWalk rev-walk ^RefDirectory$LooseRef object]
     (.reset rev-walk)

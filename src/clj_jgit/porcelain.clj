@@ -1,16 +1,16 @@
 (ns clj-jgit.porcelain
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
+            #_{:clj-kondo/ignore [:refer-all]}
             [clj-jgit.internal :refer :all]
             [clj-jgit.util :as util :refer [seq?! doseq-cmd-fn!]])
   (:import (java.io File FileNotFoundException IOException)
            (java.nio.charset StandardCharsets)
            (java.security GeneralSecurityException)
            (java.util List)
-           (org.eclipse.jgit.api Git InitCommand StatusCommand AddCommand PullCommand MergeCommand LogCommand
+           (org.eclipse.jgit.api Git InitCommand StatusCommand AddCommand MergeCommand LogCommand
                                  LsRemoteCommand Status ResetCommand$ResetType FetchCommand PushCommand CloneCommand
-                                 RmCommand ResetCommand SubmoduleUpdateCommand SubmoduleSyncCommand SubmoduleInitCommand
-                                 StashCreateCommand StashApplyCommand BlameCommand ListBranchCommand$ListMode
+                                 RmCommand ResetCommand SubmoduleUpdateCommand SubmoduleSyncCommand SubmoduleInitCommand ListBranchCommand$ListMode
                                  CreateBranchCommand$SetupUpstreamMode CheckoutCommand$Stage
                                  CommitCommand MergeCommand$FastForwardMode RevertCommand CreateBranchCommand
                                  CheckoutCommand TransportConfigCallback TransportCommand ListBranchCommand TagCommand
@@ -97,6 +97,7 @@
         false))
     (UsernamePasswordCredentialsProvider. ^String login ^String password)))
 
+#_{:clj-kondo/ignore [:unused-binding]}
 (defn key-pass-provider
   "Create a new `KeyPasswordProvider` instance for given `key-pw`."
   ^KeyPasswordProvider [key-pw]
@@ -1178,6 +1179,8 @@
           (.setPushOptions cmd (seq?! options)) cmd)
         (if (some? output-stream)
           (.setOutputStream cmd output-stream) cmd)
+        (if (some? receive-pack)
+          (.setReceivePack cmd receive-pack) cmd)
         (if (some? ref-lease-specs)
           (.setRefLeaseSpecs cmd (->> ref-lease-specs
                                       seq?!
@@ -1470,6 +1473,7 @@
    (when (< level 3)
      (let [gen (SubmoduleWalk/forIndex repo)
            repos (transient [])]
+       #_{:clj-kondo/ignore [:unused-value]}
        (while (.next gen)
          (when-let [subm (.getRepository gen)]
            (conj! repos subm)
