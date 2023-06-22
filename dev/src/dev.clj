@@ -1,5 +1,6 @@
 (ns dev
   (:require
+    [clj-jgit.diff :as d]
     [clj-jgit.internal :as i]
     [clj-jgit.porcelain :as p]
     [clj-jgit.querying :as q]

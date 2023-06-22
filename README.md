@@ -82,6 +82,10 @@ This brief tutorial will show you how to:
 (git-clean my-repo :dirs? true, :ignore? true)
 ;=> #{}
 
+;; You can also diff any part of the history
+(git-diff repo :old-commit "ab6fc2" :new-commit "HEAD^2")
+#object[java.io.ByteArrayOutputStream 0x753bc044 "diff --git ...
+
 ;; Blame
 (first (git-blame my-repo "README.md"))
 ;=> {:author {:name "Ilya Sabanin",
@@ -289,6 +293,21 @@ This uses internal JGit API, so it may require some additional knowledge of JGit
       commits (git-log repo)]
   (map (partial commit-info repo rev-walk commit-map) commits))
 ```
+### Diffing ###
+
+JGit also has excellent diffing support that can be used without any Git context:
+
+```clj
+(ns clj-jgit.diff)
+
+;; Diff two text files and write a diff-style patch to foo.patch
+(-> (diff-string-formatted (slurp "foo_org.txt") (slurp "foo_new.txt")
+      :output-stream (clojure.java.io/output-stream "foo.patch") :context-lines 4)
+    .close)
+```
+
+See `clj-jgit.diff` for more advanced use cases.
+
 ### Contribute ###
 
 If you want to contribute just fork the repository, work on the code, cover it with tests and submit a pull request through Github.
