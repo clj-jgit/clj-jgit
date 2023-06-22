@@ -65,7 +65,7 @@
                             (default: nil)
   "
   ^DiffFormatter [& {:keys [abbreviation-length binary-file-threshold context-lines detect-renames? monitor
-                            output-stream path-filter prefix-new prefix-old quote-paths? repository]
+                            output-stream path-filter quote-paths? repository]
                      :or   {abbreviation-length   7
                             binary-file-threshold 52428800
                             context-lines         3
@@ -73,8 +73,6 @@
                             monitor               nil
                             output-stream         (ByteArrayOutputStream.)
                             path-filter           TreeFilter/ALL
-                            prefix-new            "b/"
-                            prefix-old            "a/"
                             quote-paths?          nil
                             repository            nil}}]
   (let [formatter (doto (DiffFormatter. output-stream)
@@ -82,9 +80,7 @@
                     (.setBinaryFileThreshold binary-file-threshold)
                     (.setContext context-lines)
                     (.setProgressMonitor monitor)
-                    (.setPathFilter path-filter)
-                    (.setNewPrefix prefix-new)
-                    (.setOldPrefix prefix-old))]
+                    (.setPathFilter path-filter))]
     (when repository
       (.setRepository formatter repository)
       (when (some? detect-renames?) (.setDetectRenames formatter detect-renames?))
@@ -120,6 +116,7 @@
         (.format edit-list raw-a raw-b))
     output-stream))
 
+#_{:clj-kondo/ignore [:unresolved-symbol]}
 (comment
   ; JGit also supports diffing of sequences, subsequences and hashed sequences. Each type requires prior implementation of
   ; its abstract classes, see https://download.eclipse.org/jgit/site/6.0.0.202111291000-r/apidocs/org/eclipse/jgit/diff/package-summary.html
