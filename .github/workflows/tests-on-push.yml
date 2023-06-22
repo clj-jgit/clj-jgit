@@ -23,13 +23,13 @@ jobs:
       - name: Install java
         uses: actions/setup-java@v3
         with:
-          distribution: "temurin"
-          java-version: "17"
+          distribution: 'temurin'
+          java-version: '17'
 
       - name: Install clojure tools
         uses: DeLaGuardo/setup-clojure@10.1
         with:
-          cli: "latest"
+          cli: 'latest'
           lein: 2.9.1
           clj-kondo: 2023.05.26
 
@@ -54,4 +54,4 @@ jobs:
         run: lein with-profile dev do check, test
 
       - name: Lint
-        run: clj-kondo --fail-level error --parallel  --lint src --config '{:output {:pattern "::{{level}} file={{filename}},line={{row}},col={{col}}::{{message}}"}}'
+        run: clj-kondo --parallel  --lint src --config '{:output {:pattern "::{{level}} file={{filename}},line={{row}},col={{col}}::{{message}}"}}'
