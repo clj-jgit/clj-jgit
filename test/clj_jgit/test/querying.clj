@@ -35,7 +35,8 @@
                                                     ["project.clj" :add] 
                                                     ["src/clj_jgit/core.clj" :add] 
                                                     ["src/clj_jgit/util/print.clj" :add] 
-                                                    ["test/clj_jgit/test/core.clj" :add]]
+                                                    ["test/clj_jgit/test/core.clj" :add]
+                                                    ["test" :add]]
         "edb462cd4ea2f351c4c5f20ec0952e70e113c489" [["src/clj_jgit/porcelain.clj" :edit] 
                                                     ["src/clj_jgit/util.clj" :add] 
                                                     ["src/clj_jgit/util/core.clj" :delete] 
@@ -69,15 +70,19 @@
                                  expected-basic (dissoc raw-data :repo :raw :time :branches)
                                  info-basic (dissoc info :branches)
                                  target-branch (-> info :branches (first))]
-                             (and (= expected-basic info-basic)
-                                  (some #(= % target-branch) (:branches raw-data))))
+                             (is (= expected-basic info-basic))
+                             (is (some #(= % target-branch) (:branches raw-data))
+                                 (:branches raw-data))
+                             ;; Avoid a double test failure, if the `is` assertions above fail:
+                             true)
         "38dd57264cf5c05fb77211c8347d1f16e4474623" {:changed_files
                                                     [[".gitignore" :add]
                                                      ["README.md" :add]
                                                      ["project.clj" :add]
                                                      ["src/clj_jgit/core.clj" :add]
                                                      ["src/clj_jgit/util/print.clj" :add]
-                                                     ["test/clj_jgit/test/core.clj" :add]],
+                                                     ["test/clj_jgit/test/core.clj" :add]
+                                                     ["test" :add]],
                                                     :author "Daniel Gregoire",
                                                     :email "daniel.l.gregoire@gmail.com",
                                                     :message "Initial commit",

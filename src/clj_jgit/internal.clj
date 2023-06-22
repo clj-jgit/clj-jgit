@@ -29,6 +29,7 @@
     (.addTree (.getTree rev-commit))
     (.setRecursive true)))
 
+#_{:clj-kondo/ignore [:unused-binding]}
 (defn bound-commit
   "Find a RevCommit object in a RevWalk and bound to it."
   ^RevCommit [^Git repo ^RevWalk rev-walk ^ObjectId rev-commit]
@@ -45,12 +46,14 @@
     ^ObjectId [^String commit-ish ^Git repo]
     (.resolve (.getRepository repo) commit-ish)))
 
+#_{:clj-kondo/ignore [:unused-binding]}
 (extend-type ObjectId
   Resolvable
   (resolve-object
     ^ObjectId [commit-ish ^Git repo]
     commit-ish))
 
+#_{:clj-kondo/ignore [:unused-binding]}
 (extend-type ObjectIdRef
   Resolvable
   (resolve-object
