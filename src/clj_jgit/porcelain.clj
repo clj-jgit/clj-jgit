@@ -498,6 +498,7 @@
     :dir            The optional directory associated with the clone operation. If
                     the directory isn't set, a name associated with the source uri
                     will be used. (default: nil)
+    :depth          Create a shallow clone with a history truncated to the specified number of commits. (default: nil)
     :git-dir        The repository meta directory (.git). (default: nil = automatic)
     :no-checkout?   If set to true no branch will be checked out after the clone.
                     This enhances performance of the clone command when there is no
@@ -521,7 +522,7 @@
                       :no-tags      - Never fetch tags, even if we have the thing it points at.
                     (default: :auto-follow)
   "
-  [uri & {:keys [bare? branch callback clone-all? clone-branches clone-subs? dir git-dir no-checkout? mirror? monitor
+  [uri & {:keys [bare? branch callback clone-all? clone-branches clone-subs? dir depth git-dir no-checkout? mirror? monitor
                  remote tags]
           :or   {bare?          false
                  branch         "master"
@@ -530,6 +531,7 @@
                  clone-subs?    false
                  callback       nil
                  dir            nil
+                 depth          nil
                  git-dir        nil
                  no-checkout?   false
                  mirror?        false
@@ -547,6 +549,8 @@
           (.setCallback cmd callback) cmd)
         (if (some? dir)
           (.setDirectory cmd (io/as-file dir)) cmd)
+        (if (some? depth)
+          (.setDepth cmd depth) cmd)
         (if (some? git-dir)
           (.setGitDir cmd (io/as-file git-dir)) cmd)
         (.setNoCheckout cmd no-checkout?)
@@ -1001,7 +1005,7 @@
 (defonce branch-rebase-modes
          {:interactive BranchConfig$BranchRebaseMode/INTERACTIVE
           :none        BranchConfig$BranchRebaseMode/NONE
-          :preserve    BranchConfig$BranchRebaseMode/PRESERVE
+          :merges      BranchConfig$BranchRebaseMode/MERGES
           :rebase      BranchConfig$BranchRebaseMode/REBASE})
 
 (defn git-pull
@@ -1022,8 +1026,7 @@
     :rebase-mode      Keyword that sets the rebase mode to use after fetching:
                         :rebase       Equivalent to --rebase: use rebase instead of merge
                                       after fetching.
-                        :preserve     Equivalent to --preserve-merges: rebase preserving
-                                      local merge commits.
+                        :merges       Equivalent to --rebase-merges: the local merge commits are included in the rebase.
                         :interactive  Equivalent to --interactive: use interactive rebase.
                         :none         Equivalent to --no-rebase: merge instead of rebasing.
                       When nil use the setting defined in the git configuration, either

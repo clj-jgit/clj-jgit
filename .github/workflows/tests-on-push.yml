@@ -7,9 +7,7 @@ on:
   pull_request:
 
 jobs:
-
   clojure:
-
     strategy:
       matrix:
         os: [ubuntu-latest, macOS-latest]
@@ -33,11 +31,7 @@ jobs:
         with:
           cli: 'latest'
           lein: 2.9.1
-
-      - name: Install clj-kondo
-        uses: DeLaGuardo/setup-clj-kondo@afc83dbbf4e7e32e04649e29dbf30668d30e9e3e
-        with:
-          version: '2023.05.26'
+          clj-kondo: 2023.05.26
 
       - name: Cache clojure deps
         uses: actions/cache@v3
@@ -60,4 +54,4 @@ jobs:
         run: lein with-profile dev do check, test
 
       - name: Lint
-        run: clj-kondo --lint src --config '{:output {:pattern "::{{level}} file={{filename}},line={{row}},col={{col}}::{{message}}"}}'
+        run: clj-kondo --parallel  --lint src --config '{:output {:pattern "::{{level}} file={{filename}},line={{row}},col={{col}}::{{message}}"}}'

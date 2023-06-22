@@ -3606,6 +3606,7 @@ Create a new tracking branch for a remote branch and make it the current branch:
 :dir            The optional directory associated with the clone operation. If
                 the directory isn't set, a name associated with the source uri
                 will be used. (default: nil)
+:depth          Create a shallow clone with a history truncated to the specified number of commits. (default: nil)
 :git-dir        The repository meta directory (.git). (default: nil = automatic)
 :no-checkout?   If set to true no branch will be checked out after the clone.
                 This enhances performance of the clone command when there is no
@@ -3617,7 +3618,7 @@ Create a new tracking branch for a remote branch and make it the current branch:
                 (default: nil)
 </code></pre>
 </td><td class="codes"><pre class="brush: clojure">(defn git-clone
-  [uri &amp; {:keys [bare? branch callback clone-all? clone-branches clone-subs? dir git-dir no-checkout? monitor remote]
+  [uri &amp; {:keys [bare? branch callback clone-all? clone-branches clone-subs? dir depth git-dir no-checkout? monitor remote]
           :or   {bare?          false
                  branch         &quot;master&quot;
                  clone-all?     true
@@ -3625,6 +3626,7 @@ Create a new tracking branch for a remote branch and make it the current branch:
                  clone-subs?    false
                  callback       nil
                  dir            nil
+                 depth          nil
                  git-dir        nil
                  no-checkout?   false
                  monitor        nil
@@ -3640,6 +3642,8 @@ Create a new tracking branch for a remote branch and make it the current branch:
           (.setCallback cmd callback) cmd)
         (if (some? dir)
           (.setDirectory cmd (io/as-file dir)) cmd)
+        (if (some? depth)
+          (.setDepth cmd depth) cmd)
         (if (some? git-dir)
           (.setGitDir cmd (io/as-file git-dir)) cmd)
         (.setNoCheckout cmd no-checkout?)
@@ -3971,7 +3975,7 @@ Create a new tracking branch for a remote branch and make it the current branch:
 </td><td class="codes"><pre class="brush: clojure">(defonce branch-rebase-modes
          {:interactive BranchConfig$BranchRebaseMode/INTERACTIVE
           :none        BranchConfig$BranchRebaseMode/NONE
-          :preserve    BranchConfig$BranchRebaseMode/PRESERVE
+          :merges    BranchConfig$BranchRebaseMode/MERGES
           :rebase      BranchConfig$BranchRebaseMode/REBASE})</pre></td></tr><tr><td class="docs"><p>Fetch from and integrate with another repository or a local branch.</p>
 
 <pre><code>Options:
@@ -3989,8 +3993,7 @@ Create a new tracking branch for a remote branch and make it the current branch:
 :rebase-mode      Keyword that sets the rebase mode to use after fetching:
                     :rebase       Equivalent to --rebase: use rebase instead of merge
                                   after fetching.
-                    :preserve     Equivalent to --preserve-merges: rebase preserving
-                                  local merge commits.
+                    :merges       Equivalent to --rebase-merges: the local merge commits are included in the rebase.
                     :interactive  Equivalent to --interactive: use interactive rebase.
                     :none         Equivalent to --no-rebase: merge instead of rebasing.
                   When nil use the setting defined in the git configuration, either
