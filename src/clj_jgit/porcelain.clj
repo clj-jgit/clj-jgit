@@ -1006,7 +1006,11 @@
          {:interactive BranchConfig$BranchRebaseMode/INTERACTIVE
           :none        BranchConfig$BranchRebaseMode/NONE
           :merges      BranchConfig$BranchRebaseMode/MERGES
-          :rebase      BranchConfig$BranchRebaseMode/REBASE})
+          :rebase      BranchConfig$BranchRebaseMode/REBASE
+          ;; Maintain backwards compatibility with the renamed PRESERVE rebase mode
+          ;; https://github.com/eclipse-jgit/jgit/commit/0518a6b0c16c1bce210bc9b2626104ef05975ee1
+          ;; https://github.com/eclipse-jgit/jgit/commit/032eef5b12a25e0da48004eea589966ae0652433
+          :preserve    BranchConfig$BranchRebaseMode/MERGES})
 
 (defn git-pull
   "Fetch from and integrate with another repository or a local branch.
