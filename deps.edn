@@ -1,6 +1,6 @@
 {:paths ["src" "test"]
 
  :deps
- {org.eclipse.jgit/org.eclipse.jgit            {:mvn/version "6.6.1.202309021850-r"}
-  org.eclipse.jgit/org.eclipse.jgit.ssh.apache {:mvn/version "6.6.1.202309021850-r"}
-  org.eclipse.jgit/org.eclipse.jgit.gpg.bc     {:mvn/version "6.6.1.202309021850-r"}}}
+ {org.eclipse.jgit/org.eclipse.jgit            {:mvn/version "6.8.0.202311291450-r"}
+  org.eclipse.jgit/org.eclipse.jgit.ssh.apache {:mvn/version "6.8.0.202311291450-r"}
+  org.eclipse.jgit/org.eclipse.jgit.gpg.bc     {:mvn/version "6.8.0.202311291450-r"}}}
