@@ -356,7 +356,7 @@
   [^Git repo branch-names & {:keys [force?]
                              :or   {force? false}}]
   (-> (.branchDelete repo)
-      (.setBranchNames (into-array String (seq?! branch-names)))
+      (.setBranchNames ^"[Ljava.lang.String;" (into-array String (seq?! branch-names)))
       (.setForce force?)
       (.call)))
 
@@ -899,11 +899,11 @@
     :git-dir          Set the repository meta directory (.git). (default: nil = use default)
     :initial-branch   Set the initial branch of the new repository. (default: \"master\")
   "
-  [& {:keys [bare? dir git-dir initial-branch]
-      :or   {bare?          false
-             dir            "."
-             git-dir        nil
-             initial-branch "master"}}]
+  ^Git [& {:keys [bare? dir git-dir initial-branch]
+           :or   {bare?          false
+                 dir            "."
+                 git-dir        nil
+                 initial-branch "master"}}]
   (as-> (InitCommand.) cmd
         (.setBare cmd bare?)
         (.setDirectory cmd (io/as-file dir))

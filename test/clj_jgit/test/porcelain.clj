@@ -6,7 +6,7 @@
     (org.eclipse.jgit.api Git PullResult)
     (org.eclipse.jgit.api.errors NoHeadException)
     (org.eclipse.jgit.revwalk RevWalk RevCommit)
-    (org.eclipse.jgit.transport PushResult)
+    (org.eclipse.jgit.transport PushResult URIish)
     (org.eclipse.jgit.lib ObjectId StoredConfig)))
 
 (deftest test-git-init
@@ -88,7 +88,7 @@
         (git-remote-add repo remote-name remote-uri)
         (let [[added-name uri-vec] (-> repo git-remote-list first)]
           (is (= remote-name added-name))
-          (is (= remote-uri (-> uri-vec first .toString)))))
+          (is (= remote-uri (-> uri-vec ^URIish first .toString)))))
       (testing "git-remote-remove works and remotes list is empty again"
         (git-remote-remove repo remote-name)
         (is (empty? (git-remote-list repo)))))))

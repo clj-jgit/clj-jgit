@@ -11,6 +11,7 @@
            (org.eclipse.jgit.internal.storage.file RefDirectory$LooseRef)
            (org.eclipse.jgit.lib ObjectIdRef ObjectId AnyObjectId Ref)
            (org.eclipse.jgit.revwalk RevWalk RevCommit RevCommitList)
+           (org.eclipse.jgit.treewalk TreeWalk)
            (org.eclipse.jgit.util.io DisabledOutputStream)))
 
 (declare change-kind create-tree-walk diff-formatter-for-changes
@@ -159,7 +160,7 @@
 (defn- changed-files-in-first-commit
   [^Git repo ^RevCommit rev-commit]
   (let [tree-walk (new-tree-walk repo rev-commit)
-        f (fn [tree-walk]
+        f (fn [^TreeWalk tree-walk]
             [(util/normalize-path (.getPathString tree-walk)) :add])]
     (persistent! (loop [next? (.next tree-walk)
                         changes (transient [(f tree-walk)])]
