@@ -2865,10 +2865,150 @@ net.brehaut.ClojureTools = (function (SH) {
     build_tree: build_tree
   };
 })(SyntaxHighlighter);
-</script><title>clj-jgit -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">clj-jgit</h1><h2 class="project-version">1.0.0-SNAPSHOT</h2><br /><p>Clojure wrapper for JGit</p>
-</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.eclipse.jgit/org.eclipse.jgit</td><td class="dotted"><hr /></td><td class="dep-version">5.4.0.201906121030-r</td></tr><tr><td class="dep-name">org.eclipse.jgit/org.eclipse.jgit.ssh.apache</td><td class="dotted"><hr /></td><td class="dep-version">5.4.0.201906121030-r</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#clj-jgit.querying">clj-jgit.querying</a></li><li><a href="#clj-jgit.util">clj-jgit.util</a></li><li><a href="#clj-jgit.internal">clj-jgit.internal</a></li><li><a href="#clj-jgit.porcelain">clj-jgit.porcelain</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clj-jgit.querying" name="clj-jgit.querying"><h1 class="project-name">clj-jgit.querying</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+</script><title>clj-jgit -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">clj-jgit</h1><h2 class="project-version">1.1.0</h2><br /><p>Clojure wrapper for JGit</p>
+</div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#clj-jgit.diff">clj-jgit.diff</a></li><li><a href="#clj-jgit.querying">clj-jgit.querying</a></li><li><a href="#clj-jgit.util">clj-jgit.util</a></li><li><a href="#clj-jgit.internal">clj-jgit.internal</a></li><li><a href="#clj-jgit.porcelain">clj-jgit.porcelain</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clj-jgit.diff" name="clj-jgit.diff"><h1 class="project-name">clj-jgit.diff</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(ns clj-jgit.diff
+  (:import (java.io ByteArrayOutputStream OutputStream)
+           (java.util List)
+           (org.eclipse.jgit.diff DiffFormatter EditList HistogramDiff RawText RawTextComparator)
+           (org.eclipse.jgit.treewalk.filter TreeFilter)))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defonce raw-text-comparator-modes {:default            RawTextComparator/DEFAULT            ; No special treatment
+                                    :ws-ignore-all      RawTextComparator/WS_IGNORE_ALL      ; Ignores all whitespace
+                                    :ws-ignore-leading  RawTextComparator/WS_IGNORE_LEADING  ; Ignore leading whitespace
+                                    :ws-ignore-trailing RawTextComparator/WS_IGNORE_TRAILING ; Ignores trailing whitespace
+                                    :ws-ignore-change   RawTextComparator/WS_IGNORE_CHANGE}) ; Ignores whitespace occurring between non-whitespace characters</pre></td></tr><tr><td class="docs"><p>Returns a new <code>org.eclipse.jgit.diff.RawText</code> instance for given string <code>s</code></p>
+</td><td class="codes"><pre class="brush: clojure">(defn get-raw-text
+  ^RawText [^String s]
+  (-&gt; s .getBytes RawText.))</pre></td></tr><tr><td class="docs"><p>Compare given <code>RawText</code> instances <code>a</code> and <code>b</code>, returns a new <code>org.eclipse.jgit.diff.EditList</code> instance</p>
+</td><td class="codes"><pre class="brush: clojure">(defn diff-raw-text
+  ^EditList [a b &amp; {:keys [comparator-mode] :or {comparator-mode :default}}]
+  (let [comparator (comparator-mode raw-text-comparator-modes)]
+    (-&gt; (HistogramDiff.)
+        (.diff comparator a b))))</pre></td></tr><tr><td class="docs"><p>Compare given strings <code>a</code> and <code>b</code>, returns a new <code>org.eclipse.jgit.diff.EditList</code> instance</p>
+</td><td class="codes"><pre class="brush: clojure">(defn diff-string
+  ^EditList [a b &amp; {:keys [comparator-mode] :or {comparator-mode :default}}]
+  (diff-raw-text (get-raw-text a) (get-raw-text b) :comparator-mode comparator-mode))</pre></td></tr><tr><td class="docs"><p>Returns a new <code>org.eclipse.jgit.diff.DiffFormatter</code> instance. Note that depending on the used <code>format</code> method some
+  options are ignored, i.e. setting a <code>prefix</code> or <code>path-filter</code> has no effect when formatting raw-text-diffs.</p>
+
+<pre><code>Options:
+:abbreviation-length    `integer` that sets the number of digits to show for commit-ids.
+                        (default: 7)
+:binary-file-threshold  `integer` that sets the maximum file size for text files, in bytes.
+                        Files larger than this size will be assumed to be binary, even if they aren't.
+                        (default: 52428800)
+:context-lines          `integer` that sets the number of lines of context shown before and after a modification.
+                        (default: 3)
+:detect-renames?        `boolean` that sets rename detection. Ignored if `repository` is not set. Once enabled the
+                        detector can be configured away from its defaults by obtaining the instance directly by
+                        invoking `getRenameDetector()` on the formatter instance. Ignored when `:repository` is nil.
+                        (default: false)
+:monitor                Set a progress monitor. See JGit ProgressMonitor interface.
+                        (default: nil)
+:output-stream          The `OutputStream` instance the formatted diff is written to.
+                        (default: (ByteArrayOutputStream.))
+:path-filter            An `org.eclipse.jgit.treewalk.filter.TreeFilter` instance that limits the result, i.e.:
+                        `(PathFilter/create "project.clj")`. See `org.eclipse.jgit.treewalk.filter` namespace
+                        for all available filters or implement your own.
+                        (default: PathFilter/ALL)
+:prefix-new             A purely cosmetic `string` used as path prefix for the new side in the output. Can be empty
+                        but not nil.
+                        (default: "b/")
+:prefix-old             A purely cosmetic `string` used as path prefix for the old side in the output. Can be empty
+                        but not nil.
+                        (default: "a/")
+:quote-paths?           `boolean` that sets whether path names should be quoted. By default, the setting of
+                        `git config core.quotePath` is used. Ignored when `:repository` is nil.
+:repository             `Repository` instance the formatter can load object contents from. Once a repository has
+                        been set, the formatter must be released to ensure the internal ObjectReader is able to
+                        release its resources.
+                        (default: nil)
+</code></pre>
+</td><td class="codes"><pre class="brush: clojure">(defn get-diff-formatter
+  ^DiffFormatter [&amp; {:keys [abbreviation-length binary-file-threshold context-lines detect-renames? monitor
+                            output-stream path-filter quote-paths? repository]
+                     :or   {abbreviation-length   7
+                            binary-file-threshold 52428800
+                            context-lines         3
+                            detect-renames?       nil
+                            monitor               nil
+                            output-stream         (ByteArrayOutputStream.)
+                            path-filter           TreeFilter/ALL
+                            quote-paths?          nil
+                            repository            nil}}]
+  (let [formatter (doto (DiffFormatter. output-stream)
+                    (.setAbbreviationLength abbreviation-length)
+                    (.setBinaryFileThreshold binary-file-threshold)
+                    (.setContext context-lines)
+                    (.setProgressMonitor monitor)
+                    (.setPathFilter path-filter))]
+    (when repository
+      (.setRepository formatter repository)
+      (when (some? detect-renames?) (.setDetectRenames formatter detect-renames?))
+      (when (some? quote-paths?) (.setQuotePaths formatter quote-paths?)))
+    formatter))</pre></td></tr><tr><td class="docs"><p>Compare given strings <code>a</code> and <code>b</code> and write a patch-style formatted string to given <code>:output-stream</code>. Always returns
+  the <code>output-stream</code>.</p>
+
+<p>  Options:</p>
+
+<p>  :comparator-mode  Keyword that sets how whitespace changes are handled:
+                      <code>:ws-ignore-all</code>      Ignores all whitespace
+                      <code>:ws-ignore-leading</code>  Ignore leading whitespace
+                      <code>:ws-ignore-trailing</code> Ignores trailing whitespace
+                      <code>:ws-ignore-change</code>   Ignores whitespace occurring between non-whitespace characters
+                      <code>:default</code>            No special treatment
+  :context-lines    <code>integer</code> that sets the number of lines of context shown before and after a modification.
+                    (default: 3)
+  :output-stream    The <code>OutputStream</code> instance the formatted diff is written to. Note that the returned stream is not
+                    flushed or closed, when in doubt use <code>with-open</code>.
+                    (default: (ByteArrayOutputStream.))</p>
+</td><td class="codes"><pre class="brush: clojure">(defn diff-string-formatted
+  ^OutputStream [a b &amp; {:keys [comparator-mode context-lines output-stream]
+                        :or   {comparator-mode :default
+                               context-lines    3
+                               output-stream   (ByteArrayOutputStream.)}}]
+  (let [raw-a (get-raw-text a)
+        raw-b (get-raw-text b)
+        edit-list (diff-raw-text raw-a raw-b :comparator-mode comparator-mode)]
+    (-&gt; (get-diff-formatter :output-stream output-stream :context-lines context-lines)
+        (.format edit-list raw-a raw-b))
+    output-stream))</pre></td></tr><tr><td class="docs"><p>Set internal <code>state</code> field to given seq <code>s</code>Compare given sequences <code>a</code> and <code>b</code>, returns a new <code>org.eclipse.jgit.diff.EditList</code> instance</p>
+</td><td class="codes"><pre class="brush: clojure">#_{:clj-kondo/ignore [:unresolved-symbol]}
+(comment
+  ; JGit also supports diffing of sequences, subsequences and hashed sequences. Each type requires prior implementation of
+  ; its abstract classes, see https://download.eclipse.org/jgit/site/6.0.0.202111291000-r/apidocs/org/eclipse/jgit/diff/package-summary.html
+  ; Simple example for diffing Sequences below, sadly `proxy` and `reify` don't support adding new methods to abstract classes.
+  ; Note: requires aot compilation to generate the classes, i.e. for a lein project add `:aot [clj-jgit.diff]`
+(gen-class
+  :name clj-jgit.diff.Sequence
+  :extends org.eclipse.jgit.diff.Sequence
+  :state state
+  :init init
+  :prefix &quot;seq-&quot;
+  :constructors {[java.util.List] []}
+  :methods [[get [Integer] Object]])
+(defn seq-init
+  [s]
+  [[List] s])
+(defn seq-size [this]
+  (count (.state this)))
+(defn seq-get [this i]
+  (nth (.state this) i))
+(gen-class
+  :name clj-jgit.diff.SequenceComparator
+  :extends org.eclipse.jgit.diff.SequenceComparator
+  :prefix &quot;seq-comp-&quot;)
+(defn seq-comp-equals [_this col-a index-a col-b index-b]
+  (= (.get col-a index-a)
+     (.get col-b index-b)))
+(defn seq-comp-hash [_this col index]
+  (.hashCode (.get col index)))
+(defn diff-seq
+  ^EditList [a b]
+  (-&gt; (HistogramDiff.)
+      (.diff (SequenceComparator.) (Sequence. a) (Sequence. b)))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clj-jgit.querying" name="clj-jgit.querying"><h1 class="project-name">clj-jgit.querying</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns clj-jgit.querying
   (:require [clojure.string :as string]
+            #_{:clj-kondo/ignore [:refer-all]}
             [clj-jgit.internal :refer :all]
             [clj-jgit.porcelain :as porcelain]
             [clj-jgit.util :as util])
@@ -2879,6 +3019,7 @@ net.brehaut.ClojureTools = (function (SH) {
            (org.eclipse.jgit.internal.storage.file RefDirectory$LooseRef)
            (org.eclipse.jgit.lib ObjectIdRef ObjectId AnyObjectId Ref)
            (org.eclipse.jgit.revwalk RevWalk RevCommit RevCommitList)
+           (org.eclipse.jgit.treewalk TreeWalk)
            (org.eclipse.jgit.util.io DisabledOutputStream)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(declare change-kind create-tree-walk diff-formatter-for-changes
          byte-array-diff-formatter-for-changes changed-files-in-first-commit
@@ -2897,7 +3038,8 @@ net.brehaut.ClojureTools = (function (SH) {
                          [branch-ref (bound-commit repo rev-walk (.getObjectId branch-ref))])]
            (let [branches (porcelain/git-branch-list repo :jgit? true)]
              (doall (map zip-commits branches))))))</pre></td></tr><tr><td class="docs"><p>Checks if commit is merged into branch</p>
-</td><td class="codes"><pre class="brush: clojure">(defn commit-in-branch?
+</td><td class="codes"><pre class="brush: clojure">#_{:clj-kondo/ignore [:unused-binding]}
+(defn commit-in-branch?
   [^Git repo ^RevWalk rev-walk ^RevCommit branch-tip-commit ^ObjectId bound-commit]
   (.isMergedInto rev-walk bound-commit branch-tip-commit))</pre></td></tr><tr><td class="docs"><p>List of branches in which specific commit is present</p>
 </td><td class="codes"><pre class="brush: clojure">(defn branches-for
@@ -2908,9 +3050,8 @@ net.brehaut.ClojureTools = (function (SH) {
     (-&gt;&gt;
       (for [[^ObjectIdRef branch-ref ^RevCommit branch-tip-commit] branch-list
             :when branch-tip-commit]
-        (do
-          (when (commit-in-branch? repo rev-walk branch-tip-commit bound-commit)
-            (.getName branch-ref))))
+        (when (commit-in-branch? repo rev-walk branch-tip-commit bound-commit)
+          (.getName branch-ref)))
       (remove nil?)
       doall)))</pre></td></tr><tr><td class="docs"><p>List of files changed between two RevCommit objects</p>
 </td><td class="codes"><pre class="brush: clojure">(defn changed-files-between-commits
@@ -2925,7 +3066,7 @@ net.brehaut.ClojureTools = (function (SH) {
     (changed-files-in-first-commit repo rev-commit)))</pre></td></tr><tr><td class="docs"><p>Patch with diff of all changes in RevCommit object</p>
 </td><td class="codes"><pre class="brush: clojure">(defn changed-files-with-patch
   [^Git repo ^RevCommit rev-commit]
-  (if-let [parent (first (.getParents rev-commit))]
+  (when-let [parent (first (.getParents rev-commit))]
     (let [rev-parent ^RevCommit parent
           out ^ByteArrayOutputStream (new ByteArrayOutputStream)
           df ^DiffFormatter (byte-array-diff-formatter-for-changes repo out)]
@@ -2947,7 +3088,8 @@ net.brehaut.ClojureTools = (function (SH) {
     (doto (RevCommitList.)
       (.source rev-walk)
       (.fillTo Integer/MAX_VALUE))))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn commit-info-without-branches
+</td><td class="codes"><pre class="brush: clojure">#_{:clj-kondo/ignore [:unused-binding]}
+(defn commit-info-without-branches
   [^Git repo ^RevWalk rev-walk ^RevCommit rev-commit]
   (let [ident (.getAuthorIdent rev-commit)
         time (-&gt; (.getCommitTime rev-commit) (* 1000) Date.)
@@ -2971,7 +3113,8 @@ net.brehaut.ClojureTools = (function (SH) {
   ([^Git repo ^RevWalk rev-walk ^HashMap commit-map ^RevCommit rev-commit]
     (merge (commit-info-without-branches repo rev-walk rev-commit)
       {:branches (map #(.getName ^Ref %) (or (.get commit-map rev-commit) []))})))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn- mark-all-heads-as-start-for!
+</td><td class="codes"><pre class="brush: clojure">#_{:clj-kondo/ignore [:unused-binding]}
+(defn- mark-all-heads-as-start-for!
   [^Git repo ^RevWalk rev-walk]
   (doseq [[objId ref] (.getAllRefsByPeeledObjectId (.getRepository repo))]
     (.markStart rev-walk (.lookupCommit rev-walk objId))))</pre></td></tr><tr><td class="docs">
@@ -2999,10 +3142,14 @@ net.brehaut.ClojureTools = (function (SH) {
 </td><td class="codes"><pre class="brush: clojure">(defn- changed-files-in-first-commit
   [^Git repo ^RevCommit rev-commit]
   (let [tree-walk (new-tree-walk repo rev-commit)
-        changes (transient [])]
-    (while (.next tree-walk)
-      (conj! changes [(util/normalize-path (.getPathString tree-walk)) :add]))
-    (persistent! changes)))</pre></td></tr><tr><td class="docs">
+        f (fn [^TreeWalk tree-walk]
+            [(util/normalize-path (.getPathString tree-walk)) :add])]
+    (persistent! (loop [next? (.next tree-walk)
+                        changes (transient [(f tree-walk)])]
+                   (if-not next?
+                     changes
+                     (recur (.next tree-walk)
+                            (conj! changes (f tree-walk))))))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn- parse-diff-entry
   [^DiffEntry entry]
   (let [old-path (util/normalize-path (.getOldPath entry))
@@ -3013,7 +3160,8 @@ net.brehaut.ClojureTools = (function (SH) {
       (= old-path &quot;dev/null&quot;) [new-path change-kind]
       (= new-path &quot;dev/null&quot;) [old-path change-kind]
       :else [old-path change-kind new-path])))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn rev-list-for
+</td><td class="codes"><pre class="brush: clojure">#_{:clj-kondo/ignore [:unused-binding]}
+(defn rev-list-for
   ([^Git repo ^RevWalk rev-walk ^RefDirectory$LooseRef object]
     (.reset rev-walk)
     (.markStart rev-walk (.lookupCommit ^RevWalk rev-walk ^AnyObjectId (.getObjectId object)))
@@ -3102,8 +3250,8 @@ net.brehaut.ClojureTools = (function (SH) {
     (org.eclipse.jgit.api Git)
     (org.eclipse.jgit.lib ObjectId ObjectIdRef Repository RefDatabase)
     (org.eclipse.jgit.transport RefSpec)
-    (org.eclipse.jgit.revwalk RevWalk RevCommit)
-    (org.eclipse.jgit.treewalk TreeWalk)))</pre></td></tr><tr><td class="docs">
+    (org.eclipse.jgit.revwalk RevWalk RevCommit RevTree)
+    (org.eclipse.jgit.treewalk TreeWalk CanonicalTreeParser)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn ref-spec ^RefSpec [str]
   (RefSpec. str))</pre></td></tr><tr><td class="docs"><p>Creates a new RevWalk instance (mutable), it's a good idea to use <code>close-rev-walk</code> once you are done. ;)</p>
 </td><td class="codes"><pre class="brush: clojure">(defn new-rev-walk
@@ -3119,23 +3267,32 @@ net.brehaut.ClojureTools = (function (SH) {
     (TreeWalk. (.getRepository repo))
     (.addTree (.getTree rev-commit))
     (.setRecursive true)))</pre></td></tr><tr><td class="docs"><p>Find a RevCommit object in a RevWalk and bound to it.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn bound-commit
+</td><td class="codes"><pre class="brush: clojure">#_{:clj-kondo/ignore [:unused-binding]}
+(defn bound-commit
   ^RevCommit [^Git repo ^RevWalk rev-walk ^ObjectId rev-commit]
   (.parseCommit rev-walk rev-commit))</pre></td></tr><tr><td class="docs"><p>Protocol for things that resolve ObjectId's.</p>
 </td><td class="codes"><pre class="brush: clojure">(defprotocol Resolvable
   (resolve-object ^ObjectId [commit-ish repo]
     &quot;Find ObjectId instance for any Git name: commit-ish, tree-ish or blob. Accepts ObjectId instances and just passes them through.&quot;))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">#_{:clj-kondo/ignore [:unused-binding]}
+(extend-type nil
+  Resolvable
+  (resolve-object
+    ^ObjectId [^String commit-ish ^Git repo]
+    nil))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(extend-type String
   Resolvable
   (resolve-object
     ^ObjectId [^String commit-ish ^Git repo]
     (.resolve (.getRepository repo) commit-ish)))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(extend-type ObjectId
+</td><td class="codes"><pre class="brush: clojure">#_{:clj-kondo/ignore [:unused-binding]}
+(extend-type ObjectId
   Resolvable
   (resolve-object
     ^ObjectId [commit-ish ^Git repo]
     commit-ish))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(extend-type ObjectIdRef
+</td><td class="codes"><pre class="brush: clojure">#_{:clj-kondo/ignore [:unused-binding]}
+(extend-type ObjectIdRef
   Resolvable
   (resolve-object
     ^ObjectId [commit-ish ^Git repo]
@@ -3155,44 +3312,59 @@ net.brehaut.ClojureTools = (function (SH) {
   (.getRefDatabase ^Repository (.getRepository repo)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn get-refs
   [^Git repo ^String prefix]
-  (.getRefs (ref-database repo) prefix))</pre></td></tr><tr><td class="docs"><p>Return HEAD RevCommit instance</p>
+  (.getRefs (ref-database repo) prefix))</pre></td></tr><tr><td class="docs"><p>Get a new <code>RevTree</code> instance for given <code>rev-commit</code>, auto-closes given <code>rev-walk</code> unless optional <code>:dispose-rev-walk?</code> arg is set to <code>false</code></p>
+</td><td class="codes"><pre class="brush: clojure">(defn rev-tree-by-commit
+  ^RevTree [^RevWalk rev-walk ^RevCommit rev-commit &amp; {:keys [dispose-rev-walk?] :or {dispose-rev-walk? true}}]
+  (let [tree (-&gt;&gt; (doto rev-commit .getTree .getId)
+                  (.parseTree rev-walk))]
+    (when dispose-rev-walk? (.dispose rev-walk))
+    tree))</pre></td></tr><tr><td class="docs"><p>Returns a new <code>org.eclipse.jgit.treewalk.CanonicalTreeParser</code> instance that reflects the repo state at given <code>commit-ref</code></p>
+</td><td class="codes"><pre class="brush: clojure">(defn canonical-tree-parser
+  [^Git repo commit-ref]
+  (when commit-ref
+    (let [rev-walk (new-rev-walk repo)
+          object-reader (.newObjectReader (.getRepository repo))]
+      (-&gt;&gt; (resolve-object commit-ref repo)
+           (bound-commit repo rev-walk)
+           (rev-tree-by-commit rev-walk)
+           (CanonicalTreeParser. nil object-reader)))))</pre></td></tr><tr><td class="docs"><p>Return HEAD RevCommit instance</p>
 </td><td class="codes"><pre class="brush: clojure">(defn get-head-commit  [^Git repo]
-  (let [rev-walk (new-rev-walk repo)]
-    (try
+  (with-open [rev-walk (new-rev-walk repo)]
       (as-&gt; repo $
         (.getRepository $)
         (.resolve $ &quot;HEAD&quot;)
-        (bound-commit repo rev-walk $))
-      (finally (close-rev-walk rev-walk)))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clj-jgit.porcelain" name="clj-jgit.porcelain"><h1 class="project-name">clj-jgit.porcelain</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+        (bound-commit repo rev-walk $))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clj-jgit.porcelain" name="clj-jgit.porcelain"><h1 class="project-name">clj-jgit.porcelain</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns clj-jgit.porcelain
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
+            #_{:clj-kondo/ignore [:refer-all]}
             [clj-jgit.internal :refer :all]
             [clj-jgit.util :as util :refer [seq?! doseq-cmd-fn!]])
-  (:import (java.io File FileNotFoundException IOException)
+  (:import (java.io File FileNotFoundException IOException ByteArrayOutputStream)
            (java.nio.charset StandardCharsets)
+           (java.security GeneralSecurityException)
            (java.util List)
-           (org.eclipse.jgit.api Git InitCommand StatusCommand AddCommand PullCommand MergeCommand LogCommand
+           (org.eclipse.jgit.api Git InitCommand StatusCommand AddCommand MergeCommand LogCommand
                                  LsRemoteCommand Status ResetCommand$ResetType FetchCommand PushCommand CloneCommand
-                                 RmCommand ResetCommand SubmoduleUpdateCommand SubmoduleSyncCommand SubmoduleInitCommand
-                                 StashCreateCommand StashApplyCommand BlameCommand ListBranchCommand$ListMode
+                                 RmCommand ResetCommand SubmoduleUpdateCommand SubmoduleSyncCommand SubmoduleInitCommand ListBranchCommand$ListMode
                                  CreateBranchCommand$SetupUpstreamMode CheckoutCommand$Stage
                                  CommitCommand MergeCommand$FastForwardMode RevertCommand CreateBranchCommand
-                                 CheckoutCommand TransportConfigCallback TransportCommand ListBranchCommand TagCommand CleanCommand)
+                                 CheckoutCommand TransportConfigCallback TransportCommand ListBranchCommand TagCommand
+                                 CleanCommand DeleteTagCommand DiffCommand)
            (org.eclipse.jgit.blame BlameResult)
            (org.eclipse.jgit.diff DiffAlgorithm$SupportedAlgorithm)
            (org.eclipse.jgit.lib RepositoryBuilder AnyObjectId PersonIdent BranchConfig$BranchRebaseMode ObjectId
-                                 SubmoduleConfig$FetchRecurseSubmodulesMode Ref Repository)
+                                 SubmoduleConfig$FetchRecurseSubmodulesMode Ref Repository StoredConfig GpgConfig)
            (org.eclipse.jgit.merge MergeStrategy)
            (org.eclipse.jgit.notes Note)
            (org.eclipse.jgit.revwalk RevCommit)
            (org.eclipse.jgit.submodule SubmoduleWalk)
            (org.eclipse.jgit.transport.sshd SshdSessionFactory DefaultProxyDataFactory JGitKeyCache KeyPasswordProvider)
-           (org.eclipse.jgit.transport FetchResult OpenSshConfig$Host)
-           (org.eclipse.jgit.transport UsernamePasswordCredentialsProvider URIish RefSpec RefLeaseSpec TagOpt
-                                       RemoteConfig CredentialsProvider CredentialItem$YesNoType SshTransport)
+           (org.eclipse.jgit.transport FetchResult UsernamePasswordCredentialsProvider URIish RefSpec RefLeaseSpec TagOpt
+                                       RemoteConfig CredentialsProvider CredentialItem$CharArrayType
+                                       CredentialItem$YesNoType SshTransport)
            (org.eclipse.jgit.treewalk TreeWalk)
-           (java.security GeneralSecurityException)))</pre></td></tr><tr><td class="docs"><p>Discover a Git repository in a path.</p>
+           (org.eclipse.jgit.treewalk.filter PathFilter)))</pre></td></tr><tr><td class="docs"><p>Discover a Git repository in a path.</p>
 </td><td class="codes"><pre class="brush: clojure">(defmulti discover-repo  type)</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defmethod discover-repo File
   [^File file]
@@ -3253,7 +3425,8 @@ net.brehaut.ClojureTools = (function (SH) {
       (isInteractive []
         false))
     (UsernamePasswordCredentialsProvider. ^String login ^String password)))</pre></td></tr><tr><td class="docs"><p>Create a new <code>KeyPasswordProvider</code> instance for given <code>key-pw</code>.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn key-pass-provider
+</td><td class="codes"><pre class="brush: clojure">#_{:clj-kondo/ignore [:unused-binding]}
+(defn key-pass-provider
   ^KeyPasswordProvider [key-pw]
   (reify KeyPasswordProvider
     (getPassphrase [_ uri attempt]
@@ -3361,13 +3534,15 @@ net.brehaut.ClojureTools = (function (SH) {
         (Git.))
     (throw
       (FileNotFoundException. (str &quot;The Git repository at '&quot; path &quot;' could not be located.&quot;)))))</pre></td></tr><tr><td class="docs"><p>Load Git repository at <code>path</code> and bind it to <code>repo</code>, then evaluate <code>body</code>.
-  Also provides a fresh <code>rev-walk</code> instance for <code>repo</code> which is closed on form exit.</p>
+  Also provides a fresh <code>rev-walk</code> instance for <code>repo</code>.</p>
 </td><td class="codes"><pre class="brush: clojure">(defmacro with-repo
   [path &amp; body]
-  `(let [~'repo (load-repo ~path)
-         ~'rev-walk (new-rev-walk ~'repo)]
-     (try ~@body
-          (finally (close-rev-walk ~'rev-walk)))))</pre></td></tr><tr><td class="docs"><p>Add file contents to the index. <code>file-patterns</code> is either a String with a repository-relative path of the
+  `(with-open [~'repo (load-repo ~path)
+               ~'rev-walk (new-rev-walk ~'repo)]
+     ~@body))</pre></td></tr><tr><td class="docs"><p>Release all resources held by JGit process. Not mandatory, but prevents leaks when, for example, running in
+  a webapp.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn git-shutdown
+  [] (Git/shutdown))</pre></td></tr><tr><td class="docs"><p>Add file contents to the index. <code>file-patterns</code> is either a String with a repository-relative path of the
   file/directory to be added or coll of Strings with paths. If a directory name is given all files in the directory are
   added recursively. Fileglobs (e.g. *.txt) are not yet supported.</p>
 
@@ -3476,7 +3651,7 @@ net.brehaut.ClojureTools = (function (SH) {
   [^Git repo branch-names &amp; {:keys [force?]
                              :or   {force? false}}]
   (-&gt; (.branchDelete repo)
-      (.setBranchNames (into-array String (seq?! branch-names)))
+      (.setBranchNames ^&quot;[Ljava.lang.String;&quot; (into-array String (seq?! branch-names)))
       (.setForce force?)
       (.call)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defonce checkout-stage-modes
@@ -3567,10 +3742,10 @@ Create a new tracking branch for a remote branch and make it the current branch:
         (if (some? name)
           (.setName cmd name) cmd)
         (if (some? paths)
-          (.addPaths cmd (into-array String (seq?! paths))) cmd)
+          (.addPaths cmd (seq?! paths)) cmd)
         (.setAllPaths cmd all-paths?)
         (.setCreateBranch cmd create-branch?)
-        (.setForce cmd force?)
+        (.setForceRefUpdate cmd force?)
         (if (some? monitor)
           (.setProgressMonitor cmd monitor) cmd)
         (.setOrphan cmd orphan?)
@@ -3582,6 +3757,10 @@ Create a new tracking branch for a remote branch and make it the current branch:
           (.setUpstreamMode cmd (upstream-mode branch-upstream-modes)) cmd)
         (.call cmd)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(declare git-cherry-pick)</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defonce tag-opt
+         {:auto-follow  TagOpt/AUTO_FOLLOW
+          :fetch-tags   TagOpt/FETCH_TAGS
+          :no-tags      TagOpt/NO_TAGS})</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn clone-cmd ^CloneCommand [uri]
   (-&gt; (Git/cloneRepository)
       (.setURI uri)
@@ -3611,14 +3790,28 @@ Create a new tracking branch for a remote branch and make it the current branch:
 :no-checkout?   If set to true no branch will be checked out after the clone.
                 This enhances performance of the clone command when there is no
                 need for a checked out branch. (default: false)
+:mirror?        Set up a mirror of the source repository. This implies that a
+                bare repository will be created. Compared to :bare?, :mirror?
+                not only maps local branches of the source to local branches of
+                the target, it maps all refs (including remote-tracking branches,
+                notes etc.) and sets up a refspec configuration such that all
+                these refs are overwritten by a git remote update in the target
+                repository. (default: false)
 :monitor        Set a progress monitor. See JGit ProgressMonitor interface.
                 (default: nil)
 :remote         The remote name used to keep track of the upstream repository for the
                 clone operation. If no remote name is set, "origin" is used.
                 (default: nil)
+:tags           Set the tag option used for the remote configuration explicitly.
+                Options:
+                  :auto-follow  - Automatically follow tags if we fetch the thing they point at.
+                  :fetch-tags   - Always fetch tags, even if we do not have the thing it points at.
+                  :no-tags      - Never fetch tags, even if we have the thing it points at.
+                (default: :auto-follow)
 </code></pre>
 </td><td class="codes"><pre class="brush: clojure">(defn git-clone
-  [uri &amp; {:keys [bare? branch callback clone-all? clone-branches clone-subs? dir depth git-dir no-checkout? monitor remote]
+  [uri &amp; {:keys [bare? branch callback clone-all? clone-branches clone-subs? dir depth git-dir no-checkout? mirror? monitor
+                 remote tags]
           :or   {bare?          false
                  branch         &quot;master&quot;
                  clone-all?     true
@@ -3629,14 +3822,16 @@ Create a new tracking branch for a remote branch and make it the current branch:
                  depth          nil
                  git-dir        nil
                  no-checkout?   false
+                 mirror?        false
                  monitor        nil
-                 remote         nil}}]
+                 remote         nil
+                 tags           :auto-follow}}]
   (as-&gt; (clone-cmd uri) cmd
         (.setBare cmd bare?)
         (.setBranch cmd branch)
         (.setCloneAllBranches cmd clone-all?)
         (if (some? clone-branches)
-          (.setBranchesToClone cmd (into-array String (seq?! clone-branches))) cmd)
+          (.setBranchesToClone cmd (seq?! clone-branches)) cmd)
         (.setCloneSubmodules cmd clone-subs?)
         (if (some? callback)
           (.setCallback cmd callback) cmd)
@@ -3647,11 +3842,39 @@ Create a new tracking branch for a remote branch and make it the current branch:
         (if (some? git-dir)
           (.setGitDir cmd (io/as-file git-dir)) cmd)
         (.setNoCheckout cmd no-checkout?)
+        (.setMirror cmd mirror?)
         (if (some? monitor)
           (.setProgressMonitor cmd monitor) cmd)
         (if (some? remote)
           (.setRemote cmd remote) cmd)
-        (.call cmd)))</pre></td></tr><tr><td class="docs"><p>Record changes to given <code>repo</code>.</p>
+        (.setTagOption cmd (tags tag-opt))
+        (.call cmd)))</pre></td></tr><tr><td class="docs"><p>Return a new <code>CredentialsProvider</code> instance for given <code>key-pw</code>.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn signing-pass-provider
+  ^CredentialsProvider
+  [^String key-pw]
+  (proxy [CredentialsProvider] []
+    (supports [items]
+      (if (some? (-&gt;&gt; items
+                      (filter #(when (instance? CredentialItem$CharArrayType %) true))
+                      first))
+        true
+        false))
+    (get [uri items]
+      (let [^CredentialItem$CharArrayType pw-item (-&gt;&gt; items
+                                                       (filter #(when (instance? CredentialItem$CharArrayType %) true))
+                                                       first)]
+        (if (some? pw-item)
+          (do (.setValue pw-item (char-array key-pw)) true)
+          false)))
+    (isInteractive []
+      false)))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(declare git-config-load)</pre></td></tr><tr><td class="docs"><p>Return commit signing config for given <code>repo</code>.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn gpg-config
+  [^Git repo]
+  (let [config (GpgConfig. (git-config-load repo))]
+    {:sign?       (.isSignCommits config)
+     :signing-key (.getSigningKey config)
+     :key-format  (.getKeyFormat config)}))</pre></td></tr><tr><td class="docs"><p>Record changes to given <code>repo</code>.</p>
 
 <pre><code>Options:
 
@@ -3689,9 +3912,19 @@ Create a new tracking branch for a remote branch and make it the current branch:
 :reflog-comment     Override the message written to the reflog or pass nil to specify
                     that no reflog should be written. If an empty string is passed
                     Git's default reflog msg is used. (default: "")
+:sign?              Sign the commit? If nil the git config is used (commit.gpgSign).
+                    Note that unprotected GPG keys are currently not supported by JGit.
+                    (default: nil)
+:signing-key        The GPG key id used for signing. If nil the git config is used (user.signingKey).
+                    (default: nil)
+:signing-pw         The key password for the default credentials provider.
+                    (default: nil)
+:signing-provider   Pass a custom CredentialsProvider instance, overrides :signing-pw.
+                    (default: nil)
 </code></pre>
 </td><td class="codes"><pre class="brush: clojure">(defn git-commit
-  [^Git repo message &amp; {:keys [all? allow-empty? amend? author committer insert-change-id? no-verify? only reflog-comment]
+  [^Git repo message &amp; {:keys [all? allow-empty? amend? author committer insert-change-id? no-verify? only
+                               reflog-comment sign? signing-key signing-pw signing-provider]
                         :or   {all?              false
                                allow-empty?      true
                                amend?            false
@@ -3700,24 +3933,131 @@ Create a new tracking branch for a remote branch and make it the current branch:
                                insert-change-id? false
                                no-verify?        false
                                only              nil
-                               reflog-comment    &quot;&quot;}}]
-  (as-&gt; (.commit repo) ^CommitCommand cmd
-        (.setAll cmd all?)
-        (.setAllowEmpty cmd allow-empty?)
-        (.setAmend cmd amend?)
-        (if (some? author)
-          (.setAuthor cmd (:name author) (:email author)) cmd)
-        (if (some? committer)
-          (.setCommitter cmd (:name committer) (:email committer)) cmd)
-        (.setInsertChangeId cmd insert-change-id?)
-        (.setMessage cmd message)
-        (.setNoVerify cmd no-verify?)
-        (if (some? only)
-          (doseq-cmd-fn! cmd #(.setOnly ^CommitCommand %1 %2) only) cmd)
-        (if (or (nil? reflog-comment)
-                (not (clojure.string/blank? reflog-comment)))
-          (.setReflogComment cmd reflog-comment) cmd)
-        (.call cmd)))</pre></td></tr><tr><td class="docs">
+                               reflog-comment    &quot;&quot;
+                               sign?             nil
+                               signing-key       nil
+                               signing-pw        nil
+                               signing-provider  nil}}]
+  (let [sign? (if (some? sign?)
+                sign?
+                (:sign? (gpg-config repo)))]
+    (as-&gt; (.commit repo) ^CommitCommand cmd
+          (.setAll cmd all?)
+          (.setAllowEmpty cmd allow-empty?)
+          (.setAmend cmd amend?)
+          (if (some? author)
+            (.setAuthor cmd (:name author) (:email author)) cmd)
+          (if (some? committer)
+            (.setCommitter cmd (:name committer) (:email committer)) cmd)
+          (.setInsertChangeId cmd insert-change-id?)
+          (.setMessage cmd message)
+          (.setNoVerify cmd no-verify?)
+          (if (some? only)
+            (doseq-cmd-fn! cmd #(.setOnly ^CommitCommand %1 %2) only) cmd)
+          (if (or (nil? reflog-comment)
+                  (not (clojure.string/blank? reflog-comment)))
+            (.setReflogComment cmd reflog-comment) cmd)
+          (.setSign cmd sign?)
+          (if (and sign? (some? signing-key))
+            (.setSigningKey cmd signing-key) cmd)
+          (if (and sign? (some? signing-pw))
+            ; see https://bugs.eclipse.org/bugs/show_bug.cgi?id=553116
+            (do (.setCredentialsProvider cmd (signing-pass-provider signing-pw)) cmd)
+            cmd)
+          (if (and sign? (some? signing-provider))
+            ; see https://bugs.eclipse.org/bugs/show_bug.cgi?id=553116
+            (do (.setCredentialsProvider cmd signing-provider) cmd)
+            cmd)
+          (.call cmd))))</pre></td></tr><tr><td class="docs"><p>Return mutable JGit StoredConfig object for given <code>repo</code>.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn git-config-load
+  ^StoredConfig
+  [^Git repo]
+  (-&gt; repo .getRepository .getConfig))</pre></td></tr><tr><td class="docs"><p>Save given <code>git-config</code> to repo's <code>.git/config</code> file.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn git-config-save
+  [^StoredConfig git-config]
+  (.save git-config))</pre></td></tr><tr><td class="docs"><p>Parse given Git <code>config-key</code> and return a vector of format [section subsection name].</p>
+</td><td class="codes"><pre class="brush: clojure">(defn parse-git-config-key
+  [^String config-key]
+  (let [keys (str/split config-key #&quot;\.&quot;)]
+    (case (count keys)
+      2 [(first keys) nil (last keys)]
+      3 keys
+      (throw (Exception. (str &quot;Invalid config-key format: &quot; config-key))))))</pre></td></tr><tr><td class="docs"><p>Return Git config value as string for given Git <code>config-key</code>. Note that config keys that are not explicitly set in
+  global/current repo config will always return nil and not the default value.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn git-config-get
+  [^StoredConfig git-config ^String config-key]
+  (-&gt;&gt; (parse-git-config-key config-key)
+       (apply #(.getString git-config % %2 %3))))</pre></td></tr><tr><td class="docs"><p>Set given <code>config-value</code> for given Git <code>config-key</code>, always returns the passed JGit StoredConfig object.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn git-config-set
+  ^StoredConfig
+  [^StoredConfig git-config ^String config-key config-value]
+  (-&gt;&gt; (parse-git-config-key config-key)
+       (apply #(.setString git-config % %2 %3 (str config-value))))
+  git-config)</pre></td></tr><tr><td class="docs"><p>Diff given <code>repo</code>, returns a OutputStream instance. Passing no other arguments is equivalent to running git status.
+  Use <code>:new-commit</code> and <code>:old-commit</code> to specify a range for the diff, i.e.:</p>
+
+<pre><code>  (git-diff repo :old-commit "aaae79" :new-commit "HEAD")
+</code></pre>
+
+<p>   Options:</p>
+
+<p>   :context-lines          <code>integer</code> that sets the number of lines of context shown before and after a modification.
+                           (default: 3)
+   :monitor                Set a progress monitor. See JGit ProgressMonitor interface.
+                           (default: nil)
+   :destination-prefix     A purely cosmetic <code>string</code> used for the new side in the output. Can be empty but not nil.
+                           (default: "b/")
+   :name-and-status-only?  If true only returns a vector with DiffEntries (filename and change status)
+                           (default: false)
+   :new-commit             Any <code>Resolvable</code> commit-ref used as end point for the diff.
+                           default: nil (HEAD)
+   :new-tree               Same as :new-tree but takes a CanonicalTreeParser instance. Takes precedence over :new-commit.
+                           default: nil (HEAD)
+   :old-commit             Any <code>Resolvable</code> commit-ref used as starting point for the diff.
+                           default: nil (HEAD)
+   :old-tree               Same as :old-tree but takes a CanonicalTreeParser instance. Takes precedence over :old-commit.
+                           default: nil (HEAD)
+   :path-filter            An <code>org.eclipse.jgit.treewalk.filter.TreeFilter</code> instance that limits the result, i.e.:
+                           <code>(PathFilter/create "project.clj")</code>. See <code>org.eclipse.jgit.treewalk.filter</code> namespace for
+                           all available filters or implement your own.
+                           (default: PathFilter/ALL)
+   :output-stream          The <code>OutputStream</code> instance the formatted diff is written to. Ignored if
+                           <code>:name-and-status-only?</code> is true.
+                           (default: ByteArrayOutputStream.)
+   :source-prefix          A purely cosmetic <code>string</code> used for the old side in the output. Can be empty but not nil.
+                           (default: "a/")</p>
+</td><td class="codes"><pre class="brush: clojure">(defn git-diff
+  [^Git repo &amp; {:keys [cached? context-lines destination-prefix new-tree old-tree new-commit old-commit
+                       output-stream path-filter monitor name-and-status-only? source-prefix]
+                :or   {cached?               false
+                       context-lines         -1
+                       destination-prefix    &quot;b/&quot;
+                       monitor               nil
+                       name-and-status-only? false
+                       new-commit            nil
+                       new-tree              nil
+                       old-commit            nil
+                       old-tree              nil
+                       output-stream         (ByteArrayOutputStream.)
+                       path-filter           PathFilter/ALL
+                       source-prefix         &quot;a/&quot;}}]
+  (let [old-tree (or old-tree (canonical-tree-parser repo old-commit))
+        new-tree (or new-tree (canonical-tree-parser repo new-commit))
+        diff-entries (as-&gt; (.diff repo) ^DiffCommand cmd
+                           (.setOutputStream cmd output-stream)
+                           (.setCached cmd cached?)
+                           (.setOldTree cmd old-tree)
+                           (.setNewTree cmd new-tree)
+                           (.setSourcePrefix cmd source-prefix)
+                           (.setDestinationPrefix cmd destination-prefix)
+                           (.setShowNameAndStatusOnly cmd name-and-status-only?)
+                           (.setContextLines cmd context-lines)
+                           (.setPathFilter cmd path-filter)
+                           (.setProgressMonitor cmd monitor)
+                           (.call cmd))]
+    (if name-and-status-only?
+      diff-entries
+      output-stream)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn fetch-cmd ^FetchCommand [^Git repo]
   (-&gt; (.fetch repo)
       ^TransportCommand (.setCredentialsProvider *cred-provider*)
@@ -3794,7 +4134,7 @@ Create a new tracking branch for a remote branch and make it the current branch:
         (if (some? recurse-subs)
           (.setRecurseSubmodules cmd (recurse-subs fetch-recurse-submodules-modes)) cmd)
         (if (some? ref-specs)
-          (.setRefSpecs cmd ^List (into-array String (seq?! ref-specs))) cmd)
+          (.setRefSpecs cmd ^&quot;[Ljava.lang.String;&quot; (into-array String (seq?! ref-specs))) cmd)
         (if (some? remote)
           (.setRemote cmd remote) cmd)
         (if (some? rm-deleted-refs?)
@@ -3811,21 +4151,24 @@ Create a new tracking branch for a remote branch and make it the current branch:
 
 <pre><code>Options:
 
-:bare?    Whether the repository is bare or not. (default: false)
-:dir      The optional directory associated with the init operation. If no directory
-          is set, we'll use the current directory. (default: ".")
-:git-dir  Set the repository meta directory (.git). (default: nil = use default)
+:bare?            Whether the repository is bare or not. (default: false)
+:dir              The optional directory associated with the init operation. If no directory
+                  is set, we'll use the current directory. (default: ".")
+:git-dir          Set the repository meta directory (.git). (default: nil = use default)
+:initial-branch   Set the initial branch of the new repository. (default: "master")
 </code></pre>
 </td><td class="codes"><pre class="brush: clojure">(defn git-init
-  [&amp; {:keys [bare? dir git-dir]
-      :or   {bare?   false
-             dir     &quot;.&quot;
-             git-dir nil}}]
+  ^Git [&amp; {:keys [bare? dir git-dir initial-branch]
+           :or   {bare?          false
+                 dir            &quot;.&quot;
+                 git-dir        nil
+                 initial-branch &quot;master&quot;}}]
   (as-&gt; (InitCommand.) cmd
         (.setBare cmd bare?)
         (.setDirectory cmd (io/as-file dir))
         (if (some? git-dir)
           (.setGitDir cmd (io/as-file git-dir)) cmd)
+        (.setInitialBranch cmd initial-branch)
         (.call cmd)))</pre></td></tr><tr><td class="docs"><p>Add a new remote to given <code>repo</code> and return the JGit RemoteAddCommand instance.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn git-remote-add
   [^Git repo name ^String uri]
@@ -3975,8 +4318,12 @@ Create a new tracking branch for a remote branch and make it the current branch:
 </td><td class="codes"><pre class="brush: clojure">(defonce branch-rebase-modes
          {:interactive BranchConfig$BranchRebaseMode/INTERACTIVE
           :none        BranchConfig$BranchRebaseMode/NONE
-          :merges    BranchConfig$BranchRebaseMode/MERGES
-          :rebase      BranchConfig$BranchRebaseMode/REBASE})</pre></td></tr><tr><td class="docs"><p>Fetch from and integrate with another repository or a local branch.</p>
+          :merges      BranchConfig$BranchRebaseMode/MERGES
+          :rebase      BranchConfig$BranchRebaseMode/REBASE
+          ;; Maintain backwards compatibility with the renamed PRESERVE rebase mode
+          ;; https://github.com/eclipse-jgit/jgit/commit/0518a6b0c16c1bce210bc9b2626104ef05975ee1
+          ;; https://github.com/eclipse-jgit/jgit/commit/032eef5b12a25e0da48004eea589966ae0652433
+          :preserve    BranchConfig$BranchRebaseMode/MERGES})</pre></td></tr><tr><td class="docs"><p>Fetch from and integrate with another repository or a local branch.</p>
 
 <pre><code>Options:
 
@@ -4145,9 +4492,11 @@ user's ssh key for auth:
         (if (some? monitor)
           (.setProgressMonitor cmd monitor) cmd)
         (if (some? options)
-          (.setPushOptions cmd (into-array String (seq?! options))) cmd)
+          (.setPushOptions cmd (seq?! options)) cmd)
         (if (some? output-stream)
           (.setOutputStream cmd output-stream) cmd)
+        (if (some? receive-pack)
+          (.setReceivePack cmd receive-pack) cmd)
         (if (some? ref-lease-specs)
           (.setRefLeaseSpecs cmd (-&gt;&gt; ref-lease-specs
                                       seq?!
@@ -4155,7 +4504,7 @@ user's ssh key for auth:
                                       ^List (apply list)))
           cmd)
         (if (some? ref-specs)
-          (.setRefSpecs cmd ^List (into-array RefSpec (seq?! ref-specs))) cmd)
+          (.setRefSpecs cmd ^List (map #(RefSpec. %) (seq?! ref-specs))) cmd)
         (if (some? refs)
           (doseq-cmd-fn! cmd #(.add ^PushCommand %1 ^String %2) refs) cmd)
         (if (some? remote)
@@ -4332,7 +4681,7 @@ Options:
         (.call cmd)))</pre></td></tr><tr><td class="docs"><p>Deletes tag(s) with the provided name(s).</p>
 </td><td class="codes"><pre class="brush: clojure">(defn git-tag-delete
   [^Git repo &amp; tag-names]
-  (-&gt; (.tagDelete repo)
+  (-&gt; ^DeleteTagCommand (.tagDelete repo)
       (.setTags (into-array String tag-names))
       (.call)))</pre></td></tr><tr><td class="docs"><p>Lists the tags in a <code>repo</code>, returning them as a seq of strings.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn git-tag-list
@@ -4383,7 +4732,7 @@ Options:
                 :merge
                 :mixed
                 :soft
-              (default: :mixed)
+              (default: :mixed, always nil if :paths is set)
 :monitor      Set a progress monitor. See JGit ProgressMonitor interface.
               (default: nil)
 :paths        String or coll of strings with repository relative path(s) of file(s)
@@ -4400,7 +4749,8 @@ Options:
                        ref      nil
                        ref-log? true}}]
   (as-&gt; (.reset repo) ^ResetCommand cmd
-        (.setMode cmd (mode reset-modes))
+        (if (nil? paths)
+          (.setMode cmd (mode reset-modes)) cmd)
         (if (some? monitor)
           (.setProgressMonitor cmd monitor) cmd)
         (if (some? paths)
@@ -4419,6 +4769,7 @@ Options:
    (when (&lt; level 3)
      (let [gen (SubmoduleWalk/forIndex repo)
            repos (transient [])]
+       #_{:clj-kondo/ignore [:unused-value]}
        (while (.next gen)
          (when-let [subm (.getRepository gen)]
            (conj! repos subm)
@@ -4605,14 +4956,13 @@ strategy        Keyword that sets the merge strategy to use during this update
 
 :all?       If true drop all stashed commits, if false only the :stash-id is dropped.
             (default: false)
-:stash-id   Integer with the stash id to drop. If nil the latest stash commit
-            (stash@{0}) is dropped.
-              (default: nil)
+:stash-id   Integer with the stash id to drop. Corresponds to stash@{stash-id}
+            (default: 0)
 </code></pre>
 </td><td class="codes"><pre class="brush: clojure">(defn git-stash-drop
   [^Git repo &amp; {:keys [all? stash-id]
                 :or   {all?     false
-                       stash-id nil}}]
+                       stash-id 0}}]
   (-&gt; (.stashDrop repo)
       (.setAll all?)
       (.setStashRef stash-id)
@@ -4647,7 +4997,7 @@ strategy        Keyword that sets the merge strategy to use during this update
         (.setForce cmd force?)
         (.setIgnore cmd ignore?)
         (if (some? paths)
-          (.setPaths cmd (into-array String (seq?! paths))) cmd)
+          (.setPaths cmd (set (seq?! paths))) cmd)
         (.call cmd)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn blame-result
   [^BlameResult blame]
@@ -4799,7 +5149,7 @@ strategy        Keyword that sets the merge strategy to use during this update
   (as-&gt; (git-notes-show repo :ref ref) $
         (conj $ message)
         (str/join &quot;\n&quot; $)
-        (git-notes-add repo $ :ref ref :commit commit)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/gdeer81/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a><div id="floating-toc"><ul><li class="floating-toc-li" id="floating-toc_clj-jgit.querying">clj-jgit.querying</li><li class="floating-toc-li" id="floating-toc_clj-jgit.util">clj-jgit.util</li><li class="floating-toc-li" id="floating-toc_clj-jgit.internal">clj-jgit.internal</li><li class="floating-toc-li" id="floating-toc_clj-jgit.porcelain">clj-jgit.porcelain</li></ul></div></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
+        (git-notes-add repo $ :ref ref :commit commit)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/gdeer81/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a><div id="floating-toc"><ul><li class="floating-toc-li" id="floating-toc_clj-jgit.diff">clj-jgit.diff</li><li class="floating-toc-li" id="floating-toc_clj-jgit.querying">clj-jgit.querying</li><li class="floating-toc-li" id="floating-toc_clj-jgit.util">clj-jgit.util</li><li class="floating-toc-li" id="floating-toc_clj-jgit.internal">clj-jgit.internal</li><li class="floating-toc-li" id="floating-toc_clj-jgit.porcelain">clj-jgit.porcelain</li></ul></div></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
 SyntaxHighlighter.all();
 
 // hackity hack
