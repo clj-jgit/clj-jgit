@@ -4,8 +4,8 @@
     (org.eclipse.jgit.api Git)
     (org.eclipse.jgit.lib ObjectId ObjectIdRef Repository RefDatabase)
     (org.eclipse.jgit.transport RefSpec)
-    (org.eclipse.jgit.revwalk RevWalk RevCommit)
-    (org.eclipse.jgit.treewalk TreeWalk)))
+    (org.eclipse.jgit.revwalk RevWalk RevCommit RevTree)
+    (org.eclipse.jgit.treewalk TreeWalk CanonicalTreeParser)))
 
 (defn ref-spec ^RefSpec [str]
   (RefSpec. str))
@@ -39,6 +39,13 @@
   "Protocol for things that resolve ObjectId's."
   (resolve-object ^ObjectId [commit-ish repo]
     "Find ObjectId instance for any Git name: commit-ish, tree-ish or blob. Accepts ObjectId instances and just passes them through."))
+
+#_{:clj-kondo/ignore [:unused-binding]}
+(extend-type nil
+  Resolvable
+  (resolve-object
+    ^ObjectId [^String commit-ish ^Git repo]
+    nil))
 
 (extend-type String
   Resolvable
@@ -79,6 +86,25 @@
 (defn get-refs
   [^Git repo ^String prefix]
   (.getRefs (ref-database repo) prefix))
+
+(defn rev-tree-by-commit
+  "Get a new `RevTree` instance for given `rev-commit`, auto-closes given `rev-walk` unless optional `:dispose-rev-walk?` arg is set to `false`"
+  ^RevTree [^RevWalk rev-walk ^RevCommit rev-commit & {:keys [dispose-rev-walk?] :or {dispose-rev-walk? true}}]
+  (let [tree (->> (doto rev-commit .getTree .getId)
+                  (.parseTree rev-walk))]
+    (when dispose-rev-walk? (.dispose rev-walk))
+    tree))
+
+(defn canonical-tree-parser
+  "Returns a new `org.eclipse.jgit.treewalk.CanonicalTreeParser` instance that reflects the repo state at given `commit-ref`"
+  [^Git repo commit-ref]
+  (when commit-ref
+    (let [rev-walk (new-rev-walk repo)
+          object-reader (.newObjectReader (.getRepository repo))]
+      (->> (resolve-object commit-ref repo)
+           (bound-commit repo rev-walk)
+           (rev-tree-by-commit rev-walk)
+           (CanonicalTreeParser. nil object-reader)))))
 
 (defn get-head-commit "Return HEAD RevCommit instance" [^Git repo]
   (with-open [rev-walk (new-rev-walk repo)]
