@@ -1,6 +1,9 @@
-(defproject clj-jgit "1.1.0-SNAPSHOT"
+(defproject clj-jgit "1.1.0"
   :description "Clojure wrapper for JGit"
-  :profiles {:dev {:dependencies [[org.clojure/clojure "1.11.1"]
+  :license {:name "Eclipse Public License - v 1.0"
+            :url "http://www.eclipse.org/legal/epl-v10.html"
+            :distribution :repo}
+  :profiles {:dev {:dependencies [[org.clojure/clojure "1.11.2"]
                                   [org.clojure/tools.namespace "1.3.0"]]
                    :source-paths ["dev/src" "test"]}}
   :repl-options {:init-ns dev}
