@@ -26,7 +26,7 @@
            (org.eclipse.jgit.transport.sshd SshdSessionFactory DefaultProxyDataFactory JGitKeyCache KeyPasswordProvider)
            (org.eclipse.jgit.transport FetchResult UsernamePasswordCredentialsProvider URIish RefSpec RefLeaseSpec TagOpt
                                        RemoteConfig CredentialsProvider CredentialItem$CharArrayType
-                                       CredentialItem$YesNoType SshTransport)
+                                       CredentialItem$YesNoType CredentialItem$Password SshTransport)
            (org.eclipse.jgit.treewalk TreeWalk)
            (org.eclipse.jgit.treewalk.filter PathFilter)))
 
@@ -101,10 +101,13 @@
 #_{:clj-kondo/ignore [:unused-binding]}
 (defn key-pass-provider
   "Create a new `KeyPasswordProvider` instance for given `key-pw`."
-  ^KeyPasswordProvider [key-pw]
+  ^KeyPasswordProvider [^CredentialsProvider provider]
   (reify KeyPasswordProvider
     (getPassphrase [_ uri attempt]
-      (char-array key-pw))
+      (let [credential-item (CredentialItem$Password.)]
+        (if (.get provider uri [credential-item])
+          (.getValue credential-item)
+          nil)))
     (setAttempts [_ attempts]
       true)
     (getAttempts [_]
@@ -123,7 +126,7 @@
           ssh-dir
           (.getAbsoluteFile ssh-dir))))
     (createKeyPasswordProvider [^CredentialsProvider provider]
-      (key-pass-provider *ssh-key-passphrase*))
+      (key-pass-provider provider))
     (getDefaultKnownHostsFiles [^File ssh-dir]
       (let [ssh-dir (.toPath ssh-dir)
             kh-files (->> (seq?! *known-hosts-file*)
@@ -476,7 +479,9 @@
   (-> (Git/cloneRepository)
       (.setURI uri)
       ^TransportCommand (.setCredentialsProvider *cred-provider*)
-      (.setTransportConfigCallback *transport-callback*)))
+      (.setTransportConfigCallback *transport-callback*)
+      (.setCredentialsProvider(UsernamePasswordCredentialsProvider. nil *ssh-key-passphrase*))
+      ))
 
 (defn git-clone
   "Clone a repository into a new working directory from given `uri`.
