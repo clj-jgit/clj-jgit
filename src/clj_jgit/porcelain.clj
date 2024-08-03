@@ -616,6 +616,11 @@
     :author             A map of format {:name \"me\" :email \"me@foo.net\"}. If no
                         author is explicitly specified the author will be set to the
                         committer or to the original author when amending. (default: nil)
+                        Optional, but must be specified together as follows:
+                          :date              :timezone
+                          java.util.Date     java.util.TimeZone
+                          java.time.Instant  java.time.ZoneId
+                          Long               Integer
     :committer          A map of format {:name \"me\" :email \"me@foo.net\"}. If no
                         committer is explicitly specified the committer will be deduced
                         from config info in current repository, with current time.
@@ -666,7 +671,7 @@
           (.setAllowEmpty cmd allow-empty?)
           (.setAmend cmd amend?)
           (if (some? author)
-            (.setAuthor cmd (:name author) (:email author)) cmd)
+            (.setAuthor cmd (util/map->person-ident author)) cmd)
           (if (some? committer)
             (.setCommitter cmd (:name committer) (:email committer)) cmd)
           (.setInsertChangeId cmd insert-change-id?)

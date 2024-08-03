@@ -7,7 +7,10 @@
     (org.eclipse.jgit.api.errors NoHeadException)
     (org.eclipse.jgit.revwalk RevWalk RevCommit)
     (org.eclipse.jgit.transport PushResult URIish)
-    (org.eclipse.jgit.lib ObjectId StoredConfig)))
+    (org.eclipse.jgit.lib ObjectId StoredConfig)
+    (java.time Instant ZoneId)
+    (java.time.temporal ChronoUnit))
+  (:require [clj-jgit.util :as util]))
 
 (deftest test-git-init
   (let [repo-dir (get-temp-dir)]
@@ -25,6 +28,22 @@
     (read-only-repo
       (is (instance? Git repo))
       (is (instance? RevWalk rev-walk)))))
+
+(deftest test-git-commit
+  (with-tmp-repo "target/tmp"
+    (let [author {:name "me"
+                  :email "me@foo.net"
+                  :date (.minusSeconds (Instant/now) 60)
+                  :timezone (ZoneId/systemDefault)}
+          commit (git-commit repo "initial commit" {:author author})]
+      (testing "git-commit with custom author date"
+        (is (instance? RevCommit commit)))
+      (testing "git-commit keeps custom author date"
+        (let [normalize (fn [person-ident] (-> person-ident
+                                               (update :date #(.truncatedTo % ChronoUnit/SECONDS))
+                                               (update :timezone #(.getOffset (.getRules %) (:date person-ident)))))]
+          (is (= (normalize author)
+                 (normalize (util/person-ident (.getAuthorIdent commit) :java-time true)))))))))
 
 (deftest test-git-config-functions
   (with-tmp-repo "target/tmp"

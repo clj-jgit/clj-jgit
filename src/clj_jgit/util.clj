@@ -64,11 +64,30 @@
       (subs path 1)
       path)))
 
+(defn map->person-ident
+  "Construct a JGit `PersonIdent` object from a map"
+  ^PersonIdent
+  [{:keys [name email date timezone]}]
+  ;; if one is specified but not the other, PersonIdent constructor will fail
+  (if (or (some? date) (some? timezone))
+    (PersonIdent. ^String name ^String email date timezone)
+    (PersonIdent. ^String name ^String email)))
+
 (defn person-ident
-  "Convert given JGit `PersonIdent` object into a map"
-  [^PersonIdent person]
+  "Convert given JGit `PersonIdent` object into a map.
+   
+    Options:
+   
+    :java-time  Use java.time objects for :date and :timezone.
+                  :date      java.time.Instant
+                  :timezone  java.time.ZoneId
+                (default: nil)
+                  :date      java.util.Date
+                  :timezone  java.util.TimeZone
+   "
+  [^PersonIdent person & {:keys [java-time]}]
   (when person
     {:name     (.getName person)
      :email    (.getEmailAddress person)
-     :date     (.getWhen person)
-     :timezone (.getTimeZone person)}))
+     :date     (if java-time (.getWhenAsInstant person) (.getWhen person))
+     :timezone (if java-time (.getZoneId person) (.getTimeZone person))}))
