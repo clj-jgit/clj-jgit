@@ -8,7 +8,7 @@
     (org.eclipse.jgit.revwalk RevWalk RevCommit)
     (org.eclipse.jgit.transport PushResult URIish)
     (org.eclipse.jgit.lib ObjectId StoredConfig)
-    (java.time Instant ZoneId)
+    (java.time ZonedDateTime)
     (java.time.temporal ChronoUnit))
   (:require [clj-jgit.util :as util]))
 
@@ -31,10 +31,11 @@
 
 (deftest test-git-commit
   (with-tmp-repo "target/tmp"
-    (let [author {:name "me"
+    (let [datetime (ZonedDateTime/parse "2007-12-03T10:15:30+01:00")
+          author {:name "me"
                   :email "me@foo.net"
-                  :date (.minusSeconds (Instant/now) 60)
-                  :timezone (ZoneId/systemDefault)}
+                  :date (.toInstant datetime)
+                  :timezone (.getZone datetime)}
           commit (git-commit repo "initial commit" {:author author})]
       (testing "git-commit with custom author date"
         (is (instance? RevCommit commit)))
