@@ -205,9 +205,10 @@
      (binding [*ssh-key-name* key-name#
                *ssh-key-dir* key-dir#
                *ssh-key-passphrase* key-pw#
-               *cred-provider* (if (and trust-all?# (nil? cred-provider#))
-                                 trust-any-provider
-                                 cred-provider#)
+               *cred-provider* (cond
+                                 (and trust-all?# (nil? cred-provider#)) trust-any-provider
+                                 (and key-pw# (nil? cred-provider#)) (user-pass-provider nil key-pw# :trust-all? trust-all?#)
+                                 :else cred-provider#)
                *transport-callback* transport-cb#]
        ~@body)))
 
@@ -479,9 +480,7 @@
   (-> (Git/cloneRepository)
       (.setURI uri)
       ^TransportCommand (.setCredentialsProvider *cred-provider*)
-      (.setTransportConfigCallback *transport-callback*)
-      (.setCredentialsProvider(UsernamePasswordCredentialsProvider. nil *ssh-key-passphrase*))
-      ))
+      (.setTransportConfigCallback *transport-callback*)))
 
 (defn git-clone
   "Clone a repository into a new working directory from given `uri`.
