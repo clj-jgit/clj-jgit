@@ -17,6 +17,7 @@
                                  CleanCommand DeleteTagCommand DiffCommand)
            (org.eclipse.jgit.blame BlameResult)
            (org.eclipse.jgit.diff DiffAlgorithm$SupportedAlgorithm)
+           (org.eclipse.jgit.errors UnsupportedCredentialItem)
            (org.eclipse.jgit.lib RepositoryBuilder AnyObjectId PersonIdent BranchConfig$BranchRebaseMode ObjectId
                                  SubmoduleConfig$FetchRecurseSubmodulesMode Ref Repository StoredConfig GpgConfig)
            (org.eclipse.jgit.merge MergeStrategy)
@@ -24,7 +25,7 @@
            (org.eclipse.jgit.revwalk RevCommit)
            (org.eclipse.jgit.submodule SubmoduleWalk)
            (org.eclipse.jgit.transport.sshd SshdSessionFactory DefaultProxyDataFactory JGitKeyCache KeyPasswordProvider)
-           (org.eclipse.jgit.transport FetchResult UsernamePasswordCredentialsProvider URIish RefSpec RefLeaseSpec TagOpt
+           (org.eclipse.jgit.transport CredentialItem CredentialItem$InformationalMessage CredentialItem$StringType CredentialItem$Username FetchResult UsernamePasswordCredentialsProvider URIish RefSpec RefLeaseSpec TagOpt
                                        RemoteConfig CredentialsProvider CredentialItem$CharArrayType
                                        CredentialItem$YesNoType CredentialItem$Password SshTransport)
            (org.eclipse.jgit.treewalk TreeWalk)
@@ -46,7 +47,7 @@
       (.exists bare) (io/as-file path))))
 
 (def ^:dynamic *cred-provider* nil)
-(def ^:dynamic *ssh-key-dir* (str (System/getProperty "user.home") (File/separator) ".ssh"))
+(def ^:dynamic *ssh-key-dir* (str (System/getProperty "user.home") File/separator ".ssh"))
 (def ^:dynamic *ssh-key-name* ["id_rsa", "id_dsa", "id_ecdsa", "id_ed25519"])
 (def ^:dynamic *ssh-key-passphrase* "")
 (def ^:dynamic *known-hosts-file* ["known_hosts" "known_hosts2"])
@@ -55,18 +56,15 @@
   "Basic `CredentialsProvider` instance that accepts and adds any unknown server keys to `known_hosts` file."
   (proxy [CredentialsProvider] []
     (supports [items]
-      (if (some? (->> items
-                      (filter #(when (instance? CredentialItem$YesNoType %) true))
-                      first))
-        true
-        false))
+      (->> items
+           (remove #(instance? CredentialItem$YesNoType %))
+           empty?))
     (get [uri items]
-      (let [^CredentialItem$YesNoType yesno-item (->> items
-                                                      (filter #(when (instance? CredentialItem$YesNoType %) true))
-                                                      first)]
-        (if (some? yesno-item)
-          (do (.setValue yesno-item true) true)
-          false)))
+      (doall (map #(if (instance? CredentialItem$YesNoType %)
+                     (.setValue ^CredentialItem$YesNoType % true)
+                     (throw (UnsupportedCredentialItem. uri (-> ^CredentialItem % .getClass .getName))))
+                  items))
+      true)
     (isInteractive []
       false)))
 
@@ -82,18 +80,22 @@
   (if trust-all?
     (proxy [UsernamePasswordCredentialsProvider] [^String login ^String password]
       (supports [items]
-        (if (some? (->> items
-                        (filter #(when (instance? CredentialItem$YesNoType %) true))
-                        first))
-          true
-          false))
+        (->> items
+             (remove #(or (instance? CredentialItem$InformationalMessage %)
+                          (instance? CredentialItem$Username %)
+                          (instance? CredentialItem$Password %)
+                          (instance? CredentialItem$StringType %)
+                          (instance? CredentialItem$YesNoType %)))
+             empty?))
       (get [uri items]
-        (let [^CredentialItem$YesNoType yesno-item (->> items
-                                                        (filter #(when (instance? CredentialItem$YesNoType %) true))
-                                                        first)]
-          (if (some? yesno-item)
-            (do (.setValue yesno-item true) true)
-            false)))
+        (doall (map #(cond
+                       (instance? CredentialItem$Username %) (.setValue ^CredentialItem$Username % login)
+                       (instance? CredentialItem$Password %) (.setValue ^CredentialItem$Password % (char-array password))
+                       (instance? CredentialItem$StringType %) (.setValue ^CredentialItem$StringType % password)
+                       (instance? CredentialItem$YesNoType %) (.setValue ^CredentialItem$YesNoType % true)
+                       :else (throw (UnsupportedCredentialItem. uri (-> ^CredentialItem % .getClass .getName))))
+                    items))
+        true)
       (isInteractive []
         false))
     (UsernamePasswordCredentialsProvider. ^String login ^String password)))
@@ -105,7 +107,7 @@
   (reify KeyPasswordProvider
     (getPassphrase [_ uri attempt]
       (let [credential-item (CredentialItem$Password.)]
-        (if (.get provider uri [credential-item])
+        (if (.get provider ^URIish uri [credential-item])
           (.getValue credential-item)
           nil)))
     (setAttempts [_ attempts]
@@ -206,8 +208,8 @@
                *ssh-key-dir* key-dir#
                *ssh-key-passphrase* key-pw#
                *cred-provider* (cond
-                                 (and trust-all?# (nil? cred-provider#)) trust-any-provider
                                  (and key-pw# (nil? cred-provider#)) (user-pass-provider nil key-pw# :trust-all? trust-all?#)
+                                 (and trust-all?# (nil? cred-provider#)) trust-any-provider
                                  :else cred-provider#)
                *transport-callback* transport-cb#]
        ~@body)))
@@ -1917,7 +1919,7 @@
                 :or   {ref "commits"}}]
   (let [repository (-> repo .getRepository)]
     (->> (git-notes repo :ref ref)
-         (map #(String. (.getBytes (.open repository (.getData ^Note %))) (StandardCharsets/UTF_8)))
+         (map #(String. (.getBytes (.open repository (.getData ^Note %))) StandardCharsets/UTF_8))
          (map #(str/split % #"\n"))
          first)))
 
